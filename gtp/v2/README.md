@@ -169,7 +169,7 @@ _See [v1/README.md](../v1/README.md)._
 
 The following Messages marked with "Yes" are currently available with their own useful constructors.
 
-_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGenecic()`._
+_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGeneric()`._
 
 ### Messages
 
@@ -372,7 +372,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 148     | CSG Membership Indication (CMI)                                | Yes       |
 | 149     | Service Indicator                                              | Yes       |
 | 150     | Detach Type                                                    | Yes       |
-| 151     | Local Distiguished Name (LDN)                                  | Yes       |
+| 151     | Local Distinguished Name (LDN)                                 | Yes       |
 | 152     | Node Features                                                  |           |
 | 153     | MBMS Time to Data Transfer                                     |           |
 | 154     | Throttling                                                     |           |

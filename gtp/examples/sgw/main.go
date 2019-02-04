@@ -116,7 +116,7 @@ func main() {
 				continue
 			}
 
-			log.Println("Active Subcribers:")
+			log.Println("Active Subscribers:")
 			for _, imsi := range activeIMSIs {
 				log.Printf("\t%s", imsi)
 			}

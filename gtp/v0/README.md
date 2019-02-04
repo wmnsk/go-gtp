@@ -23,7 +23,7 @@ _NOT IMPLEMENTED YET!_
 
 The following Messages marked with "Yes" are currently available with their own useful constructors.
 
-_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGenecic()`._
+_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGeneric()`._
 
 ### Messages
 

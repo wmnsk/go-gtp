@@ -79,7 +79,7 @@ type ErrRequiredParameterMissing struct {
 	Name, Msg string
 }
 
-// Error returns missing paramter with message.
+// Error returns missing parameter with message.
 func (e *ErrRequiredParameterMissing) Error() string {
 	return fmt.Sprintf("required parameter: %s is missing. %s", e.Name, e.Msg)
 }

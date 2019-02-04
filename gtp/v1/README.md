@@ -4,7 +4,7 @@ Package v1 provides the simple and painless handling of GTPv2-C protocol in pure
 
 ## Getting Started
 
-This package is still under construction. The networking fearure is only available for GTPv1-U. GTPv1-C feature would be available in the future.
+This package is still under construction. The networking feature is only available for GTPv1-U. GTPv1-C feature would be available in the future.
 See messages and ies directory for what you can do with the current implementation. 
 
 ### Creating a PDP Context as a client
@@ -86,7 +86,7 @@ Note: _package v1 does provide encapsulation/decapsulation and some networking f
 
 The following Messages marked with "Yes" are currently available with their own useful constructors.
 
-_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGenecic()`._
+_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGeneric()`._
 
 | ID        | Name                                        | Supported |
 |-----------|---------------------------------------------|-----------|

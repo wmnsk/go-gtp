@@ -30,7 +30,7 @@ go get -u github.com/pascaldekloe/goe/verify
 
 ### Running examples
 
-Examples works as it is by `go build` and executing coomands in the following way.
+Examples works as it is by `go build` and executing commands in the following way.
 
 1. Open four terminals on a machine and start capturing on loopback interface.
 

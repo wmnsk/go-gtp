@@ -6,7 +6,7 @@
 //
 // NOTE: Working examples are available in example directory, which might be a better help.
 //
-// To creatie a Session as a client, use Dial(), AddHandler(), CreateSession(), and you can get *Conn, *Session and *Bearer.
+// To create a Session as a client, use Dial(), AddHandler(), CreateSession(), and you can get *Conn, *Session and *Bearer.
 //
 // 1. Dial() to retrieve *v2.Conn
 //

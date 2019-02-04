@@ -4,7 +4,7 @@
 
 // Package v1 provides the simple and painless handling of GTPv1-C and GTPv1-U protocol in pure Golang.
 //
-// This package is still under construction. The networking fearure is only available for GTPv1-U.
+// This package is still under construction. The networking feature is only available for GTPv1-U.
 // GTPv1-C feature would be available in the future.
 // See messages and ies directory for what you can do with the current implementation.
 //

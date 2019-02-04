@@ -11,7 +11,7 @@
 // 1. Exchange Echo to S-GW address specified in command-line argument.
 //
 // 2. Start dispatching subscribers by sending Create Session Request to S-GW.
-// APN is handled with getPGWIP, which is hard-coded.
+// APN is handled with getPGWIP(), which is hard-coded.
 //
 // 3. Wait for Create Session Response coming from S-GW with Cause="request accepted".
 //
