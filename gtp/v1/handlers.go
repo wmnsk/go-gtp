@@ -92,14 +92,9 @@ func handleEchoRequest(c Conn, senderAddr net.Addr, msg messages.Message) error 
 	}
 
 	// respond with EchoResponse.
-	if err := c.RespondTo(
-		senderAddr,
-		msg, messages.NewEchoResponse(0, ies.NewRecovery(c.Restarts())),
-	); err != nil {
-		return err
-	}
-
-	return nil
+	return c.RespondTo(
+		senderAddr, msg, messages.NewEchoResponse(0, ies.NewRecovery(c.Restarts())),
+	)
 }
 
 func handleEchoResponse(c Conn, senderAddr net.Addr, msg messages.Message) error {

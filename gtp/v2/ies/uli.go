@@ -124,7 +124,6 @@ func NewUserLocationInformation(
 	if flags>>7&0x01 == 1 {
 		copy(i.Payload[offset:offset+3], plmn)
 		copy(i.Payload[offset+3:offset+6], utils.Uint32To24(emenbi))
-		offset += emenbilen
 	}
 	return i
 }
