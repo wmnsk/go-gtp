@@ -8,7 +8,35 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"net"
+
+	"github.com/wmnsk/go-gtp/gtp/utils"
 )
+
+// NewPacketTMSI creates a new PacketTMSI IE.
+func NewPacketTMSI(ptmsi uint32) *IE {
+	return newUint32ValIE(PacketTMSI, ptmsi)
+}
+
+// PacketTMSI returns PacketTMSI value in uint32 if type matches.
+func (i *IE) PacketTMSI() uint32 {
+	if i.Type != PacketTMSI {
+		return 0
+	}
+	return binary.BigEndian.Uint32(i.Payload)
+}
+
+// NewPTMSISignature creates a new PTMSISignature IE.
+func NewPTMSISignature(sig uint32) *IE {
+	return New(PTMSISignature, utils.Uint32To24(sig))
+}
+
+// PTMSISignature returns PTMSISignature value in uint32 if type matches.
+func (i *IE) PTMSISignature() uint32 {
+	if i.Type != PTMSISignature {
+		return 0
+	}
+	return utils.Uint24To32(i.Payload)
+}
 
 // NewTEIDDataI creates a new TEIDDataI IE.
 func NewTEIDDataI(teid uint32) *IE {

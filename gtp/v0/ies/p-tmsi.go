@@ -4,9 +4,7 @@
 
 package ies
 
-import (
-	"encoding/binary"
-)
+import "encoding/binary"
 
 // NewPacketTMSI creates a new PacketTMSI IE.
 func NewPacketTMSI(ptmsi uint32) *IE {

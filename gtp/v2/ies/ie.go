@@ -125,7 +125,7 @@ const (
 	MMContextUMTSKeyQuadrupletsAndQuintuplets
 	PDNConnection
 	PDUNumbers
-	PTMSI
+	PacketTMSI
 	PTMSISignature
 	HopCounter
 	UETimeZone

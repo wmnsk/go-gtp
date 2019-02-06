@@ -35,9 +35,9 @@ func TestIE(t *testing.T) {
 			ies.NewTemporaryLogicalLinkIdentity(0xff00ff00),
 			[]byte{0x04, 0xff, 0x00, 0xff, 0x00},
 		}, {
-			"P-TMSI",
-			ies.NewPacketTMSI(0xff00ff00),
-			[]byte{0x05, 0xff, 0x00, 0xff, 0x00},
+			"PacketTMSI",
+			ies.NewPacketTMSI(0xdeadbeef),
+			[]byte{0x05, 0xde, 0xad, 0xbe, 0xef},
 		}, { // XXX - not implemented fully
 			"QoS Profile",
 			ies.NewQualityOfServiceProfile(1, 1, 1, 1, 1),
@@ -66,6 +66,10 @@ func TestIE(t *testing.T) {
 			[]byte{},
 		},*/
 		{
+			"PTMSISignature",
+			ies.NewPTMSISignature(0xbeebee),
+			[]byte{0x0c, 0xbe, 0xeb, 0xee},
+		}, {
 			"Recovery",
 			ies.NewRecovery(0x80),
 			[]byte{0x0e, 0x80},
