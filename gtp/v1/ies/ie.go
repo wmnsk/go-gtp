@@ -144,8 +144,8 @@ const (
 	CIoTOptimizationsSupportIndication
 	SCEFPDNConnection
 	IOVUpdatesCounter
-	_
-	_
+	MappedUEUsageType
+	UPFunctionSelectionIndicationFlags
 	_
 	_
 	_
