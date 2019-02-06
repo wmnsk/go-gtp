@@ -56,8 +56,8 @@ type CreateSessionRequest struct {
 	CNOperatorSelectionEntity          *ies.IE
 	PresenceReportingAreaInformation   *ies.IE
 	MMESGSNOverloadControlInformation  *ies.IE
-	SGWOverloadControlInformaion       *ies.IE
-	TWANePDGOverloadControlInformaion  *ies.IE
+	SGWOverloadControlInformation      *ies.IE
+	TWANePDGOverloadControlInformation *ies.IE
 	OriginationTimeStamp               *ies.IE
 	MaximumWaitTime                    *ies.IE
 	WLANLocationInformation            *ies.IE
@@ -105,6 +105,8 @@ func NewCreateSessionRequest(teid, seq uint32, ie ...*ies.IE) *CreateSessionRequ
 				c.ULI = i
 			case 1:
 				c.ULIForSGW = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.ServingNetwork:
 			c.ServingNetwork = i
@@ -118,6 +120,8 @@ func NewCreateSessionRequest(teid, seq uint32, ie ...*ies.IE) *CreateSessionRequ
 				c.SenderFTEIDC = i
 			case 1:
 				c.PGWS5S8FTEIDC = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.AccessPointName:
 			c.APN = i
@@ -143,6 +147,8 @@ func NewCreateSessionRequest(teid, seq uint32, ie ...*ies.IE) *CreateSessionRequ
 				c.BearerContextsToBeCreated = i
 			case 1:
 				c.BearerContextsToBeRemoved = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
@@ -154,6 +160,8 @@ func NewCreateSessionRequest(teid, seq uint32, ie ...*ies.IE) *CreateSessionRequ
 				c.EPDGFQCSID = i
 			case 3:
 				c.TWANFQCSID = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.TraceInformation:
 			c.TraceInformation = i
@@ -175,6 +183,8 @@ func NewCreateSessionRequest(teid, seq uint32, ie ...*ies.IE) *CreateSessionRequ
 				c.EPDGLDN = i
 			case 3:
 				c.TWANLDN = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.SignallingPriorityIndication:
 			c.SignallingPriorityIndication = i
@@ -188,6 +198,8 @@ func NewCreateSessionRequest(teid, seq uint32, ie ...*ies.IE) *CreateSessionRequ
 				c.MMESGSNIdentifier = i
 			case 3:
 				c.EPDGIPAddress = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.PortNumber:
 			switch i.Instance() {
@@ -197,6 +209,8 @@ func NewCreateSessionRequest(teid, seq uint32, ie ...*ies.IE) *CreateSessionRequ
 				c.HeNBUDPPort = i
 			case 2:
 				c.UETCPPort = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.AdditionalProtocolConfigurationOptions:
 			c.APCO = i
@@ -216,9 +230,11 @@ func NewCreateSessionRequest(teid, seq uint32, ie ...*ies.IE) *CreateSessionRequ
 			case 0:
 				c.MMESGSNOverloadControlInformation = i
 			case 1:
-				c.SGWOverloadControlInformaion = i
+				c.SGWOverloadControlInformation = i
 			case 2:
-				c.TWANePDGOverloadControlInformaion = i
+				c.TWANePDGOverloadControlInformation = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.MillisecondTimeStamp:
 			c.OriginationTimeStamp = i
@@ -546,13 +562,13 @@ func (c *CreateSessionRequest) SerializeTo(b []byte) error {
 		}
 		offset += ie.Len()
 	}
-	if ie := c.SGWOverloadControlInformaion; ie != nil {
+	if ie := c.SGWOverloadControlInformation; ie != nil {
 		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.Len()
 	}
-	if ie := c.TWANePDGOverloadControlInformaion; ie != nil {
+	if ie := c.TWANePDGOverloadControlInformation; ie != nil {
 		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -722,6 +738,8 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 				c.ULI = i
 			case 1:
 				c.ULIForSGW = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.ServingNetwork:
 			c.ServingNetwork = i
@@ -735,6 +753,8 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 				c.SenderFTEIDC = i
 			case 1:
 				c.PGWS5S8FTEIDC = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.AccessPointName:
 			c.APN = i
@@ -760,6 +780,8 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 				c.BearerContextsToBeCreated = i
 			case 1:
 				c.BearerContextsToBeRemoved = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
@@ -771,6 +793,8 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 				c.EPDGFQCSID = i
 			case 3:
 				c.TWANFQCSID = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.TraceInformation:
 			c.TraceInformation = i
@@ -792,6 +816,8 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 				c.EPDGLDN = i
 			case 3:
 				c.TWANLDN = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.SignallingPriorityIndication:
 			c.SignallingPriorityIndication = i
@@ -805,6 +831,8 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 				c.MMESGSNIdentifier = i
 			case 3:
 				c.EPDGIPAddress = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.PortNumber:
 			switch i.Instance() {
@@ -814,6 +842,8 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 				c.HeNBUDPPort = i
 			case 2:
 				c.UETCPPort = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.AdditionalProtocolConfigurationOptions:
 			c.APCO = i
@@ -823,6 +853,8 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 				c.TWANIdentifier = i
 			case 1:
 				c.WLANLocationInformation = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.CNOperatorSelectionEntity:
 			c.CNOperatorSelectionEntity = i
@@ -833,9 +865,11 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 			case 0:
 				c.MMESGSNOverloadControlInformation = i
 			case 1:
-				c.SGWOverloadControlInformaion = i
+				c.SGWOverloadControlInformation = i
 			case 2:
-				c.TWANePDGOverloadControlInformaion = i
+				c.TWANePDGOverloadControlInformation = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.MillisecondTimeStamp:
 			c.OriginationTimeStamp = i
@@ -1014,10 +1048,10 @@ func (c *CreateSessionRequest) Len() int {
 	if ie := c.MMESGSNOverloadControlInformation; ie != nil {
 		l += ie.Len()
 	}
-	if ie := c.SGWOverloadControlInformaion; ie != nil {
+	if ie := c.SGWOverloadControlInformation; ie != nil {
 		l += ie.Len()
 	}
-	if ie := c.TWANePDGOverloadControlInformaion; ie != nil {
+	if ie := c.TWANePDGOverloadControlInformation; ie != nil {
 		l += ie.Len()
 	}
 	if ie := c.OriginationTimeStamp; ie != nil {

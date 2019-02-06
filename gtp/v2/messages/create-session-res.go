@@ -72,6 +72,8 @@ func NewCreateSessionResponse(teid, seq uint32, ie ...*ies.IE) *CreateSessionRes
 				c.SenderFTEIDC = i
 			case 1:
 				c.PGWS5S8FTEIDC = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.PDNAddressAllocation:
 			c.PAA = i
@@ -89,6 +91,8 @@ func NewCreateSessionResponse(teid, seq uint32, ie ...*ies.IE) *CreateSessionRes
 				c.BearerContextsCreated = i
 			case 1:
 				c.BearerContextMarkedForRemoval = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.Recovery:
 			c.Recovery = i
@@ -102,6 +106,8 @@ func NewCreateSessionResponse(teid, seq uint32, ie ...*ies.IE) *CreateSessionRes
 				c.PGWFQCSID = i
 			case 1:
 				c.SGWFQCSID = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.LocalDistinguishedName:
 			switch i.Instance() {
@@ -109,6 +115,8 @@ func NewCreateSessionResponse(teid, seq uint32, ie ...*ies.IE) *CreateSessionRes
 				c.PGWLDN = i
 			case 1:
 				c.SGWLDN = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.EPCTimer:
 			c.PGWBackOffTime = i
@@ -128,6 +136,8 @@ func NewCreateSessionResponse(teid, seq uint32, ie ...*ies.IE) *CreateSessionRes
 				c.PGWAPNLoadControlInformation = i
 			case 2:
 				c.SGWNodeLoadControlInformation = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -135,6 +145,8 @@ func NewCreateSessionResponse(teid, seq uint32, ie ...*ies.IE) *CreateSessionRes
 				c.PGWOverloadControlInformation = i
 			case 1:
 				c.SGWOverloadControlInformation = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.FContainer:
 			c.NBIFOMContainer = i
@@ -425,6 +437,8 @@ func (c *CreateSessionResponse) DecodeFromBytes(b []byte) error {
 				c.SenderFTEIDC = i
 			case 1:
 				c.PGWS5S8FTEIDC = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.PDNAddressAllocation:
 			c.PAA = i
@@ -442,6 +456,8 @@ func (c *CreateSessionResponse) DecodeFromBytes(b []byte) error {
 				c.BearerContextsCreated = i
 			case 1:
 				c.BearerContextMarkedForRemoval = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.Recovery:
 			c.Recovery = i
@@ -455,6 +471,8 @@ func (c *CreateSessionResponse) DecodeFromBytes(b []byte) error {
 				c.PGWFQCSID = i
 			case 1:
 				c.SGWFQCSID = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.LocalDistinguishedName:
 			switch i.Instance() {
@@ -462,6 +480,8 @@ func (c *CreateSessionResponse) DecodeFromBytes(b []byte) error {
 				c.PGWLDN = i
 			case 1:
 				c.SGWLDN = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.EPCTimer:
 			c.PGWBackOffTime = i
@@ -481,6 +501,8 @@ func (c *CreateSessionResponse) DecodeFromBytes(b []byte) error {
 				c.PGWAPNLoadControlInformation = i
 			case 2:
 				c.SGWNodeLoadControlInformation = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -488,6 +510,8 @@ func (c *CreateSessionResponse) DecodeFromBytes(b []byte) error {
 				c.PGWOverloadControlInformation = i
 			case 1:
 				c.SGWOverloadControlInformation = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.FContainer:
 			c.NBIFOMContainer = i

@@ -52,6 +52,8 @@ func NewDeleteBearerRequest(teid, seq uint32, ie ...*ies.IE) *DeleteBearerReques
 				d.LinkedEBI = i
 			case 1:
 				d.EBI = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.BearerContext:
 			d.FailedBearerContext = i
@@ -65,6 +67,8 @@ func NewDeleteBearerRequest(teid, seq uint32, ie ...*ies.IE) *DeleteBearerReques
 				d.PGWFQCSID = i
 			case 1:
 				d.SGWFQCSID = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.Cause:
 			d.Cause = i
@@ -78,6 +82,8 @@ func NewDeleteBearerRequest(teid, seq uint32, ie ...*ies.IE) *DeleteBearerReques
 				d.PGWAPNLoadControlInformation = i
 			case 2:
 				d.SGWNodeLoadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -85,6 +91,8 @@ func NewDeleteBearerRequest(teid, seq uint32, ie ...*ies.IE) *DeleteBearerReques
 				d.PGWOverloadControlInformation = i
 			case 1:
 				d.SGWOverloadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.FContainer:
 			d.NBIFOMContainer = i
@@ -279,6 +287,8 @@ func (d *DeleteBearerRequest) DecodeFromBytes(b []byte) error {
 				d.LinkedEBI = i
 			case 1:
 				d.EBI = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.BearerContext:
 			d.FailedBearerContext = i
@@ -292,6 +302,8 @@ func (d *DeleteBearerRequest) DecodeFromBytes(b []byte) error {
 				d.PGWFQCSID = i
 			case 1:
 				d.SGWFQCSID = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.Cause:
 			d.Cause = i
@@ -305,6 +317,8 @@ func (d *DeleteBearerRequest) DecodeFromBytes(b []byte) error {
 				d.PGWAPNLoadControlInformation = i
 			case 2:
 				d.SGWNodeLoadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -312,6 +326,8 @@ func (d *DeleteBearerRequest) DecodeFromBytes(b []byte) error {
 				d.PGWOverloadControlInformation = i
 			case 1:
 				d.SGWOverloadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.FContainer:
 			d.NBIFOMContainer = i

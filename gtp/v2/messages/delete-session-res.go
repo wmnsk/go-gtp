@@ -56,6 +56,8 @@ func NewDeleteSessionResponse(teid, seq uint32, ie ...*ies.IE) *DeleteSessionRes
 				d.PGWAPNLoadControlInformation = i
 			case 3:
 				d.SGWNodeLoadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -63,6 +65,8 @@ func NewDeleteSessionResponse(teid, seq uint32, ie ...*ies.IE) *DeleteSessionRes
 				d.PGWOverloadControlInformation = i
 			case 2:
 				d.SGWOverloadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.ExtendedProtocolConfigurationOptions:
 			d.EPCO = i
@@ -229,6 +233,8 @@ func (d *DeleteSessionResponse) DecodeFromBytes(b []byte) error {
 				d.PGWAPNLoadControlInformation = i
 			case 3:
 				d.SGWNodeLoadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -236,6 +242,8 @@ func (d *DeleteSessionResponse) DecodeFromBytes(b []byte) error {
 				d.PGWOverloadControlInformation = i
 			case 2:
 				d.SGWOverloadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.ExtendedProtocolConfigurationOptions:
 			d.EPCO = i

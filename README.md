@@ -87,7 +87,7 @@ Your contribution is welcome to implement helpers for all the types, of course!
 |-------------------|----------|-------|------------------------------------------------------|-----------------------------------------------------------|
 | GTPv0             | 35.7%    | 78.8% | not implemented yet                                  | [Supported Features](gtp/v0/README.md#supported-features) |
 | GTPv1             | 19.0%    | 19.5% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](gtp/v1/README.md#supported-features) |
-| GTPv2             | 27.0%    | 41.8% | almost functional                                    | [Supported Features](gtp/v2/README.md#supported-features) |
+| GTPv2             | 29.0%    | 41.8% | almost functional                                    | [Supported Features](gtp/v2/README.md#supported-features) |
 | GTP' <br> (Prime) | N/A      | N/A   | N/A                                                  | _not planned_                                             |
 
 ## Disclaimer

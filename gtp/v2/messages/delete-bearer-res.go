@@ -72,6 +72,8 @@ func NewDeleteBearerResponse(teid, seq uint32, ie ...*ies.IE) *DeleteBearerRespo
 				d.EPDGFQCSID = i
 			case 3:
 				d.TWANFQCSID = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.ProtocolConfigurationOptions:
 			d.PCO = i
@@ -87,6 +89,8 @@ func NewDeleteBearerResponse(teid, seq uint32, ie ...*ies.IE) *DeleteBearerRespo
 				d.TWANIdentifier = i
 			case 1:
 				d.WLANLocationInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.TWANIdentifierTimestamp:
 			switch i.Instance() {
@@ -94,6 +98,8 @@ func NewDeleteBearerResponse(teid, seq uint32, ie ...*ies.IE) *DeleteBearerRespo
 				d.TWANIdentifierTimestamp = i
 			case 1:
 				d.WLANLocationTimestamp = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -103,6 +109,8 @@ func NewDeleteBearerResponse(teid, seq uint32, ie ...*ies.IE) *DeleteBearerRespo
 				d.SGWOverloadControlInformation = i
 			case 2:
 				d.TWANePDGOverloadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.IPAddress:
 			switch i.Instance() {
@@ -110,6 +118,8 @@ func NewDeleteBearerResponse(teid, seq uint32, ie ...*ies.IE) *DeleteBearerRespo
 				d.MMESGSNIdentifier = i
 			case 1:
 				d.UELocalIPAddress = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.PortNumber:
 			switch i.Instance() {
@@ -117,6 +127,8 @@ func NewDeleteBearerResponse(teid, seq uint32, ie ...*ies.IE) *DeleteBearerRespo
 				d.UEUDPPort = i
 			case 1:
 				d.UETCPPort = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.FContainer:
 			d.NBIFOMContainer = i
@@ -369,6 +381,8 @@ func (d *DeleteBearerResponse) DecodeFromBytes(b []byte) error {
 				d.EPDGFQCSID = i
 			case 3:
 				d.TWANFQCSID = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.ProtocolConfigurationOptions:
 			d.PCO = i
@@ -384,6 +398,8 @@ func (d *DeleteBearerResponse) DecodeFromBytes(b []byte) error {
 				d.TWANIdentifier = i
 			case 1:
 				d.WLANLocationInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.TWANIdentifierTimestamp:
 			switch i.Instance() {
@@ -391,6 +407,8 @@ func (d *DeleteBearerResponse) DecodeFromBytes(b []byte) error {
 				d.TWANIdentifierTimestamp = i
 			case 1:
 				d.WLANLocationTimestamp = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -400,6 +418,8 @@ func (d *DeleteBearerResponse) DecodeFromBytes(b []byte) error {
 				d.SGWOverloadControlInformation = i
 			case 2:
 				d.TWANePDGOverloadControlInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.IPAddress:
 			switch i.Instance() {
@@ -407,6 +427,8 @@ func (d *DeleteBearerResponse) DecodeFromBytes(b []byte) error {
 				d.MMESGSNIdentifier = i
 			case 1:
 				d.UELocalIPAddress = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.PortNumber:
 			switch i.Instance() {
@@ -414,6 +436,8 @@ func (d *DeleteBearerResponse) DecodeFromBytes(b []byte) error {
 				d.UEUDPPort = i
 			case 1:
 				d.UETCPPort = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.FContainer:
 			d.NBIFOMContainer = i

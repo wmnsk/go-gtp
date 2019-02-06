@@ -36,8 +36,8 @@ type ModifyBearerRequest struct {
 	CNOperatorSelectionEntity              *ies.IE
 	PresenceReportingAreaInformation       *ies.IE
 	MMESGSNOverloadControlInformation      *ies.IE
-	SGWOverloadControlInformaion           *ies.IE
-	EPDGOverloadControlInformaion          *ies.IE
+	SGWOverloadControlInformation          *ies.IE
+	EPDGOverloadControlInformation         *ies.IE
 	ServingPLMNRateControl                 *ies.IE
 	MOExceptionDataCounter                 *ies.IE
 	IMSI                                   *ies.IE
@@ -71,6 +71,8 @@ func NewModifyBearerRequest(teid, seq uint32, ie ...*ies.IE) *ModifyBearerReques
 				m.ULI = i
 			case 1:
 				m.ULIForSGW = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.ServingNetwork:
 			m.ServingNetwork = i
@@ -90,6 +92,8 @@ func NewModifyBearerRequest(teid, seq uint32, ie ...*ies.IE) *ModifyBearerReques
 				m.BearerContextsToBeModified = i
 			case 1:
 				m.BearerContextsTobeRemoved = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.Recovery:
 			m.Recovery = i
@@ -101,6 +105,8 @@ func NewModifyBearerRequest(teid, seq uint32, ie ...*ies.IE) *ModifyBearerReques
 				m.MMEFQCSID = i
 			case 1:
 				m.SGWFQCSID = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.UserCSGInformation:
 			m.UCI = i
@@ -110,6 +116,8 @@ func NewModifyBearerRequest(teid, seq uint32, ie ...*ies.IE) *ModifyBearerReques
 				m.UELocalIPAddress = i
 			case 1:
 				m.HeNBLocalIPAddress = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.PortNumber:
 			switch i.Instance() {
@@ -119,6 +127,8 @@ func NewModifyBearerRequest(teid, seq uint32, ie ...*ies.IE) *ModifyBearerReques
 				m.HeNBUDPPort = i
 			case 2:
 				m.MMESGSNIdentifier = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.LocalDistinguishedName:
 			switch i.Instance() {
@@ -126,6 +136,8 @@ func NewModifyBearerRequest(teid, seq uint32, ie ...*ies.IE) *ModifyBearerReques
 				m.MMESGSNLDN = i
 			case 1:
 				m.SGWLDN = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.CNOperatorSelectionEntity:
 			m.CNOperatorSelectionEntity = i
@@ -136,9 +148,11 @@ func NewModifyBearerRequest(teid, seq uint32, ie ...*ies.IE) *ModifyBearerReques
 			case 0:
 				m.MMESGSNOverloadControlInformation = i
 			case 1:
-				m.SGWOverloadControlInformaion = i
+				m.SGWOverloadControlInformation = i
 			case 2:
-				m.EPDGOverloadControlInformaion = i
+				m.EPDGOverloadControlInformation = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.ServingPLMNRateControl:
 			m.ServingPLMNRateControl = i
@@ -330,13 +344,13 @@ func (m *ModifyBearerRequest) SerializeTo(b []byte) error {
 		}
 		offset += ie.Len()
 	}
-	if ie := m.SGWOverloadControlInformaion; ie != nil {
+	if ie := m.SGWOverloadControlInformation; ie != nil {
 		if err := ie.SerializeTo(m.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.Len()
 	}
-	if ie := m.EPDGOverloadControlInformaion; ie != nil {
+	if ie := m.EPDGOverloadControlInformation; ie != nil {
 		if err := ie.SerializeTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -443,6 +457,8 @@ func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 				m.ULI = i
 			case 1:
 				m.ULIForSGW = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.ServingNetwork:
 			m.ServingNetwork = i
@@ -462,6 +478,8 @@ func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 				m.BearerContextsToBeModified = i
 			case 1:
 				m.BearerContextsTobeRemoved = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.Recovery:
 			m.Recovery = i
@@ -473,6 +491,8 @@ func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 				m.MMEFQCSID = i
 			case 1:
 				m.SGWFQCSID = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.UserCSGInformation:
 			m.UCI = i
@@ -482,6 +502,8 @@ func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 				m.UELocalIPAddress = i
 			case 1:
 				m.HeNBLocalIPAddress = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.PortNumber:
 			switch i.Instance() {
@@ -491,6 +513,8 @@ func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 				m.HeNBUDPPort = i
 			case 2:
 				m.MMESGSNIdentifier = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.LocalDistinguishedName:
 			switch i.Instance() {
@@ -498,6 +522,8 @@ func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 				m.MMESGSNLDN = i
 			case 1:
 				m.SGWLDN = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.CNOperatorSelectionEntity:
 			m.CNOperatorSelectionEntity = i
@@ -508,9 +534,11 @@ func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 			case 0:
 				m.MMESGSNOverloadControlInformation = i
 			case 1:
-				m.SGWOverloadControlInformaion = i
+				m.SGWOverloadControlInformation = i
 			case 2:
-				m.EPDGOverloadControlInformaion = i
+				m.EPDGOverloadControlInformation = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.ServingPLMNRateControl:
 			m.ServingPLMNRateControl = i
@@ -613,10 +641,10 @@ func (m *ModifyBearerRequest) Len() int {
 	if ie := m.MMESGSNOverloadControlInformation; ie != nil {
 		l += ie.Len()
 	}
-	if ie := m.SGWOverloadControlInformaion; ie != nil {
+	if ie := m.SGWOverloadControlInformation; ie != nil {
 		l += ie.Len()
 	}
-	if ie := m.EPDGOverloadControlInformaion; ie != nil {
+	if ie := m.EPDGOverloadControlInformation; ie != nil {
 		l += ie.Len()
 	}
 	if ie := m.ServingPLMNRateControl; ie != nil {

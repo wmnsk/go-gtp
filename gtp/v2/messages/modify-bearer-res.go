@@ -70,6 +70,8 @@ func NewModifyBearerResponse(teid, seq uint32, ie ...*ies.IE) *ModifyBearerRespo
 				m.BearerContextsModified = i
 			case 1:
 				m.BearerContextsMarkedForRemoval = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.ChangeReportingAction:
 			m.ChangeReportingAction = i
@@ -87,6 +89,8 @@ func NewModifyBearerResponse(teid, seq uint32, ie ...*ies.IE) *ModifyBearerRespo
 				m.PGWFQCSID = i
 			case 1:
 				m.SGWFQCSID = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.Recovery:
 			m.Recovery = i
@@ -96,6 +100,8 @@ func NewModifyBearerResponse(teid, seq uint32, ie ...*ies.IE) *ModifyBearerRespo
 				m.SGWLDN = i
 			case 1:
 				m.PGWLDN = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.Indication:
 			m.IndicationFlags = i
@@ -107,6 +113,8 @@ func NewModifyBearerResponse(teid, seq uint32, ie ...*ies.IE) *ModifyBearerRespo
 				m.PGWNodeLoadControlInformation = i
 			case 1:
 				m.PGWAPNLoadControlInformation = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -116,6 +124,8 @@ func NewModifyBearerResponse(teid, seq uint32, ie ...*ies.IE) *ModifyBearerRespo
 				m.PGWOverloadControlInformation = i
 			case 2:
 				m.SGWOverloadControlInformation = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.ChargingID:
 			m.PDNConnectionChargingID = i
@@ -364,6 +374,8 @@ func (m *ModifyBearerResponse) DecodeFromBytes(b []byte) error {
 				m.BearerContextsModified = i
 			case 1:
 				m.BearerContextsMarkedForRemoval = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.ChangeReportingAction:
 			m.ChangeReportingAction = i
@@ -381,6 +393,8 @@ func (m *ModifyBearerResponse) DecodeFromBytes(b []byte) error {
 				m.PGWFQCSID = i
 			case 1:
 				m.SGWFQCSID = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.Recovery:
 			m.Recovery = i
@@ -390,6 +404,8 @@ func (m *ModifyBearerResponse) DecodeFromBytes(b []byte) error {
 				m.SGWLDN = i
 			case 1:
 				m.PGWLDN = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.Indication:
 			m.IndicationFlags = i
@@ -401,6 +417,8 @@ func (m *ModifyBearerResponse) DecodeFromBytes(b []byte) error {
 				m.PGWNodeLoadControlInformation = i
 			case 1:
 				m.PGWAPNLoadControlInformation = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -410,6 +428,8 @@ func (m *ModifyBearerResponse) DecodeFromBytes(b []byte) error {
 				m.PGWOverloadControlInformation = i
 			case 2:
 				m.SGWOverloadControlInformation = i
+			default:
+				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
 		case ies.ChargingID:
 			m.PDNConnectionChargingID = i

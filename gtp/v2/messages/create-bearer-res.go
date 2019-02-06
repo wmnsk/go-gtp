@@ -68,6 +68,8 @@ func NewCreateBearerResponse(teid, seq uint32, ie ...*ies.IE) *CreateBearerRespo
 				c.EPDGFQCSID = i
 			case 3:
 				c.TWANFQCSID = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.ProtocolConfigurationOptions:
 			c.PCO = i
@@ -81,6 +83,8 @@ func NewCreateBearerResponse(teid, seq uint32, ie ...*ies.IE) *CreateBearerRespo
 				c.TWANIdentifier = i
 			case 1:
 				c.WLANLocationInformation = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.TWANIdentifierTimestamp:
 			switch i.Instance() {
@@ -88,6 +92,8 @@ func NewCreateBearerResponse(teid, seq uint32, ie ...*ies.IE) *CreateBearerRespo
 				c.TWANIdentifierTimestamp = i
 			case 1:
 				c.WLANLocationTimestamp = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -97,6 +103,8 @@ func NewCreateBearerResponse(teid, seq uint32, ie ...*ies.IE) *CreateBearerRespo
 				c.SGWOverloadControlInformation = i
 			case 2:
 				c.TWANePDGOverloadControlInformation = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.PresenceReportingAreaAction:
 			c.PresenceReportingAction = i
@@ -113,6 +121,8 @@ func NewCreateBearerResponse(teid, seq uint32, ie ...*ies.IE) *CreateBearerRespo
 				c.UEUDPPort = i
 			case 1:
 				c.UETCPPort = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ies.FContainer:
 			c.NBIFOMContainer = i

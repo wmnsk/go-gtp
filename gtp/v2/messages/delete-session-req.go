@@ -77,6 +77,8 @@ func NewDeleteSessionRequest(teid, seq uint32, ie ...*ies.IE) *DeleteSessionRequ
 				d.TWANIdentifier = i
 			case 1:
 				d.WLANLocationInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.TWANIdentifierTimestamp:
 			switch i.Instance() {
@@ -84,6 +86,8 @@ func NewDeleteSessionRequest(teid, seq uint32, ie ...*ies.IE) *DeleteSessionRequ
 				d.TWANIdentifierTimestamp = i
 			case 1:
 				d.WLANLocationTimeStamp = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -93,6 +97,8 @@ func NewDeleteSessionRequest(teid, seq uint32, ie ...*ies.IE) *DeleteSessionRequ
 				d.SGWOverloadControlInformaion = i
 			case 2:
 				d.TWANePDGOverloadControlInformaion = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.IPAddress:
 			d.UELocalIPAddress = i
@@ -102,6 +108,8 @@ func NewDeleteSessionRequest(teid, seq uint32, ie ...*ies.IE) *DeleteSessionRequ
 				d.UEUDPPort = i
 			case 1:
 				d.UETCPPort = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.ExtendedProtocolConfigurationOptions:
 			d.EPCO = i
@@ -344,6 +352,8 @@ func (d *DeleteSessionRequest) DecodeFromBytes(b []byte) error {
 				d.TWANIdentifier = i
 			case 1:
 				d.WLANLocationInformation = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.TWANIdentifierTimestamp:
 			switch i.Instance() {
@@ -351,6 +361,8 @@ func (d *DeleteSessionRequest) DecodeFromBytes(b []byte) error {
 				d.TWANIdentifierTimestamp = i
 			case 1:
 				d.WLANLocationTimeStamp = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.OverloadControlInformation:
 			switch i.Instance() {
@@ -360,6 +372,8 @@ func (d *DeleteSessionRequest) DecodeFromBytes(b []byte) error {
 				d.SGWOverloadControlInformaion = i
 			case 2:
 				d.TWANePDGOverloadControlInformaion = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.IPAddress:
 			d.UELocalIPAddress = i
@@ -369,6 +383,8 @@ func (d *DeleteSessionRequest) DecodeFromBytes(b []byte) error {
 				d.UEUDPPort = i
 			case 1:
 				d.UETCPPort = i
+			default:
+				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
 		case ies.ExtendedProtocolConfigurationOptions:
 			d.EPCO = i
