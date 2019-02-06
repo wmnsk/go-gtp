@@ -317,6 +317,10 @@ func Decode(b []byte) (Message, error) {
 		m = &DeleteSessionResponse{}
 	case MsgTypeDeleteBearerRequest:
 		m = &DeleteBearerRequest{}
+	case MsgTypeCreateBearerRequest:
+		m = &CreateBearerRequest{}
+	case MsgTypeCreateBearerResponse:
+		m = &CreateBearerResponse{}
 	case MsgTypeDeleteBearerResponse:
 		m = &DeleteBearerResponse{}
 	case MsgTypeModifyBearerRequest:
