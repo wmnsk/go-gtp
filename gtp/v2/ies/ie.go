@@ -98,7 +98,7 @@ const (
 	FlowQoS
 	RATType
 	ServingNetwork
-	EPSBearerLevelTrafficFlowTemplate
+	BearerTFT
 	TrafficAggregateDescription
 	UserLocationInformation
 	FullyQualifiedTEID

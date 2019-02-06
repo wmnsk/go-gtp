@@ -163,7 +163,7 @@ When adding handler for server, the following things should be taken into accoun
 
 ### Opening a U-Plane connection
 
-_See [v1/README.md](../v1/README.md)._
+_See [v1/README.md](../v1/README.md#opening-a-u-plane-connection)._
 
 ## Supported Features
 
@@ -204,8 +204,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 72      | Trace Session Deactivation                      |           |
 | 73      | Stop Paging Indication                          |           |
 | 74-94   | (Spare/Reserved)                                | -         |
-| 95      | Create Bearer Request                           |           |
-| 96      | Create Bearer Response                          |           |
+| 95      | Create Bearer Request                           | Yes       |
+| 96      | Create Bearer Response                          | Yes       |
 | 97      | Update Bearer Request                           |           |
 | 98      | Update Bearer Response                          |           |
 | 99      | Delete Bearer Request                           | Yes       |

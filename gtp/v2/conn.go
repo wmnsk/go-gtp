@@ -435,7 +435,7 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
 					case ies.BearerQoS:
 						br.PL = child.PriorityLevel()
 						br.QCI = child.QCILabel()
-						br.PCI = child.PremptionCapability()
+						br.PCI = child.PreemptionCapability()
 						br.PVI = child.PreemptionVulnerability()
 						br.MBRUL = child.MBRForUplink()
 						br.MBRDL = child.MBRForDownlink()
@@ -443,7 +443,7 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
 						br.GBRDL = child.GBRForUplink()
 					case ies.FullyQualifiedTEID:
 						sess.AddTEID(i.InterfaceType(), i.TEID())
-					case ies.EPSBearerLevelTrafficFlowTemplate:
+					case ies.BearerTFT:
 						// XXX - do nothing for BearerTFT?
 					}
 				}

@@ -5,9 +5,9 @@
 package ies
 
 // NewBearerFlags creates a new BearerFlags IE.
-func NewBearerFlags(asi, vind, vb, ppc uint8) *IE {
+func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
 	i := New(BearerFlags, 0x00, make([]byte, 1))
-	i.Payload[0] |= ((asi << 3 & 0x08) | (vind << 2 & 0x04) | (vb << 1 & 0x2) | ppc&0x01)
+	i.Payload[0] |= ((asi << 3 & 0x08) | (vInd << 2 & 0x04) | (vb << 1 & 0x2) | ppc&0x01)
 	return i
 }
 
