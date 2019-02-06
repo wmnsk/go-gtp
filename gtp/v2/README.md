@@ -332,8 +332,8 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 108     | MM Context (UMTS Key, Quadruplets and Quintuplets)             |           |
 | 109     | PDN Connection                                                 |           |
 | 110     | PDU Numbers                                                    |           |
-| 111     | P-TMSI                                                         |           |
-| 112     | P-TMSI Signature                                               |           |
+| 111     | Packet TMSI                                                    | Yes       |
+| 112     | P-TMSI Signature                                               | Yes       |
 | 113     | Hop Counter                                                    | Yes       |
 | 114     | UE Time Zone                                                   | Yes       |
 | 115     | Trace Reference                                                | Yes       |

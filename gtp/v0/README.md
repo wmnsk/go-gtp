@@ -92,7 +92,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 9       | Authentication Triplet                 |           |
 | 10      | (Spare/Reserved)                       | -         |
 | 11      | MAP Cause                              |           |
-| 12      | P-TMSI Signature                       |           |
+| 12      | P-TMSI Signature                       | Yes       |
 | 13      | MS Validated                           |           |
 | 14      | Recovery                               | Yes       |
 | 15      | Selection mode                         | Yes       |

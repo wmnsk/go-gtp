@@ -183,14 +183,14 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 2       | IMSI                                      | Yes       |
 | 3       | Routeing Area Identity                    | Yes       |
 | 4       | Temporary Logical Link Identity           |           |
-| 5       | Packet TMSI                               |           |
+| 5       | Packet TMSI                               | Yes       |
 | 6       | (Spare/Reserved)                          | -         |
 | 7       | (Spare/Reserved)                          | -         |
 | 8       | Reordering Required                       |           |
 | 9       | Authentication Triplet                    |           |
 | 10      | (Spare/Reserved)                          | -         |
 | 11      | MAP Cause                                 |           |
-| 12      | P-TMSI Signature                          |           |
+| 12      | P-TMSI Signature                          | Yes       |
 | 13      | MS Validated                              |           |
 | 14      | Recovery                                  | Yes       |
 | 15      | Selection Mode                            | Yes       |

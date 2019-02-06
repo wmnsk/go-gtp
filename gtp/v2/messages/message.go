@@ -327,6 +327,8 @@ func Decode(b []byte) (Message, error) {
 		m = &ModifyBearerRequest{}
 	case MsgTypeModifyBearerResponse:
 		m = &ModifyBearerResponse{}
+	case MsgTypeContextRequest:
+		m = &ContextRequest{}
 	default:
 		m = &Generic{}
 	}
