@@ -9,7 +9,7 @@ const (
 	ReqCauseRequestIMSI uint8 = iota
 	ReqCauseRequestIMEI
 	ReqCauseRequestIMSIAndIMEI
-	ReqCauseNoidentityMeeded
+	ReqCauseNoIdentityNeeded
 	ReqCauseMSRefuses
 	ReqCauseMSIsNotGPRSResponding
 	ReqCauseReactivationRequested
@@ -19,7 +19,7 @@ const (
 	// 10-127: for future use / reserved for prime
 )
 
-// Cause definiions.
+// Cause definitions.
 const (
 	ResCauseRequestAccepted uint8 = iota + 128
 	ResCauseNewPDPTypeDueToNetworkPreference
@@ -104,7 +104,7 @@ const (
 	ContIDNBIFOMMode
 	ContIDNonIPLinkMTURequest
 	ContIDAPNRateControlSupportIndicator
-	ContID3GPPPSDataOffUEstatus
+	ContID3GPPPSDataOffUEStatus
 	ContIDReliableDataServiceRequestIndicator
 	ContIDAdditionalAPNRateControlForExceptionDataSupportIndicator
 	ContIDPDUSessionID

@@ -100,7 +100,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 7         | Redirection Response                        |           |
 | 8-15      | (Spare/Reserved)                            | -         |
 | 16        | Create PDP Context Request                  | Yes       |
-| 17        | Create PDP Context Response                 |           |
+| 17        | Create PDP Context Response                 | Yes       |
 | 18        | Update PDP Context Request                  |           |
 | 19        | Update PDP Context Response                 |           |
 | 20        | Delete PDP Context Request                  |           |
@@ -186,7 +186,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 5       | Packet TMSI                               | Yes       |
 | 6       | (Spare/Reserved)                          | -         |
 | 7       | (Spare/Reserved)                          | -         |
-| 8       | Reordering Required                       |           |
+| 8       | Reordering Required                       | Yes       |
 | 9       | Authentication Triplet                    |           |
 | 10      | (Spare/Reserved)                          | -         |
 | 11      | MAP Cause                                 |           |
