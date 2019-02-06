@@ -217,9 +217,9 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 105-127 | (Spare/Reserved)                                | -         |
 | 128     | Identification Request                          |           |
 | 129     | Identification Response                         |           |
-| 130     | Context Request                                 |           |
-| 131     | Context Response                                |           |
-| 132     | Context Acknowledge                             |           |
+| 130     | Context Request                                 | Yes       |
+| 131     | Context Response                                | Yes       |
+| 132     | Context Acknowledge                             | Yes       |
 | 133     | Forward Relocation Request                      |           |
 | 134     | Forward Relocation Response                     |           |
 | 135     | Forward Relocation Complete Notification        |           |

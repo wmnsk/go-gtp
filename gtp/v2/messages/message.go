@@ -329,6 +329,10 @@ func Decode(b []byte) (Message, error) {
 		m = &ModifyBearerResponse{}
 	case MsgTypeContextRequest:
 		m = &ContextRequest{}
+	case MsgTypeContextResponse:
+		m = &ContextResponse{}
+	case MsgTypeContextAcknowledge:
+		m = &ContextAcknowledge{}
 	default:
 		m = &Generic{}
 	}

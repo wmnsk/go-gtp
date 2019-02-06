@@ -284,6 +284,9 @@ func (c *ContextRequest) DecodeFromBytes(b []byte) error {
 		return err
 	}
 	for _, i := range decodedIEs {
+		if i == nil {
+			continue
+		}
 		switch i.Type {
 		case ies.IMSI:
 			c.IMSI = i
