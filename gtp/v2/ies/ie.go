@@ -146,7 +146,7 @@ const (
 	SourceIdentification
 	Reserved
 	ChangeReportingAction
-	FullyQualifiedPDNConnectionSetIdentifier
+	FullyQualifiedCSID
 	ChannelNeeded
 	EMLPPPriority
 	NodeType

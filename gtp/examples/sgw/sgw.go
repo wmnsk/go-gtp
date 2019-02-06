@@ -225,7 +225,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			ies.NewBearerQoS(1, 2, 1, 0xff, 0, 0, 0, 0),
 		),
 		csReqFromMME.MMEFQCSID,
-		ies.NewFullyQualifiedPDNConnectionSetIdentifier(s5cIP, 1).WithInstance(1),
+		ies.NewFullyQualifiedCSID(s5cIP, 1).WithInstance(1),
 	)
 	if err != nil {
 		return err
@@ -252,7 +252,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			s1usgwFTEID := s11Conn.NewFTEID(v2.IFTypeS1USGWGTPU, s11IP, "")
 			csRspFromSGW = csRspFromPGW
 			csRspFromSGW.SenderFTEIDC = senderFTEID
-			csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedPDNConnectionSetIdentifier(laddr.IP.String(), 1).WithInstance(1)
+			csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedCSID(laddr.IP.String(), 1).WithInstance(1)
 			csRspFromSGW.BearerContextsCreated.Add(s1usgwFTEID)
 			csRspFromSGW.BearerContextsCreated.Remove(ies.ChargingID, 0)
 			csRspFromSGW.SetTEID(s11mmeTEID)

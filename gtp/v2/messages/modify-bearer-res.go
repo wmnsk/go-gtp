@@ -81,7 +81,7 @@ func NewModifyBearerResponse(teid, seq uint32, ie ...*ies.IE) *ModifyBearerRespo
 			m.ChargingGatewayName = i
 		case ies.IPAddress:
 			m.ChargingGatewayAddress = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				m.PGWFQCSID = i
@@ -375,7 +375,7 @@ func (m *ModifyBearerResponse) DecodeFromBytes(b []byte) error {
 			m.ChargingGatewayName = i
 		case ies.IPAddress:
 			m.ChargingGatewayAddress = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				m.PGWFQCSID = i

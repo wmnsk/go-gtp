@@ -30,8 +30,8 @@ func TestCreateSessionResponse(t *testing.T) {
 					ies.NewFullyQualifiedTEID(v2.IFTypeS1USGWGTPU, 0xffffffff, "1.1.1.3", ""),
 					ies.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPU, 0xffffffff, "1.1.1.2", "").WithInstance(1),
 				),
-				ies.NewFullyQualifiedPDNConnectionSetIdentifier("1.1.1.2", 1),
-				ies.NewFullyQualifiedPDNConnectionSetIdentifier("1.1.1.3", 1).WithInstance(1),
+				ies.NewFullyQualifiedCSID("1.1.1.2", 1),
+				ies.NewFullyQualifiedCSID("1.1.1.3", 1).WithInstance(1),
 				ies.NewChargingID(1),
 			),
 			Serialized: []byte{

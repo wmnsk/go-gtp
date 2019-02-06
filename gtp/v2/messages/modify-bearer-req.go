@@ -95,7 +95,7 @@ func NewModifyBearerRequest(teid, seq uint32, ie ...*ies.IE) *ModifyBearerReques
 			m.Recovery = i
 		case ies.UETimeZone:
 			m.UETimeZone = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				m.MMEFQCSID = i
@@ -467,7 +467,7 @@ func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 			m.Recovery = i
 		case ies.UETimeZone:
 			m.UETimeZone = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				m.MMEFQCSID = i

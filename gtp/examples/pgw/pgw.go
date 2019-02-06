@@ -135,7 +135,7 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 		),
 	)
 	if csReqFromSGW.SGWFQCSID != nil {
-		csRspFromPGW.PGWFQCSID = ies.NewFullyQualifiedPDNConnectionSetIdentifier(cIP, 1)
+		csRspFromPGW.PGWFQCSID = ies.NewFullyQualifiedCSID(cIP, 1)
 	}
 	session.AddTEID(v2.IFTypeS5S8PGWGTPC, s5cFTEID.TEID())
 	session.AddTEID(v2.IFTypeS5S8PGWGTPU, s5uFTEID.TEID())

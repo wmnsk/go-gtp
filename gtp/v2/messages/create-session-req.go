@@ -144,7 +144,7 @@ func NewCreateSessionRequest(teid, seq uint32, ie ...*ies.IE) *CreateSessionRequ
 			case 1:
 				c.BearerContextsToBeRemoved = i
 			}
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				c.MMEFQCSID = i
@@ -761,7 +761,7 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 			case 1:
 				c.BearerContextsToBeRemoved = i
 			}
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				c.MMEFQCSID = i

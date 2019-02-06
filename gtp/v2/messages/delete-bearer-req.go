@@ -59,7 +59,7 @@ func NewDeleteBearerRequest(teid, seq uint32, ie ...*ies.IE) *DeleteBearerReques
 			d.PTI = i
 		case ies.ProtocolConfigurationOptions:
 			d.PCO = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				d.PGWFQCSID = i
@@ -286,7 +286,7 @@ func (d *DeleteBearerRequest) DecodeFromBytes(b []byte) error {
 			d.PTI = i
 		case ies.ProtocolConfigurationOptions:
 			d.PCO = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				d.PGWFQCSID = i

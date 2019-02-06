@@ -87,7 +87,7 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 			ies.NewEPSBearerID(br.EBI),
 			ies.NewBearerQoS(pci, br.PL, pvi, br.QCI, br.MBRUL, br.MBRDL, br.GBRUL, br.GBRDL),
 		),
-		ies.NewFullyQualifiedPDNConnectionSetIdentifier(localIP, 1),
+		ies.NewFullyQualifiedCSID(localIP, 1),
 		ies.NewServingNetwork(sub.MCC, sub.MNC),
 		ies.NewUETimeZone(9*time.Hour, 0),
 	)

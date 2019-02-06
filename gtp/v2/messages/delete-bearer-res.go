@@ -62,7 +62,7 @@ func NewDeleteBearerResponse(teid, seq uint32, ie ...*ies.IE) *DeleteBearerRespo
 			d.BearerContexts = i
 		case ies.Recovery:
 			d.Recovery = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				d.MMEFQCSID = i
@@ -359,7 +359,7 @@ func (d *DeleteBearerResponse) DecodeFromBytes(b []byte) error {
 			d.BearerContexts = i
 		case ies.Recovery:
 			d.Recovery = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				d.MMEFQCSID = i

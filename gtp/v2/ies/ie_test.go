@@ -327,20 +327,20 @@ func TestIEs(t *testing.T) {
 			ies.NewSelectionMode(v2.SelectionModeMSProvidedAPNSubscriptionNotVerified),
 			[]byte{0x80, 0x00, 0x01, 0x00, 0x01},
 		}, {
-			"FullyQualifiedPDNConnectionSetIdentifier/v4",
-			ies.NewFullyQualifiedPDNConnectionSetIdentifier("1.1.1.1", 1),
+			"FullyQualifiedCSID/v4",
+			ies.NewFullyQualifiedCSID("1.1.1.1", 1),
 			[]byte{0x84, 0x00, 0x07, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x01},
 		}, {
-			"FullyQualifiedPDNConnectionSetIdentifier/v4/multiCSIDs",
-			ies.NewFullyQualifiedPDNConnectionSetIdentifier("1.1.1.1", 1, 2),
+			"FullyQualifiedCSID/v4/multiCSIDs",
+			ies.NewFullyQualifiedCSID("1.1.1.1", 1, 2),
 			[]byte{0x84, 0x00, 0x09, 0x00, 0x02, 0x01, 0x01, 0x01, 0x01, 0x00, 0x01, 0x00, 0x02},
 		}, {
-			"FullyQualifiedPDNConnectionSetIdentifier/v6",
-			ies.NewFullyQualifiedPDNConnectionSetIdentifier("2001::1", 1),
+			"FullyQualifiedCSID/v6",
+			ies.NewFullyQualifiedCSID("2001::1", 1),
 			[]byte{0x84, 0x00, 0x13, 0x00, 0x11, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01},
 		}, {
-			"FullyQualifiedPDNConnectionSetIdentifier/other",
-			ies.NewFullyQualifiedPDNConnectionSetIdentifier("12304501", 1),
+			"FullyQualifiedCSID/other",
+			ies.NewFullyQualifiedCSID("12304501", 1),
 			[]byte{0x84, 0x00, 0x07, 0x00, 0x21, 0x12, 0x30, 0x45, 0x01, 0x00, 0x01},
 		}, {
 			"NodeType",

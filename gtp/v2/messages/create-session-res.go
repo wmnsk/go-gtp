@@ -96,7 +96,7 @@ func NewCreateSessionResponse(teid, seq uint32, ie ...*ies.IE) *CreateSessionRes
 			c.ChargingGatewayName = i
 		case ies.IPAddress:
 			c.ChargingGatewayAddress = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				c.PGWFQCSID = i
@@ -449,7 +449,7 @@ func (c *CreateSessionResponse) DecodeFromBytes(b []byte) error {
 			c.ChargingGatewayName = i
 		case ies.IPAddress:
 			c.ChargingGatewayAddress = i
-		case ies.FullyQualifiedPDNConnectionSetIdentifier:
+		case ies.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
 				c.PGWFQCSID = i

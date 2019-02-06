@@ -17,8 +17,8 @@ const (
 	nodeIDOther
 )
 
-// NewFullyQualifiedPDNConnectionSetIdentifier creates a new FullyQualifiedPDNConnectionSetIdentifier IE.
-func NewFullyQualifiedPDNConnectionSetIdentifier(nodeID string, csIDs ...uint16) *IE {
+// NewFullyQualifiedCSID creates a new FullyQualifiedCSID IE.
+func NewFullyQualifiedCSID(nodeID string, csIDs ...uint16) *IE {
 	var (
 		nid   []byte
 		ntype uint8
@@ -39,7 +39,7 @@ func NewFullyQualifiedPDNConnectionSetIdentifier(nodeID string, csIDs ...uint16)
 		ntype = nodeIDIPv6
 	}
 
-	i := New(FullyQualifiedPDNConnectionSetIdentifier, 0x00, make([]byte, 1+len(nid)+len(csIDs)*2))
+	i := New(FullyQualifiedCSID, 0x00, make([]byte, 1+len(nid)+len(csIDs)*2))
 	i.Payload[0] = ((ntype << 4) & 0xf0) | uint8(len(csIDs)&0x0f)
 
 	offset := len(nid) + 1
@@ -53,7 +53,7 @@ func NewFullyQualifiedPDNConnectionSetIdentifier(nodeID string, csIDs ...uint16)
 // NodeIDType returns NodeIDType in uint8 if the type of IE matches.
 func (i *IE) NodeIDType() uint8 {
 	switch i.Type {
-	case FullyQualifiedPDNConnectionSetIdentifier:
+	case FullyQualifiedCSID:
 		return (i.Payload[0] >> 4) & 0x0f
 	default:
 		return 0
@@ -63,7 +63,7 @@ func (i *IE) NodeIDType() uint8 {
 // NodeID returns NodeID in []byte if the type of IE matches.
 func (i *IE) NodeID() []byte {
 	switch i.Type {
-	case FullyQualifiedPDNConnectionSetIdentifier:
+	case FullyQualifiedCSID:
 		switch (i.Payload[0] >> 4) & 0x0f {
 		case nodeIDIPv4, nodeIDOther:
 			return i.Payload[1:5]
@@ -80,7 +80,7 @@ func (i *IE) NodeID() []byte {
 // CSIDs returns CSIDs in []uint16 if the type of IE matches.
 func (i *IE) CSIDs() []uint16 {
 	switch i.Type {
-	case FullyQualifiedPDNConnectionSetIdentifier:
+	case FullyQualifiedCSID:
 		offset := 0
 		switch (i.Payload[0] >> 4) & 0x0f {
 		case nodeIDIPv4, nodeIDOther:
