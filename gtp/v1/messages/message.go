@@ -102,91 +102,93 @@ func Serialize(g Message) ([]byte, error) {
 
 // Decode decodes the given bytes as Message.
 func Decode(b []byte) (Message, error) {
-	var g Message
+	var m Message
 
 	switch b[1] {
 	case MsgTypeEchoRequest:
-		g = &EchoRequest{}
+		m = &EchoRequest{}
 	case MsgTypeEchoResponse:
-		g = &EchoResponse{}
+		m = &EchoResponse{}
 	case MsgTypeCreatePDPContextRequest:
-		g = &CreatePDPContextRequest{}
+		m = &CreatePDPContextRequest{}
+	case MsgTypeCreatePDPContextResponse:
+		m = &CreatePDPContextResponse{}
 	case MsgTypeVersionNotSupported:
-		g = &VersionNotSupported{}
+		m = &VersionNotSupported{}
 	/* XXX - Implement!
 	case MsgTypeNodeAliveRequest:
-		g = &NodeAliveReq{}
+		m = &NodeAliveReq{}
 	case MsgTypeNodeAliveResponse:
-		g = &NodeAliveRes{}
+		m = &NodeAliveRes{}
 	case MsgTypeRedirectionRequest:
-		g = &RedirectionReq{}
+		m = &RedirectionReq{}
 	case MsgTypeRedirectionResponse:
-		g = &RedirectionRes{}
+		m = &RedirectionRes{}
 	case MsgTypeCreatePDPContextResponse:
-		g = &CreatePDPContextRes{}
+		m = &CreatePDPContextRes{}
 	case MsgTypeUpdatePDPContextRequest:
-		g = &UpdatePDPContextReq{}
+		m = &UpdatePDPContextReq{}
 	case MsgTypeUpdatePDPContextResponse:
-		g = &UpdatePDPContextRes{}
+		m = &UpdatePDPContextRes{}
 	case MsgTypeDeletePDPContextRequest:
-		g = &DeletePDPContextReq{}
+		m = &DeletePDPContextReq{}
 	case MsgTypeDeletePDPContextResponse:
-		g = &DeletePDPContextRes{}
+		m = &DeletePDPContextRes{}
 	case MsgTypeCreateAaPDPContextRequest:
-		g = &CreateAaPDPContextReq{}
+		m = &CreateAaPDPContextReq{}
 	case MsgTypeCreateAaPDPContextResponse:
-		g = &CreateAaPDPContextRes{}
+		m = &CreateAaPDPContextRes{}
 	case MsgTypeDeleteAaPDPContextRequest:
-		g = &DeleteAaPDPContextReq{}
+		m = &DeleteAaPDPContextReq{}
 	case MsgTypeDeleteAaPDPContextResponse:
-		g = &DeleteAaPDPContextRes{}
+		m = &DeleteAaPDPContextRes{}
 	*/
 	case MsgTypeErrorIndication:
-		g = &ErrorIndication{}
+		m = &ErrorIndication{}
 	/* XXX - Implement!
 	case MsgTypePduNotificationRequest:
-		g = &PduNotificationReq{}
+		m = &PduNotificationReq{}
 	case MsgTypePduNotificationResponse:
-		g = &PduNotificationRes{}
+		m = &PduNotificationRes{}
 	case MsgTypePduNotificationRejectRequest:
-		g = &PduNotificationRejectReq{}
+		m = &PduNotificationRejectReq{}
 	case MsgTypePduNotificationRejectResponse:
-		g = &PduNotificationRejectRes{}
+		m = &PduNotificationRejectRes{}
 	case MsgTypeSendRoutingInfoRequest:
-		g = &SendRoutingInfoReq{}
+		m = &SendRoutingInfoReq{}
 	case MsgTypeSendRoutingInfoResponse:
-		g = &SendRoutingInfoRes{}
+		m = &SendRoutingInfoRes{}
 	case MsgTypeFailureReportRequest:
-		g = &FailureReportReq{}
+		m = &FailureReportReq{}
 	case MsgTypeFailureReportResponse:
-		g = &FailureReportRes{}
+		m = &FailureReportRes{}
 	case MsgTypeNoteMsPresentRequest:
-		g = &NoteMsPresentReq{}
+		m = &NoteMsPresentReq{}
 	case MsgTypeNoteMsPresentResponse:
-		g = &NoteMsPresentRes{}
+		m = &NoteMsPresentRes{}
 	case MsgTypeIdentificationRequest:
-		g = &IdentificationReq{}
+		m = &IdentificationReq{}
 	case MsgTypeIdentificationResponse:
-		g = &IdentificationRes{}
+		m = &IdentificationRes{}
 	case MsgTypeSgsnContextRequest:
-		g = &SgsnContextReq{}
+		m = &SgsnContextReq{}
 	case MsgTypeSgsnContextResponse:
-		g = &SgsnContextRes{}
+		m = &SgsnContextRes{}
 	case MsgTypeSgsnContextAcknowledge:
-		g = &SgsnContextAck{}
+		m = &SgsnContextAck{}
 	case MsgTypeDataRecordTransferRequest:
-		g = &DataRecordTransferReq{}
+		m = &DataRecordTransferReq{}
 	case MsgTypeDataRecordTransferResponse:
-		g = &DataRecordTransferRes{}
+		m = &DataRecordTransferRes{}
 	*/
 	case MsgTypeTPDU:
-		g = &TPDU{}
+		m = &TPDU{}
 	default:
-		g = &Generic{}
+		m = &Generic{}
 	}
 
-	if err := g.DecodeFromBytes(b); err != nil {
+	if err := m.DecodeFromBytes(b); err != nil {
 		return nil, err
 	}
-	return g, nil
+	return m, nil
 }

@@ -93,7 +93,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 0         | (Spare/Reserved)                            | -         |
 | 1         | Echo Request                                | Yes       |
 | 2         | Echo Response                               | Yes       |
-| 3         | Version Not Supported                       |           |
+| 3         | Version Not Supported                       | Yes       |
 | 4         | Node Alive Request                          |           |
 | 5         | Node Alive Response                         |           |
 | 6         | Redirection Request                         |           |

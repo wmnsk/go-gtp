@@ -4,6 +4,59 @@
 
 package v1
 
+// Cause definitions.
+const (
+	ReqCauseRequestIMSI uint8 = iota
+	ReqCauseRequestIMEI
+	ReqCauseRequestIMSIAndIMEI
+	ReqCauseNoidentityMeeded
+	ReqCauseMSRefuses
+	ReqCauseMSIsNotGPRSResponding
+	ReqCauseReactivationRequested
+	ReqCausePDPAddressInactivityTimerExpires
+	ReqCauseNetworkFailure
+	ReqCauseQoSParameterMismatch
+	// 10-127: for future use / reserved for prime
+)
+
+// Cause definiions.
+const (
+	ResCauseRequestAccepted uint8 = iota + 128
+	ResCauseNewPDPTypeDueToNetworkPreference
+	ResCauseNewPDPTypeDueToSingleAddressBearerOnly
+	// 131-191: for future use / reserved for prime.
+)
+
+// Cause definitions.
+const (
+	ResCauseNonExistent uint8 = iota + 192
+	ResCauseInvalidMessageFormat
+	ResCauseIMSIIMEINotKnown
+	ResCauseMSIsGPRSDetached
+	ResCauseMSIsNotGPRSResponding
+	ResCauseMSRefuses
+	ResCauseVersionNotSupported
+	ResCauseNoResourcesAvailable
+	ResCauseServiceNotSupported
+	ResCauseMandatoryIEIncorrect
+	ResCauseMandatoryIEMissing
+	ResCauseOptionalIEIncorrect
+	ResCauseSystemFailure
+	ResCauseRoamingRestriction
+	ResCausePTMSISignatureMismatch
+	ResCauseGPRSConnectionSuspended
+	ResCauseAuthenticationFailure
+	ResCauseUserAuthenticationFailed
+	ResCauseContextNotFound
+	ResCauseAllDynamicPDPAddressesAreOccupied
+	ResCauseNoMemoryIsAvailable
+	ResCauseRelocationFailure
+	ResCauseUnknownMandatoryExtensionHeader
+	ResCauseSemanticErrorInTheTFTOperation
+	ResCauseSyntacticErrorInTheTFTOperation
+	ResCauseSemanticErrorsInPacketFilter
+)
+
 // SelectionMode definitions.
 const (
 	SelectionModeMSorNetworkProvidedAPNSubscribedVerified uint8 = iota | 0xf0
