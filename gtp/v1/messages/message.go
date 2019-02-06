@@ -111,9 +111,9 @@ func Decode(b []byte) (Message, error) {
 		g = &EchoResponse{}
 	case MsgTypeCreatePDPContextRequest:
 		g = &CreatePDPContextRequest{}
-	/* XXX - Implement!
 	case MsgTypeVersionNotSupported:
-		g = &VerNotSupported{}
+		g = &VersionNotSupported{}
+	/* XXX - Implement!
 	case MsgTypeNodeAliveRequest:
 		g = &NodeAliveReq{}
 	case MsgTypeNodeAliveResponse:
