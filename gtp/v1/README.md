@@ -102,7 +102,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 16        | Create PDP Context Request                  | Yes       |
 | 17        | Create PDP Context Response                 | Yes       |
 | 18        | Update PDP Context Request                  | Yes       |
-| 19        | Update PDP Context Response                 |           |
+| 19        | Update PDP Context Response                 | Yes       |
 | 20        | Delete PDP Context Request                  | Yes       |
 | 21        | Delete PDP Context Response                 | Yes       |
 | 22        | Initiate PDP Context Activation Request     |           |

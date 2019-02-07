@@ -115,6 +115,8 @@ func Decode(b []byte) (Message, error) {
 		m = &CreatePDPContextResponse{}
 	case MsgTypeUpdatePDPContextRequest:
 		m = &UpdatePDPContextRequest{}
+	case MsgTypeUpdatePDPContextResponse:
+		m = &UpdatePDPContextResponse{}
 	case MsgTypeDeletePDPContextRequest:
 		m = &DeletePDPContextRequest{}
 	case MsgTypeVersionNotSupported:
@@ -130,8 +132,6 @@ func Decode(b []byte) (Message, error) {
 		m = &RedirectionReq{}
 	case MsgTypeRedirectionResponse:
 		m = &RedirectionRes{}
-	case MsgTypeUpdatePDPContextResponse:
-		m = &UpdatePDPContextRes{}
 	case MsgTypeCreateAaPDPContextRequest:
 		m = &CreateAaPDPContextReq{}
 	case MsgTypeCreateAaPDPContextResponse:
