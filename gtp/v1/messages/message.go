@@ -113,8 +113,12 @@ func Decode(b []byte) (Message, error) {
 		m = &CreatePDPContextRequest{}
 	case MsgTypeCreatePDPContextResponse:
 		m = &CreatePDPContextResponse{}
+	case MsgTypeDeletePDPContextRequest:
+		m = &DeletePDPContextRequest{}
 	case MsgTypeVersionNotSupported:
 		m = &VersionNotSupported{}
+	case MsgTypeDeletePDPContextResponse:
+		m = &DeletePDPContextResponse{}
 	/* XXX - Implement!
 	case MsgTypeNodeAliveRequest:
 		m = &NodeAliveReq{}
@@ -124,16 +128,10 @@ func Decode(b []byte) (Message, error) {
 		m = &RedirectionReq{}
 	case MsgTypeRedirectionResponse:
 		m = &RedirectionRes{}
-	case MsgTypeCreatePDPContextResponse:
-		m = &CreatePDPContextRes{}
 	case MsgTypeUpdatePDPContextRequest:
 		m = &UpdatePDPContextReq{}
 	case MsgTypeUpdatePDPContextResponse:
 		m = &UpdatePDPContextRes{}
-	case MsgTypeDeletePDPContextRequest:
-		m = &DeletePDPContextReq{}
-	case MsgTypeDeletePDPContextResponse:
-		m = &DeletePDPContextRes{}
 	case MsgTypeCreateAaPDPContextRequest:
 		m = &CreateAaPDPContextReq{}
 	case MsgTypeCreateAaPDPContextResponse:
