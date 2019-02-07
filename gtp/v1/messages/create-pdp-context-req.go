@@ -11,46 +11,46 @@ import (
 // CreatePDPContextRequest is a CreatePDPContextRequest Header and its IEs above.
 type CreatePDPContextRequest struct {
 	*Header
-	IMSI                                *ies.IE
-	RAI                                 *ies.IE
-	Recovery                            *ies.IE
-	SelectionMode                       *ies.IE
-	TEIDDataI                           *ies.IE
-	TEIDCPlane                          *ies.IE
-	NSAPI                               *ies.IE
-	LinkedNSAPI                         *ies.IE
-	ChargingCharacteristics             *ies.IE
-	TraceReference                      *ies.IE
-	TraceType                           *ies.IE
-	EndUserAddress                      *ies.IE
-	APN                                 *ies.IE
-	PCO                                 *ies.IE
-	SGSNAddressForSignalling            *ies.IE
-	SGSNAddressForUserTraffic           *ies.IE
-	MSISDN                              *ies.IE
-	QoSProfile                          *ies.IE
-	TFT                                 *ies.IE
-	TriggerID                           *ies.IE
-	OMCIdentity                         *ies.IE
-	CommonFlags                         *ies.IE
-	APNRestriction                      *ies.IE
-	RATType                             *ies.IE
-	UserLocationInformation             *ies.IE
-	MSTimeZone                          *ies.IE
-	IMEI                                *ies.IE
-	CAMELChargingInformationContainer   *ies.IE
-	AdditionalTraceInfo                 *ies.IE
-	CorrelationID                       *ies.IE
-	EvolvedAllocationRetentionPriorityI *ies.IE
-	ExtendedCommonFlags                 *ies.IE
-	UCI                                 *ies.IE
-	APNAMBR                             *ies.IE
-	SignallingPriorityIndication        *ies.IE
-	CNOperatorSelectionEntity           *ies.IE
-	MappedUEUsageType                   *ies.IE
-	UPFunctionSelectionIndicationFlags  *ies.IE
-	PrivateExtension                    *ies.IE
-	AdditionalIEs                       []*ies.IE
+	IMSI                               *ies.IE
+	RAI                                *ies.IE
+	Recovery                           *ies.IE
+	SelectionMode                      *ies.IE
+	TEIDDataI                          *ies.IE
+	TEIDCPlane                         *ies.IE
+	NSAPI                              *ies.IE
+	LinkedNSAPI                        *ies.IE
+	ChargingCharacteristics            *ies.IE
+	TraceReference                     *ies.IE
+	TraceType                          *ies.IE
+	EndUserAddress                     *ies.IE
+	APN                                *ies.IE
+	PCO                                *ies.IE
+	SGSNAddressForSignalling           *ies.IE
+	SGSNAddressForUserTraffic          *ies.IE
+	MSISDN                             *ies.IE
+	QoSProfile                         *ies.IE
+	TFT                                *ies.IE
+	TriggerID                          *ies.IE
+	OMCIdentity                        *ies.IE
+	CommonFlags                        *ies.IE
+	APNRestriction                     *ies.IE
+	RATType                            *ies.IE
+	UserLocationInformation            *ies.IE
+	MSTimeZone                         *ies.IE
+	IMEI                               *ies.IE
+	CAMELChargingInformationContainer  *ies.IE
+	AdditionalTraceInfo                *ies.IE
+	CorrelationID                      *ies.IE
+	EvolvedARPI                        *ies.IE
+	ExtendedCommonFlags                *ies.IE
+	UCI                                *ies.IE
+	APNAMBR                            *ies.IE
+	SignallingPriorityIndication       *ies.IE
+	CNOperatorSelectionEntity          *ies.IE
+	MappedUEUsageType                  *ies.IE
+	UPFunctionSelectionIndicationFlags *ies.IE
+	PrivateExtension                   *ies.IE
+	AdditionalIEs                      []*ies.IE
 }
 
 // NewCreatePDPContextRequest creates a new GTPv1 CreatePDPContextRequest.
@@ -133,7 +133,7 @@ func NewCreatePDPContextRequest(teid uint32, seq uint16, ie ...*ies.IE) *CreateP
 		case ies.CorrelationID:
 			c.CorrelationID = i
 		case ies.EvolvedAllocationRetentionPriorityI:
-			c.EvolvedAllocationRetentionPriorityI = i
+			c.EvolvedARPI = i
 		case ies.ExtendedCommonFlags:
 			c.ExtendedCommonFlags = i
 		case ies.UserCSGInformation:
@@ -357,7 +357,7 @@ func (c *CreatePDPContextRequest) SerializeTo(b []byte) error {
 		}
 		offset += ie.Len()
 	}
-	if ie := c.EvolvedAllocationRetentionPriorityI; ie != nil {
+	if ie := c.EvolvedARPI; ie != nil {
 		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -525,7 +525,7 @@ func (c *CreatePDPContextRequest) DecodeFromBytes(b []byte) error {
 		case ies.CorrelationID:
 			c.CorrelationID = i
 		case ies.EvolvedAllocationRetentionPriorityI:
-			c.EvolvedAllocationRetentionPriorityI = i
+			c.EvolvedARPI = i
 		case ies.ExtendedCommonFlags:
 			c.ExtendedCommonFlags = i
 		case ies.UserCSGInformation:
@@ -643,7 +643,7 @@ func (c *CreatePDPContextRequest) Len() int {
 	if ie := c.CorrelationID; ie != nil {
 		l += ie.Len()
 	}
-	if ie := c.EvolvedAllocationRetentionPriorityI; ie != nil {
+	if ie := c.EvolvedARPI; ie != nil {
 		l += ie.Len()
 	}
 	if ie := c.ExtendedCommonFlags; ie != nil {

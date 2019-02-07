@@ -101,7 +101,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 8-15      | (Spare/Reserved)                            | -         |
 | 16        | Create PDP Context Request                  | Yes       |
 | 17        | Create PDP Context Response                 | Yes       |
-| 18        | Update PDP Context Request                  |           |
+| 18        | Update PDP Context Request                  | Yes       |
 | 19        | Update PDP Context Response                 |           |
 | 20        | Delete PDP Context Request                  | Yes       |
 | 21        | Delete PDP Context Response                 | Yes       |

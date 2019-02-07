@@ -11,34 +11,34 @@ import (
 // CreatePDPContextResponse is a CreatePDPContextResponse Header and its IEs above.
 type CreatePDPContextResponse struct {
 	*Header
-	Cause                                *ies.IE
-	ReorderingRequired                   *ies.IE
-	Recovery                             *ies.IE
-	TEIDDataI                            *ies.IE
-	TEIDCPlane                           *ies.IE
-	NSAPI                                *ies.IE
-	ChargingID                           *ies.IE
-	EndUserAddress                       *ies.IE
-	PCO                                  *ies.IE
-	GGSNAddressForCPlane                 *ies.IE
-	GGSNAddressForUsertraffic            *ies.IE
-	AlternativeGGSNAddressForCPlane      *ies.IE
-	AlternativeGGSNAddressForUsertraffic *ies.IE
-	QoSProfile                           *ies.IE
-	ChargingGatewayAddress               *ies.IE
-	AlternativeChargingGatewayAddress    *ies.IE
-	CommonFlags                          *ies.IE
-	APNRestriction                       *ies.IE
-	MSInfoChangeReportingAction          *ies.IE
-	BearerControlMode                    *ies.IE
-	EvolvedAllocationRetentionPriorityI  *ies.IE
-	ExtendedCommonFlag                   *ies.IE
-	CSGInformationReportingAction        *ies.IE
-	APNAMBR                              *ies.IE
-	GGSNBackOffTime                      *ies.IE
-	ExtendedCommonFlagsII                *ies.IE
-	PrivateExtension                     *ies.IE
-	AdditionalIEs                        []*ies.IE
+	Cause                         *ies.IE
+	ReorderingRequired            *ies.IE
+	Recovery                      *ies.IE
+	TEIDDataI                     *ies.IE
+	TEIDCPlane                    *ies.IE
+	NSAPI                         *ies.IE
+	ChargingID                    *ies.IE
+	EndUserAddress                *ies.IE
+	PCO                           *ies.IE
+	GGSNAddressForCPlane          *ies.IE
+	GGSNAddressForUserTraffic     *ies.IE
+	AltGGSNAddressForCPlane       *ies.IE
+	AltGGSNAddressForUserTraffic  *ies.IE
+	QoSProfile                    *ies.IE
+	ChargingGatewayAddress        *ies.IE
+	AltChargingGatewayAddress     *ies.IE
+	CommonFlags                   *ies.IE
+	APNRestriction                *ies.IE
+	MSInfoChangeReportingAction   *ies.IE
+	BearerControlMode             *ies.IE
+	EvolvedARPI                   *ies.IE
+	ExtendedCommonFlag            *ies.IE
+	CSGInformationReportingAction *ies.IE
+	APNAMBR                       *ies.IE
+	GGSNBackOffTime               *ies.IE
+	ExtendedCommonFlagsII         *ies.IE
+	PrivateExtension              *ies.IE
+	AdditionalIEs                 []*ies.IE
 }
 
 // NewCreatePDPContextResponse creates a new GTPv1 CreatePDPContextResponse.
@@ -73,20 +73,20 @@ func NewCreatePDPContextResponse(teid uint32, seq uint16, ie ...*ies.IE) *Create
 		case ies.GSNAddress:
 			if c.GGSNAddressForCPlane == nil {
 				c.GGSNAddressForCPlane = i
-			} else if c.GGSNAddressForUsertraffic == nil {
-				c.GGSNAddressForUsertraffic = i
-			} else if c.AlternativeGGSNAddressForCPlane == nil {
-				c.AlternativeGGSNAddressForCPlane = i
-			} else if c.AlternativeGGSNAddressForUsertraffic == nil {
-				c.AlternativeGGSNAddressForUsertraffic = i
+			} else if c.GGSNAddressForUserTraffic == nil {
+				c.GGSNAddressForUserTraffic = i
+			} else if c.AltGGSNAddressForCPlane == nil {
+				c.AltGGSNAddressForCPlane = i
+			} else if c.AltGGSNAddressForUserTraffic == nil {
+				c.AltGGSNAddressForUserTraffic = i
 			}
 		case ies.QoSProfile:
 			c.QoSProfile = i
 		case ies.ChargingGatewayAddress:
 			if c.ChargingGatewayAddress == nil {
 				c.ChargingGatewayAddress = i
-			} else if c.AlternativeChargingGatewayAddress == nil {
-				c.AlternativeChargingGatewayAddress = i
+			} else if c.AltChargingGatewayAddress == nil {
+				c.AltChargingGatewayAddress = i
 			}
 		case ies.CommonFlags:
 			c.CommonFlags = i
@@ -97,7 +97,7 @@ func NewCreatePDPContextResponse(teid uint32, seq uint16, ie ...*ies.IE) *Create
 		case ies.BearerControlMode:
 			c.BearerControlMode = i
 		case ies.EvolvedAllocationRetentionPriorityI:
-			c.EvolvedAllocationRetentionPriorityI = i
+			c.EvolvedARPI = i
 		case ies.ExtendedCommonFlags:
 			c.ExtendedCommonFlag = i
 		case ies.CSGInformationReportingAction:
@@ -197,19 +197,19 @@ func (c *CreatePDPContextResponse) SerializeTo(b []byte) error {
 		}
 		offset += ie.Len()
 	}
-	if ie := c.GGSNAddressForUsertraffic; ie != nil {
+	if ie := c.GGSNAddressForUserTraffic; ie != nil {
 		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.Len()
 	}
-	if ie := c.AlternativeGGSNAddressForCPlane; ie != nil {
+	if ie := c.AltGGSNAddressForCPlane; ie != nil {
 		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.Len()
 	}
-	if ie := c.AlternativeGGSNAddressForUsertraffic; ie != nil {
+	if ie := c.AltGGSNAddressForUserTraffic; ie != nil {
 		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -227,7 +227,7 @@ func (c *CreatePDPContextResponse) SerializeTo(b []byte) error {
 		}
 		offset += ie.Len()
 	}
-	if ie := c.AlternativeChargingGatewayAddress; ie != nil {
+	if ie := c.AltChargingGatewayAddress; ie != nil {
 		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -257,7 +257,7 @@ func (c *CreatePDPContextResponse) SerializeTo(b []byte) error {
 		}
 		offset += ie.Len()
 	}
-	if ie := c.EvolvedAllocationRetentionPriorityI; ie != nil {
+	if ie := c.EvolvedARPI; ie != nil {
 		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -365,20 +365,20 @@ func (c *CreatePDPContextResponse) DecodeFromBytes(b []byte) error {
 		case ies.GSNAddress:
 			if c.GGSNAddressForCPlane == nil {
 				c.GGSNAddressForCPlane = i
-			} else if c.GGSNAddressForUsertraffic == nil {
-				c.GGSNAddressForUsertraffic = i
-			} else if c.AlternativeGGSNAddressForCPlane == nil {
-				c.AlternativeGGSNAddressForCPlane = i
-			} else if c.AlternativeGGSNAddressForUsertraffic == nil {
-				c.AlternativeGGSNAddressForUsertraffic = i
+			} else if c.GGSNAddressForUserTraffic == nil {
+				c.GGSNAddressForUserTraffic = i
+			} else if c.AltGGSNAddressForCPlane == nil {
+				c.AltGGSNAddressForCPlane = i
+			} else if c.AltGGSNAddressForUserTraffic == nil {
+				c.AltGGSNAddressForUserTraffic = i
 			}
 		case ies.QoSProfile:
 			c.QoSProfile = i
 		case ies.ChargingGatewayAddress:
 			if c.ChargingGatewayAddress == nil {
 				c.ChargingGatewayAddress = i
-			} else if c.AlternativeChargingGatewayAddress == nil {
-				c.AlternativeChargingGatewayAddress = i
+			} else if c.AltChargingGatewayAddress == nil {
+				c.AltChargingGatewayAddress = i
 			}
 		case ies.CommonFlags:
 			c.CommonFlags = i
@@ -389,7 +389,7 @@ func (c *CreatePDPContextResponse) DecodeFromBytes(b []byte) error {
 		case ies.BearerControlMode:
 			c.BearerControlMode = i
 		case ies.EvolvedAllocationRetentionPriorityI:
-			c.EvolvedAllocationRetentionPriorityI = i
+			c.EvolvedARPI = i
 		case ies.ExtendedCommonFlags:
 			c.ExtendedCommonFlag = i
 		case ies.CSGInformationReportingAction:
@@ -444,13 +444,13 @@ func (c *CreatePDPContextResponse) Len() int {
 	if ie := c.GGSNAddressForCPlane; ie != nil {
 		l += ie.Len()
 	}
-	if ie := c.GGSNAddressForUsertraffic; ie != nil {
+	if ie := c.GGSNAddressForUserTraffic; ie != nil {
 		l += ie.Len()
 	}
-	if ie := c.AlternativeGGSNAddressForCPlane; ie != nil {
+	if ie := c.AltGGSNAddressForCPlane; ie != nil {
 		l += ie.Len()
 	}
-	if ie := c.AlternativeGGSNAddressForUsertraffic; ie != nil {
+	if ie := c.AltGGSNAddressForUserTraffic; ie != nil {
 		l += ie.Len()
 	}
 	if ie := c.QoSProfile; ie != nil {
@@ -459,7 +459,7 @@ func (c *CreatePDPContextResponse) Len() int {
 	if ie := c.ChargingGatewayAddress; ie != nil {
 		l += ie.Len()
 	}
-	if ie := c.AlternativeChargingGatewayAddress; ie != nil {
+	if ie := c.AltChargingGatewayAddress; ie != nil {
 		l += ie.Len()
 	}
 	if ie := c.CommonFlags; ie != nil {
@@ -474,7 +474,7 @@ func (c *CreatePDPContextResponse) Len() int {
 	if ie := c.BearerControlMode; ie != nil {
 		l += ie.Len()
 	}
-	if ie := c.EvolvedAllocationRetentionPriorityI; ie != nil {
+	if ie := c.EvolvedARPI; ie != nil {
 		l += ie.Len()
 	}
 	if ie := c.ExtendedCommonFlag; ie != nil {
