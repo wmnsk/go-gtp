@@ -6,6 +6,7 @@ package ies_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	v1 "github.com/wmnsk/go-gtp/gtp/v1"
@@ -109,8 +110,8 @@ func TestIEs(t *testing.T) {
 			[]byte{0x98, 0x00, 0x07, 0x02, 0x21, 0xf3, 0x54, 0x00, 0xff, 0x00},
 		}, {
 			"MSTimeZone",
-			ies.NewMSTimeZone(0x00, 0x01), // XXX - should be updated with more realistic value
-			[]byte{0x99, 0x00, 0x02, 0x00, 0x01},
+			ies.NewMSTimeZone(9*time.Hour, 0), // XXX - should be updated with more realistic value
+			[]byte{0x99, 0x00, 0x02, 0x63, 0x00},
 		}, {
 			"IMEISV",
 			ies.NewIMEISV("123450123456789"),
