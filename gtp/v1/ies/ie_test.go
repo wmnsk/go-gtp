@@ -41,6 +41,10 @@ func TestIEs(t *testing.T) {
 				0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
 			},
 		}, {
+			"MAPCause",
+			ies.NewMAPCause(v1.MAPCauseSystemFailure),
+			[]byte{0x0b, 0x22},
+		}, {
 			"PTMSISignature",
 			ies.NewPTMSISignature(0xbeebee),
 			[]byte{0x0c, 0xbe, 0xeb, 0xee},

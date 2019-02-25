@@ -149,3 +149,80 @@ const (
 	APNRestrictionPrivate1
 	APNRestrictionPrivate2
 )
+
+// MAP Cause definitions.
+const (
+	_ uint8 = iota
+	MAPCauseUnknownSubscriber
+	MAPCauseUnknownBaseStation
+	MAPCauseUnknownMSC
+	MAPCauseSecureTransportError
+	MAPCauseUnidentifiedSubscriber
+	MAPCauseAbsentSubscriberSM
+	MAPCauseUnknownEquipment
+	MAPCauseRoamingNotAllowed
+	MAPCauseIllegalSubscriber
+	MAPCauseBearerServiceNotProvisioned
+	MAPCauseTeleserviceNotProvisioned
+	MAPCauseIllegalEquipment
+	MAPCauseCallBarred
+	MAPCauseForwardingViolation
+	MAPCauseCUGReject
+	MAPCauseIllegalSSOperation
+	MAPCauseSSErrorStatus
+	MAPCauseSSNotAvailable
+	MAPCauseSSSubscriptionViolatio
+	MAPCauseSSIncompatibility
+	MAPCauseFacilityNotSupported
+	MAPCauseOngoingGroupCall
+	MAPCauseInvalidTargetBaseStation
+	MAPCauseNoRadioResourceAvailable
+	MAPCauseNoHandoverNumberAvailable
+	MAPCauseSubsequentHandoverFailure
+	MAPCauseAbsentSubscriber
+	MAPCauseIncompatibleTerminal
+	MAPCauseShortTermDenial
+	MAPCauseLongTermDenial
+	MAPCauseSubscriberBusyForMTSMS
+	MAPCauseSMDeliveryFailure
+	MAPCauseMessageWaitingListFull
+	MAPCauseSystemFailure
+	MAPCauseDataMissing
+	MAPCauseUnexpectedDataValue
+	MAPCausePWRegistrationFailure
+	MAPCauseNegativePWCheck
+	MAPCauseNoRoamingNumberAvailable
+	MAPCauseTracingBufferFull
+	_
+	MAPCauseTargetCellOutsideGroupCallArea
+	MAPCauseNumberOfPWAttemptsViolation
+	MAPCauseNumberChanged
+	MAPCauseBusySubscriber
+	MAPCauseNoSubscriberReply
+	MAPCauseForwardingFailed
+	MAPCauseORNotAllowed
+	MAPCauseATINotAllowed
+	MAPCauseNoGroupCallNumberAvailable
+	MAPCauseResourceLimitation
+	MAPCauseUnauthorizedRequestingNetwork
+	MAPCauseUnauthorizedLCSClient
+	MAPCausePositionMethodFailure
+	_
+	_
+	_
+	MAPCauseUnknownOrUnreachableLCSClient
+	MAPCauseMMEventNotSupported
+	MAPCauseATSINotAllowed
+	MAPCauseATMNotAllowed
+	MAPCauseInformationNotAvailabl
+	_
+	_
+	_
+	_
+	_
+	_
+	_
+	_
+	MAPCauseUnknownAlphabe
+	MAPCauseUSSDBusy
+)

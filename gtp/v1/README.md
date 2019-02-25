@@ -189,7 +189,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 8       | Reordering Required                       | Yes       |
 | 9       | Authentication Triplet                    | Yes       |
 | 10      | (Spare/Reserved)                          | -         |
-| 11      | MAP Cause                                 |           |
+| 11      | MAP Cause                                 | Yes       |
 | 12      | P-TMSI Signature                          | Yes       |
 | 13      | MS Validated                              |           |
 | 14      | Recovery                                  | Yes       |
@@ -198,7 +198,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 17      | TEID C-Plane                              | Yes       |
 | 18      | TEID Data II                              | Yes       |
 | 19      | Teardown Indication                       |           |
-| 20      | NSAPI                                     |           |
+| 20      | NSAPI                                     | Yes       |
 | 21      | RANAP Cause                               |           |
 | 22      | RAB Context                               |           |
 | 23      | Radio Priority SMS                        |           |
@@ -231,9 +231,9 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 146     | Additional RAB Setup Information          |           |
 | 147     | SGSN Number                               |           |
 | 148     | Common Flags                              | Yes       |
-| 149     | APN Restriction                           |           |
+| 149     | APN Restriction                           | Yes       |
 | 150     | Radio Priority LCS                        |           |
-| 151     | RAT Type                                  |           |
+| 151     | RAT Type                                  | Yes       |
 | 152     | User Location Information                 | Yes       |
 | 153     | MS Time Zone                              | Yes       |
 | 154     | IMEISV                                    | Yes       |
@@ -296,7 +296,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 211     | Extended RANAP Cause                      |           |
 | 212     | eNodeB ID                                 |           |
 | 213     | Selection Mode with NSAPI                 |           |
-| 214     | ULI Timestamp                             |           |
+| 214     | ULI Timestamp                             | Yes       |
 | 215     | LHN Id with NSAPI                         |           |
 | 216     | CN Operator Selection Entity              |           |
 | 217     | UE Usage Type                             |           |
