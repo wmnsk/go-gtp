@@ -187,7 +187,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 6       | (Spare/Reserved)                          | -         |
 | 7       | (Spare/Reserved)                          | -         |
 | 8       | Reordering Required                       | Yes       |
-| 9       | Authentication Triplet                    |           |
+| 9       | Authentication Triplet                    | Yes       |
 | 10      | (Spare/Reserved)                          | -         |
 | 11      | MAP Cause                                 |           |
 | 12      | P-TMSI Signature                          | Yes       |
@@ -216,9 +216,9 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 131     | Access Point Name                         | Yes       |
 | 132     | Protocol Configuration Options            | Yes       |
 | 133     | GSN Address                               | Yes       |
-| 134     | MSISDN                                    |           |
+| 134     | MSISDN                                    | Yes       |
 | 135     | QoS Profile                               |           |
-| 136     | Authentication Quintuplet                 |           |
+| 136     | Authentication Quintuplet                 | Yes       |
 | 137     | Traffic Flow Template                     |           |
 | 138     | Target Identification                     |           |
 | 139     | UTRAN Transparent Container               |           |

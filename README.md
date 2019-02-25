@@ -86,7 +86,7 @@ Your contribution is welcome to implement helpers for all the types, of course!
 | Version           | Messages | IEs   | Networking (state machine)                           | Details                                                   |
 |-------------------|----------|-------|------------------------------------------------------|-----------------------------------------------------------|
 | GTPv0             | 35.7%    | 81.8% | not implemented yet                                  | [Supported Features](gtp/v0/README.md#supported-features) |
-| GTPv1             | 26.6%    | 21.8% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](gtp/v1/README.md#supported-features) |
+| GTPv1             | 26.6%    | 24.1% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](gtp/v1/README.md#supported-features) |
 | GTPv2             | 32.0%    | 43.2% | almost functional                                    | [Supported Features](gtp/v2/README.md#supported-features) |
 | GTP' <br> (Prime) | N/A      | N/A   | N/A                                                  | _not planned_                                             |
 
