@@ -49,6 +49,10 @@ func TestIEs(t *testing.T) {
 			ies.NewPTMSISignature(0xbeebee),
 			[]byte{0x0c, 0xbe, 0xeb, 0xee},
 		}, {
+			"MSValidated",
+			ies.NewMSValidated(true),
+			[]byte{0x0d, 0xff},
+		}, {
 			"Recovery",
 			ies.NewRecovery(1),
 			[]byte{0x0e, 0x01},

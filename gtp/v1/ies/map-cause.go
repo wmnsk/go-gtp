@@ -11,7 +11,7 @@ func NewMAPCause(cause uint8) *IE {
 
 // MAPCause returns MAPCause in uint8 if type matches.
 func (i *IE) MAPCause() uint8 {
-	if i.Type != AuthenticationTriplet {
+	if i.Type != MAPCause {
 		return 0
 	}
 	return i.Payload[0]
