@@ -81,6 +81,10 @@ func TestIEs(t *testing.T) {
 			ies.NewNSAPI(0x05),
 			[]byte{0x14, 0x05},
 		}, {
+			"RANAPCause",
+			ies.NewRANAPCause(v1.MAPCauseUnknownSubscriber),
+			[]byte{0x15, 0x01},
+		}, {
 			"EndUserAddress/v4",
 			ies.NewEndUserAddress("1.1.1.1"),
 			[]byte{0x80, 0x00, 0x06, 0xf1, 0x21, 0x01, 0x01, 0x01, 0x01},

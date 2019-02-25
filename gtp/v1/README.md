@@ -199,7 +199,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 18      | TEID Data II                              | Yes       |
 | 19      | Teardown Indication                       | Yes       |
 | 20      | NSAPI                                     | Yes       |
-| 21      | RANAP Cause                               |           |
+| 21      | RANAP Cause                               | Yes       |
 | 22      | RAB Context                               |           |
 | 23      | Radio Priority SMS                        |           |
 | 24      | Radio Priority                            |           |
