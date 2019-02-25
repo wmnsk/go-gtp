@@ -140,3 +140,12 @@ const (
 	LocTypeSAI
 	LocTypeRAI
 )
+
+// APN Restriction definitions.
+const (
+	APNRestrictionNoExistingContextsorRestriction uint8 = iota
+	APNRestrictionPublic1
+	APNRestrictionPublic2
+	APNRestrictionPrivate1
+	APNRestrictionPrivate2
+)

@@ -125,6 +125,10 @@ func TestIEs(t *testing.T) {
 			ies.NewCommonFlags(0, 1, 0, 0, 0, 0, 0, 0),
 			[]byte{0x94, 0x00, 0x01, 0x40},
 		}, {
+			"APNRestriction",
+			ies.NewAPNRestriction(v1.APNRestrictionPrivate1),
+			[]byte{0x95, 0x00, 0x01, 0x03},
+		}, {
 			"RATType",
 			ies.NewRATType(v1.RatTypeEUTRAN),
 			[]byte{0x97, 0x00, 0x01, 0x06},
