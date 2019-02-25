@@ -73,6 +73,10 @@ func TestIEs(t *testing.T) {
 			ies.NewTEIDDataII(0xdeadbeef),
 			[]byte{0x12, 0xde, 0xad, 0xbe, 0xef},
 		}, {
+			"TeardownInd",
+			ies.NewTeardownInd(true),
+			[]byte{0x13, 0xff},
+		}, {
 			"NSAPI",
 			ies.NewNSAPI(0x05),
 			[]byte{0x14, 0x05},

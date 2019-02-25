@@ -191,13 +191,13 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 10      | (Spare/Reserved)                          | -         |
 | 11      | MAP Cause                                 | Yes       |
 | 12      | P-TMSI Signature                          | Yes       |
-| 13      | MS Validated                              |           |
+| 13      | MS Validated                              | Yes       |
 | 14      | Recovery                                  | Yes       |
 | 15      | Selection Mode                            | Yes       |
 | 16      | TEID Data I                               | Yes       |
 | 17      | TEID C-Plane                              | Yes       |
 | 18      | TEID Data II                              | Yes       |
-| 19      | Teardown Indication                       |           |
+| 19      | Teardown Indication                       | Yes       |
 | 20      | NSAPI                                     | Yes       |
 | 21      | RANAP Cause                               |           |
 | 22      | RAB Context                               |           |
