@@ -59,12 +59,16 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 	}
 
 	// if no response coming within 3 seconds, returns error without retrying.
-	c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	if err := c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
+		return nil, err
+	}
 	n, raddr, err := c.pktConn.ReadFrom(c.rcvBuf)
 	if err != nil {
 		return nil, err
 	}
-	c.pktConn.SetReadDeadline(time.Time{})
+	if err := c.pktConn.SetReadDeadline(time.Time{}); err != nil {
+		return nil, err
+	}
 
 	// decode incoming message and let it be handled by default handler funcs.
 	msg, err := messages.Decode(c.rcvBuf[:n])
@@ -116,12 +120,16 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 	}
 
 	// if no response coming within 3 seconds, returns error without retrying.
-	c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	if err := c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
+		return nil, err
+	}
 	n, raddr, err := c.pktConn.ReadFrom(c.rcvBuf)
 	if err != nil {
 		return nil, err
 	}
-	c.pktConn.SetReadDeadline(time.Time{})
+	if err := c.pktConn.SetReadDeadline(time.Time{}); err != nil {
+		return nil, err
+	}
 
 	// decode incoming message and let it be handled by default handler funcs.
 	msg, err := messages.Decode(c.rcvBuf[:n])
@@ -616,7 +624,10 @@ func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
 
 func generateUniqueUint32(vals []uint32) uint32 {
 	b := make([]byte, 4)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		return 0
+	}
+
 	generated := binary.BigEndian.Uint32(b)
 	for _, existing := range vals {
 		if generated == existing {

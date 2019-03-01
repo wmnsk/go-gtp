@@ -5,7 +5,6 @@
 package ies
 
 import (
-	"crypto/rand"
 	"encoding/binary"
 	"net"
 )
@@ -27,13 +26,6 @@ func NewFullyQualifiedTEID(ifType uint8, teid uint32, v4, v6 string) *IE {
 	i.SetLength()
 
 	return i
-}
-
-// NewFullyQualifiedTEIDRandom creates a new FullyQualifiedTEID IE with random value.
-func NewFullyQualifiedTEIDRandom(ifType uint8, v4, v6 string) *IE {
-	teid := make([]byte, 4)
-	rand.Read(teid)
-	return NewFullyQualifiedTEID(ifType, binary.BigEndian.Uint32(teid), v4, v6)
 }
 
 // HasIPv4 reports whether the IE has IPv4 address in its payload or not.

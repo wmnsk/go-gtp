@@ -59,7 +59,9 @@ func NewSession(peerAddr net.Addr, sub *Subscriber) *Session {
 	}
 
 	u32buf := make([]byte, 4)
-	rand.Read(u32buf)
+	if _, err := rand.Read(u32buf); err != nil {
+		u32buf = []byte{0x00, 0x00, 0x00, 0x00}
+	}
 	s.Sequence = binary.BigEndian.Uint32(u32buf)
 
 	return s

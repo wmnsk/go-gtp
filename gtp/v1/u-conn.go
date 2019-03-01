@@ -61,7 +61,9 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 	}
 
 	// if no response coming within 5 seconds, returns error.
-	u.pktConn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	if err := u.pktConn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		return nil, err
+	}
 	for {
 		// send EchoRequest to raddr.
 		if err := u.EchoRequest(raddr); err != nil {
@@ -72,7 +74,9 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 		if err != nil {
 			return nil, err
 		}
-		u.pktConn.SetReadDeadline(time.Time{})
+		if err := u.pktConn.SetReadDeadline(time.Time{}); err != nil {
+			return nil, err
+		}
 
 		// decode incoming message and let it be handled by default handler funcs.
 		msg, err := messages.Decode(u.rcvBuf[:n])
@@ -216,8 +220,10 @@ func (u *UPlaneConn) Close() error {
 	close(u.errCh)
 	close(u.closeCh)
 
-	// triggers error in blocking Read() / Write() immediately.
-	u.pktConn.SetDeadline(time.Now().Add(1 * time.Millisecond))
+	// triggers error in blocking Read() / Write() after 1ms.
+	if err := u.pktConn.SetDeadline(time.Now().Add(1 * time.Millisecond)); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -91,10 +91,15 @@ func (r *Relay) Run() {
 }
 
 // Close closes Relay. It does not close the UPlaneConn given at first.
-func (r *Relay) Close() {
-	r.leftConn.SetReadDeadline(time.Now().Add(time.Duration(1 * time.Millisecond)))
-	r.rightConn.SetReadDeadline(time.Now().Add(time.Duration(1 * time.Millisecond)))
+func (r *Relay) Close() error {
+	if err := r.leftConn.SetReadDeadline(time.Now().Add(time.Duration(1 * time.Millisecond))); err != nil {
+		return err
+	}
+	if err := r.rightConn.SetReadDeadline(time.Now().Add(time.Duration(1 * time.Millisecond))); err != nil {
+		return err
+	}
 	close(r.closeCh)
+	return nil
 }
 
 func (r *Relay) closed() <-chan struct{} {
