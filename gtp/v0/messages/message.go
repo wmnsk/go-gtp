@@ -9,7 +9,6 @@ package messages
 
 import (
 	"github.com/pkg/errors"
-	"github.com/wmnsk/go-gtp/gtp/v0/ies"
 )
 
 // MessageType definitions.
@@ -197,22 +196,4 @@ func Decapsulate(b []byte) ([]byte, error) {
 		return nil, nil
 	}
 	return header.Payload, nil
-}
-
-func sumMultiIELen(multipleIEs ...*ies.IE) int {
-	l := 0
-	for _, ie := range multipleIEs {
-		if ie != nil {
-			l += ie.Len()
-		}
-	}
-	return l
-}
-
-func setMultiIELength(multipleIEs ...*ies.IE) {
-	for _, ie := range multipleIEs {
-		if ie != nil {
-			ie.SetLength()
-		}
-	}
 }

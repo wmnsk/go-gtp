@@ -78,7 +78,8 @@ func TestClientWrite(t *testing.T) {
 	go func(tv *testVal) {
 		n, addr, teid, err := srvConn.ReadFromGTP(buf)
 		if err != nil {
-			t.Fatal(err)
+			errCh <- err
+			return
 		}
 
 		if diff := cmp.Diff(n, len(tv.payload)); diff != "" {

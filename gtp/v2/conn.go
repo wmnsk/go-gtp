@@ -236,7 +236,9 @@ func (c *Conn) Close() error {
 	close(c.closeCh)
 
 	// triggers error in blocking Read() / Write() immediately.
-	c.pktConn.SetDeadline(time.Now().Add(1 * time.Millisecond))
+	if err := c.pktConn.SetDeadline(time.Now().Add(1 * time.Millisecond)); err != nil {
+		return err
+	}
 	return nil
 }
 

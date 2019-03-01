@@ -84,9 +84,7 @@ type PCOPayload struct {
 // NewPCOPayload creates a new PCOPayload.
 func NewPCOPayload(configProto uint8, opts ...*ConfigurationProtocolOption) *PCOPayload {
 	p := &PCOPayload{ConfigurationProtocol: configProto}
-	for _, opt := range opts {
-		p.ConfigurationProtocolOptions = append(p.ConfigurationProtocolOptions, opt)
-	}
+	p.ConfigurationProtocolOptions = append(p.ConfigurationProtocolOptions, opts...)
 
 	return p
 }
