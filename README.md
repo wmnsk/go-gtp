@@ -6,6 +6,7 @@ Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol
 [![GolangCI](https://golangci.com/badges/github.com/wmnsk/go-gtp.svg)](https://golangci.com/r/github.com/wmnsk/go-gtp)
 [![GoDoc](https://godoc.org/github.com/wmnsk/go-gtp?status.svg)](https://godoc.org/github.com/wmnsk/go-gtp)
 [![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/wmnsk/go-gtp/blob/master/LICENSE)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp?ref=badge_shield)
 
 ## Features
 
@@ -103,3 +104,6 @@ _I'm always open to welcome co-authors! Please feel free to talk to me._
 ## LICENSE
 
 [MIT](https://github.com/wmnsk/go-gtp/blob/master/LICENSE)
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp?ref=badge_large)
