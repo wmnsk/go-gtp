@@ -108,10 +108,6 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			if err != nil {
 				return err
 			}
-			s11Session, err := s11Conn.GetSessionByIMSI(s5Session.IMSI)
-			if err != nil {
-				return err
-			}
 
 			// assert type to refer to the struct field specific to the message.
 			// in general, no need to check if it can be type-asserted, as long as the MessageType is
@@ -146,7 +142,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 				return &v2.ErrRequiredIEMissing{Type: ies.PDNAddressAllocation}
 			}
 			if ie := csRspFromPGW.PGWS5S8FTEIDC; ie != nil {
-				s11Session.AddTEID(ie.InterfaceType(), ie.TEID())
+				s5Session.AddTEID(ie.InterfaceType(), ie.TEID())
 			} else {
 				s5cConn.RemoveSession(s5Session)
 				return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
