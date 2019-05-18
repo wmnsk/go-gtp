@@ -7,20 +7,15 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	v1 "github.com/wmnsk/go-gtp/v1"
 	v2 "github.com/wmnsk/go-gtp/v2"
 	"github.com/wmnsk/go-gtp/v2/ies"
 	"github.com/wmnsk/go-gtp/v2/messages"
-)
-
-var (
-	s5cConn *v2.Conn
-	relay   *v1.Relay
 )
 
 func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
@@ -360,10 +355,16 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 	if err != nil {
 		return err
 	}
-	s1uIP := strings.Split(*s1u, ":")[0]
-	relay.AddPeer(s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
-	relay.AddPeer(s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
+	s1uConn.RelayTo(s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
+	s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
 
+	log.Printf("S1=>S5: %s, %08x, %08x", s5uBearer.RemoteAddress(), s1usgwTEID, s5uBearer.OutgoingTEID())
+	log.Printf("S5=>S1: %s, %08x, %08x", s1uBearer.RemoteAddress(), s5usgwTEID, s1uBearer.OutgoingTEID())
+
+	s1uIP, _, err := net.SplitHostPort(*s1u)
+	if err != nil {
+		return err
+	}
 	mbRspFromSGW := messages.NewModifyBearerResponse(
 		s11mmeTEID, 0,
 		ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
