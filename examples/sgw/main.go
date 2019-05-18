@@ -48,6 +48,9 @@ var (
 	delCh    = make(chan struct{})
 	loggerCh = make(chan string)
 	errCh    = make(chan error)
+	s5cConn  *v2.Conn
+	s1uConn  *v1.UPlaneConn
+	s5uConn  *v1.UPlaneConn
 )
 
 func main() {
@@ -84,18 +87,14 @@ func main() {
 
 	// let relay start working here.
 	// this just drops packets until TEID and peer information is registered.
-	s1uConn, err := v1.ListenAndServeUPlane(s1uladdr, 0, errCh)
+	s1uConn, err = v1.ListenAndServeUPlane(s1uladdr, 0, errCh)
 	if err != nil {
 		log.Fatal(err)
 	}
-	s5uConn, err := v1.ListenAndServeUPlane(s5uladdr, 0, errCh)
+	s5uConn, err = v1.ListenAndServeUPlane(s5uladdr, 0, errCh)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	relay = v1.NewRelay(s1uConn, s5uConn)
-	go relay.Run()
-	defer relay.Close()
 
 	// wait for events(logs, errors, timers).
 	for {

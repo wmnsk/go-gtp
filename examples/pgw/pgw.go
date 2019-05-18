@@ -176,13 +176,13 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 			}
 
 			rsp := make([]byte, n)
-			// swap IP
-			copy(rsp[12:16], buf[16:20])
-			copy(rsp[16:20], buf[12:16])
 			// update message type and checksum
 			copy(rsp, buf[:n])
 			rsp[20] = 0
 			rsp[22] = 0x9b
+			// swap IP
+			copy(rsp[12:16], buf[16:20])
+			copy(rsp[16:20], buf[12:16])
 
 			if _, err := uConn.WriteToGTP(teidOut, rsp, raddr); err != nil {
 				return
