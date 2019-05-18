@@ -599,7 +599,19 @@ func (c *Conn) AddSession(session *Session) {
 }
 
 // RemoveSession removes a session from c.Session.
+// Bearers associated with the Session is to be removed automatically.
 func (c *Conn) RemoveSession(session *Session) {
+	// remove bearers first, if remains.
+	session.bearerMap.rangeWithFunc(func(k, v interface{}) bool {
+		br := v.(*Bearer)
+		if br.IsNetlink() {
+			_ = br.DelTunnel()
+		}
+		name := k.(string)
+		session.bearerMap.delete(name)
+		return true
+	})
+
 	var newSessions []*Session
 	for _, sess := range c.Sessions {
 		if session.IMSI == sess.IMSI {

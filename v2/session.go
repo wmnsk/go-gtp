@@ -53,9 +53,35 @@ func NewSession(peerAddr net.Addr, sub *Subscriber) *Session {
 	s := &Session{
 		mu:         sync.Mutex{},
 		PeerAddr:   peerAddr,
+		Subscriber: sub,
 		teidMap:    newTeidMap(),
 		bearerMap:  newBearerMap("default", &Bearer{QoSProfile: &QoSProfile{}}),
+	}
+
+	u32buf := make([]byte, 4)
+	if _, err := rand.Read(u32buf); err != nil {
+		u32buf = []byte{0x00, 0x00, 0x00, 0x00}
+	}
+	s.Sequence = binary.BigEndian.Uint32(u32buf)
+
+	return s
+}
+
+// NewSessionWithNetlink creates a new Session with subscriber information, using
+// Netlink-based GTP-U bearer with the version given.
+//
+// This is expected to be used by server-like nodes. Otherwise, use CreateSession(),
+// which sends Create Session Request and returns a new Session.
+func NewSessionWithNetlink(peerAddr net.Addr, sub *Subscriber, uVer uint32) *Session {
+	s := &Session{
+		mu:         sync.Mutex{},
+		PeerAddr:   peerAddr,
 		Subscriber: sub,
+		teidMap:    newTeidMap(),
+		bearerMap: newBearerMap(
+			"default",
+			NewNetlinkBearer(uVer, 0, "", &QoSProfile{}),
+		),
 	}
 
 	u32buf := make([]byte, 4)
@@ -245,6 +271,12 @@ func (s *Session) LookupEBIByTEID(teid uint32) uint8 {
 	var ebi uint8
 	s.bearerMap.rangeWithFunc(func(name, bearer interface{}) bool {
 		br := bearer.(*Bearer)
+		if br.IsNetlink() {
+			if teid == br.PDP.ITEI || teid == br.PDP.OTEI {
+				ebi = br.EBI
+				return false
+			}
+		}
 		if teid == br.teidIn || teid == br.teidOut {
 			ebi = br.EBI
 			return false
