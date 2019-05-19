@@ -12,7 +12,7 @@ import (
 )
 
 func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
-	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
 
 	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID())
 	if err != nil {
@@ -90,7 +90,7 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 		return err
 	}
 
-	s11Session, err := s11Conn.GetSessionByIMSI(s5Session.IMSI)
+	s11Session, err := sgw.s11Conn.GetSessionByIMSI(s5Session.IMSI)
 	if err != nil {
 		return err
 	}
@@ -103,16 +103,16 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 }
 
 func handleDeleteSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
-	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
 
 	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID())
 	if err != nil {
 		// this is not such a fatal error worth stopping the whole program.
-		loggerCh <- errors.Wrap(err, "Error").Error()
+		sgw.loggerCh <- errors.Wrap(err, "Error").Error()
 		return nil
 	}
 
-	s11Session, err := s11Conn.GetSessionByIMSI(s5Session.IMSI)
+	s11Session, err := sgw.s11Conn.GetSessionByIMSI(s5Session.IMSI)
 	if err != nil {
 		return err
 	}
@@ -122,8 +122,7 @@ func handleDeleteSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 	}
 
 	// even the cause indicates failure, session should be removed locally.
-	loggerCh <- fmt.Sprintf("Session deleted with P-GW for Subscriber: %s", s5Session.IMSI)
+	sgw.loggerCh <- fmt.Sprintf("Session deleted with P-GW for Subscriber: %s", s5Session.IMSI)
 	s5cConn.RemoveSession(s5Session)
-	delCh <- struct{}{}
 	return nil
 }
