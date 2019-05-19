@@ -17,7 +17,7 @@ import (
 )
 
 func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
-	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
 	s11Session := v2.NewSession(mmeAddr, &v2.Subscriber{Location: &v2.Location{}})
 	s11Bearer := s11Session.GetDefaultBearer()
@@ -98,10 +98,10 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	s11Conn.AddSession(s11Session)
 
 	s5cIP := laddr.IP.String()
-	s5cFTEID := s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPC, s5cIP, "")
-	s5uFTEID := s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s5cIP, "").WithInstance(2)
+	s5cFTEID := sgw.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPC, s5cIP, "")
+	s5uFTEID := sgw.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s5cIP, "").WithInstance(2)
 
-	s5Session, err := s5cConn.CreateSession(
+	s5Session, err := sgw.s5cConn.CreateSession(
 		raddr,
 		csReqFromMME.IMSI, csReqFromMME.MSISDN, csReqFromMME.MEI, csReqFromMME.ServingNetwork,
 		csReqFromMME.RATType, csReqFromMME.IndicationFlags, s5cFTEID, csReqFromMME.PGWS5S8FTEIDC,
@@ -119,9 +119,9 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return err
 	}
 	s5Session.AddTEID(s5uFTEID.InterfaceType(), s5uFTEID.TEID())
-	s5cConn.AddSession(s5Session)
+	sgw.s5cConn.AddSession(s5Session)
 
-	loggerCh <- fmt.Sprintf("Sent Create Session Request to %s for %s", pgwAddrString, s5Session.IMSI)
+	sgw.loggerCh <- fmt.Sprintf("Sent Create Session Request to %s for %s", pgwAddrString, s5Session.IMSI)
 
 	doneCh := make(chan struct{})
 	failCh := make(chan error)
@@ -144,7 +144,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 				failCh <- err
 				return
 			}
-			loggerCh <- fmt.Sprintf(
+			sgw.loggerCh <- fmt.Sprintf(
 				"Sent %s with failure code: %d, target subscriber: %s",
 				csRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI,
 			)
@@ -199,7 +199,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			failCh <- err
 			return
 		}
-		loggerCh <- fmt.Sprintf(
+		sgw.loggerCh <- fmt.Sprintf(
 			"Session created with MME and P-GW for Subscriber: %s;\n\tS11 MME:  %s, TEID->: %#x, TEID<-: %#x\n\tS5C P-GW: %s, TEID->: %#x, TEID<-: %#x",
 			s5Session.Subscriber.IMSI, mmeAddr, s11mmeTEID, s11sgwTEID, pgwAddrString, s5cpgwTEID, s5csgwTEID,
 		)
@@ -209,7 +209,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	select {
 	case <-doneCh:
 		if s11Session.Activate(); err != nil {
-			loggerCh <- errors.Wrap(err, "Error").Error()
+			sgw.loggerCh <- errors.Wrap(err, "Error").Error()
 			s11Conn.RemoveSession(s11Session)
 			return nil
 		}
@@ -224,7 +224,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 }
 
 func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
-	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
@@ -233,7 +233,7 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 	if err != nil {
 		return err
 	}
-	s5cSession, err := s5cConn.GetSessionByIMSI(s11Session.IMSI)
+	s5cSession, err := sgw.s5cConn.GetSessionByIMSI(s11Session.IMSI)
 	if err != nil {
 		return err
 	}
@@ -269,8 +269,8 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 	if err != nil {
 		return err
 	}
-	s1uConn.RelayTo(s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
-	s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
+	sgw.s1uConn.RelayTo(sgw.s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
+	sgw.s5uConn.RelayTo(sgw.s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
 
 	s1uIP, _, err := net.SplitHostPort(*s1u)
 	if err != nil {
@@ -290,7 +290,7 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 		return err
 	}
 
-	loggerCh <- fmt.Sprintf(
+	sgw.loggerCh <- fmt.Sprintf(
 		"Started listening on U-Plane for Subscriber: %s;\n\tS1-U: %s\n\tS5-U: %s",
 		s11Session.IMSI, *s1u, *s5u,
 	)
@@ -298,7 +298,7 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 }
 
 func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
-	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
@@ -310,7 +310,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return err
 	}
 
-	s5Session, err := s5cConn.GetSessionByIMSI(s11Session.IMSI)
+	s5Session, err := sgw.s5cConn.GetSessionByIMSI(s11Session.IMSI)
 	if err != nil {
 		return err
 	}
@@ -320,7 +320,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return err
 	}
 
-	if err := s5cConn.DeleteSession(
+	if err := sgw.s5cConn.DeleteSession(
 		s5cpgwTEID,
 		ies.NewEPSBearerID(s5Session.GetDefaultBearer().EBI),
 	); err != nil {
@@ -330,7 +330,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	// wait for response from P-GW for 5 seconds
 	doneCh := make(chan struct{})
 	failCh := make(chan error)
-	go func(delCh chan struct{}) {
+	go func() {
 		var dsRspFromSGW *messages.DeleteSessionResponse
 		// respond to MME with DeleteSessionResponse.
 		s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
@@ -350,7 +350,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 				failCh <- err
 				return
 			}
-			loggerCh <- fmt.Sprintf(
+			sgw.loggerCh <- fmt.Sprintf(
 				"Sent %s with failure code: %d, target subscriber: %s",
 				dsRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI,
 			)
@@ -374,10 +374,10 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			return
 		}
 
-		loggerCh <- fmt.Sprintf("Session deleted with MME for Subscriber: %s", s11Session.IMSI)
+		sgw.loggerCh <- fmt.Sprintf("Session deleted with MME for Subscriber: %s", s11Session.IMSI)
 		s11Conn.RemoveSession(s11Session)
 		doneCh <- struct{}{}
-	}(delCh)
+	}()
 	select {
 	case <-doneCh:
 		return nil
