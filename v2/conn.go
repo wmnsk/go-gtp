@@ -192,13 +192,11 @@ func (c *Conn) serve() {
 			continue
 		}
 
-		if err := c.handleMessage(raddr, msg); err != nil {
-			// errors should be handled by user
-			go func() {
+		go func() {
+			if err := c.handleMessage(raddr, msg); err != nil {
 				c.errCh <- err
-			}()
-			continue
-		}
+			}
+		}()
 	}
 }
 

@@ -7,7 +7,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"time"
 
@@ -145,8 +144,11 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 				failCh <- err
 				return
 			}
-			loggerCh <- fmt.Sprintf("Sent %s with failure code: %d, target subscriber: %s", csRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI)
-			failCh <- v2.ErrTimeout
+			loggerCh <- fmt.Sprintf(
+				"Sent %s with failure code: %d, target subscriber: %s",
+				csRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI,
+			)
+			failCh <- err
 			return
 
 		}
@@ -270,9 +272,6 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 	s1uConn.RelayTo(s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
 	s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
 
-	log.Printf("S1=>S5: %s, %08x, %08x", s5uBearer.RemoteAddress(), s1usgwTEID, s5uBearer.OutgoingTEID())
-	log.Printf("S5=>S1: %s, %08x, %08x", s1uBearer.RemoteAddress(), s5usgwTEID, s1uBearer.OutgoingTEID())
-
 	s1uIP, _, err := net.SplitHostPort(*s1u)
 	if err != nil {
 		return err
@@ -304,6 +303,8 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
 	// specified correctly in AddHandler().
+	dsReqFromMME := msg.(*messages.DeleteSessionRequest)
+
 	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID())
 	if err != nil {
 		return err
@@ -330,19 +331,44 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	doneCh := make(chan struct{})
 	failCh := make(chan error)
 	go func(delCh chan struct{}) {
-		select {
-		case <-delCh:
-			break
-		case <-time.After(5 * time.Second):
-			loggerCh <- "No Delete Session Response from P-GW, purging session with MME anyway"
-		}
+		var dsRspFromSGW *messages.DeleteSessionResponse
 		// respond to MME with DeleteSessionResponse.
 		s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
 		if err != nil {
 			failCh <- err
 			return
 		}
-		dsRspFromSGW := messages.NewDeleteSessionResponse(s11mmeTEID, s11Session.Sequence)
+
+		message, err := s11Session.WaitMessage(5 * time.Second)
+		if err != nil {
+			dsRspFromSGW = messages.NewDeleteSessionResponse(
+				s11mmeTEID, 0,
+				ies.NewCause(v2.CausePGWNotResponding, 0, 0, 0, nil),
+			)
+
+			if err := s11Conn.RespondTo(mmeAddr, dsReqFromMME, dsRspFromSGW); err != nil {
+				failCh <- err
+				return
+			}
+			loggerCh <- fmt.Sprintf(
+				"Sent %s with failure code: %d, target subscriber: %s",
+				dsRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI,
+			)
+			failCh <- err
+			return
+		}
+
+		// use the cause as it is.
+		switch m := message.(type) {
+		case *messages.DeleteSessionResponse:
+			// move forward
+			dsRspFromSGW = m
+		default:
+			failCh <- v2.ErrUnexpectedType
+			return
+		}
+
+		dsRspFromSGW.SetTEID(s11mmeTEID)
 		if err := s11Conn.RespondTo(mmeAddr, msg, dsRspFromSGW); err != nil {
 			failCh <- err
 			return
