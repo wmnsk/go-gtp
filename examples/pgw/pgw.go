@@ -56,7 +56,19 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 	session := v2.NewSession(sgwAddr, &v2.Subscriber{Location: &v2.Location{}})
 	bearer := session.GetDefaultBearer()
 	if ie := csReqFromSGW.IMSI; ie != nil {
-		session.IMSI = ie.IMSI()
+		imsi := ie.IMSI()
+		session.IMSI = imsi
+
+		// remove previous session for the same subscriber if exists.
+		sess, err := c.GetSessionByIMSI(imsi)
+		if err != nil {
+			if err == v2.ErrUnknownIMSI {
+				// whole new session. just ignore.
+			}
+			return errors.Wrap(err, "got something unexpected")
+		} else {
+			c.RemoveSession(sess)
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.IMSI}
 	}
