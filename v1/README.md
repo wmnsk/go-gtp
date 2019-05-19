@@ -63,7 +63,7 @@ if _, err := uConn.WriteToGTP(teid, payload, addr); err != nil {
 ```
 
 For SGSN/S-GW-ish nodes, this package provides a method to swap TEID and forward T-PDU packets efficiently.  
-By using `*UPlaneConn.Relay()`, the connection automatically handles the T-PDU packet in background with the least cost.
+By using `*UPlaneConn.RelayTo()`, the connection automatically handles the T-PDU packet in background with the least cost.
 
 ```go
 // this is the example for S-GW that completed establishing a session and ready to forward U-Plane packets.

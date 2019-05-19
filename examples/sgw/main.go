@@ -30,8 +30,9 @@ import (
 	"net"
 	"time"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
+	"github.com/pkg/errors"
 
+	v1 "github.com/wmnsk/go-gtp/v1"
 	v2 "github.com/wmnsk/go-gtp/v2"
 	"github.com/wmnsk/go-gtp/v2/messages"
 )
@@ -48,9 +49,9 @@ var (
 	delCh    = make(chan struct{})
 	loggerCh = make(chan string)
 	errCh    = make(chan error)
-	s5cConn  *v2.Conn
-	s1uConn  *v1.UPlaneConn
-	s5uConn  *v1.UPlaneConn
+
+	s11Conn, s5cConn *v2.Conn
+	s1uConn, s5uConn *v1.UPlaneConn
 )
 
 func main() {
@@ -62,20 +63,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	s1uladdr, err := net.ResolveUDPAddr("udp", *s1u)
-	if err != nil {
-		log.Fatal(err)
-	}
-	s5uladdr, err := net.ResolveUDPAddr("udp", *s5u)
+	s5claddr, err := net.ResolveUDPAddr("udp", *s5c)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	s11Conn, err := v2.ListenAndServe(s11laddr, 0, errCh)
+	s11Conn, err = v2.ListenAndServe(s11laddr, 0, errCh)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer s11Conn.Close()
+
+	s5cConn, err = v2.ListenAndServe(s5claddr, 0, errCh)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer s5cConn.Close()
 	log.Printf("Started serving on %s", s11Conn.LocalAddr())
 
 	// register handlers for ALL the messages you expect remote endpoint to send.
@@ -84,9 +87,20 @@ func main() {
 		messages.MsgTypeModifyBearerRequest:  handleModifyBearerRequest,
 		messages.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
 	})
+	s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
+		messages.MsgTypeCreateSessionResponse: handleCreateSessionResponse,
+		messages.MsgTypeDeleteSessionResponse: handleDeleteSessionResponse,
+	})
 
-	// let relay start working here.
-	// this just drops packets until TEID and peer information is registered.
+	// start U-Plane
+	s1uladdr, err := net.ResolveUDPAddr("udp", *s1u)
+	if err != nil {
+		log.Fatal(err)
+	}
+	s5uladdr, err := net.ResolveUDPAddr("udp", *s5u)
+	if err != nil {
+		log.Fatal(err)
+	}
 	s1uConn, err = v1.ListenAndServeUPlane(s1uladdr, 0, errCh)
 	if err != nil {
 		log.Fatal(err)
@@ -102,7 +116,7 @@ func main() {
 		case str := <-loggerCh:
 			log.Println(str)
 		case err := <-errCh:
-			log.Printf("Warning: %s", err)
+			log.Printf("Warning: %s", errors.WithStack(err))
 		case <-time.After(10 * time.Second):
 			var activeIMSIs []string
 			for _, sess := range s11Conn.Sessions {

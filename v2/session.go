@@ -9,6 +9,9 @@ import (
 	"encoding/binary"
 	"net"
 	"sync"
+	"time"
+
+	"github.com/wmnsk/go-gtp/v2/messages"
 
 	"github.com/wmnsk/go-gtp/v2/ies"
 )
@@ -33,6 +36,7 @@ type Session struct {
 	isActive bool
 	*teidMap
 	*bearerMap
+	inflightCh chan messages.Message
 
 	// PeerAddr is a net.Addr of the peer of the Session.
 	PeerAddr net.Addr
@@ -56,6 +60,7 @@ func NewSession(peerAddr net.Addr, sub *Subscriber) *Session {
 		teidMap:    newTeidMap(),
 		bearerMap:  newBearerMap("default", &Bearer{QoSProfile: &QoSProfile{}}),
 		Subscriber: sub,
+		inflightCh: make(chan messages.Message),
 	}
 
 	u32buf := make([]byte, 4)
@@ -167,6 +172,28 @@ func (s *Session) GetTEID(ifType uint8) (uint32, error) {
 		return teid, nil
 	}
 	return 0, ErrTEIDNotFound
+}
+
+// PassMessageTo passes the message (typically "triggerred message") to the session
+// expecting to receive it.
+func PassMessageTo(s *Session, msg messages.Message, timeout time.Duration) error {
+	select {
+	case s.inflightCh <- msg:
+		return nil
+	case <-time.After(timeout):
+		return ErrTimeout
+	}
+}
+
+// WaitMessage waits for a message to come.
+// Unless the user does not use PassMessage() func, this always fails with timeout.
+func (s *Session) WaitMessage(timeout time.Duration) (messages.Message, error) {
+	select {
+	case msg := <-s.inflightCh:
+		return msg, nil
+	case <-time.After(timeout):
+		return nil, ErrTimeout
+	}
 }
 
 // AddBearer adds a Bearer to Session with arbitrary name given.
