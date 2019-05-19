@@ -5,12 +5,13 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 
 	v1 "github.com/wmnsk/go-gtp/v1"
 	v2 "github.com/wmnsk/go-gtp/v2"
@@ -51,6 +52,21 @@ func dispatch(subs []*v2.Subscriber) {
 // handleAttach is to start the session creation on S11.
 // in the real case this should be called after the procedure on S1AP/NAS has been done.
 func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer) error {
+	// remove previous session for the same subscriber if exists.
+	sess, err := c.GetSessionByIMSI(sub.IMSI)
+	if err != nil {
+		if err == v2.ErrUnknownIMSI {
+			// whole new session. just ignore.
+		}
+		return errors.Wrap(err, "got something unexpected")
+	} else {
+		// send Delete Session Request to cleanup sessions in S/P-GW.
+		if err := sess.Delete(c, v2.IFTypeS11S4SGWGTPC); err != nil {
+			return errors.Wrap(err, "got something unexpected")
+		}
+		c.RemoveSession(sess)
+	}
+
 	pgwAddr, err := getPGWIP(br.APN)
 	if err != nil {
 		return err
@@ -94,8 +110,8 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 	if err != nil {
 		return err
 	}
-	c.AddSession(session)
 
+	c.AddSession(session)
 	return nil
 }
 

@@ -7,7 +7,6 @@ package v2
 import (
 	"crypto/rand"
 	"encoding/binary"
-	"log"
 	"net"
 	"sync"
 	"time"
@@ -552,9 +551,6 @@ func (c *Conn) GetSessionByTEID(teid uint32) (*Session, error) {
 
 // GetSessionByIMSI returns the current session looked up by IMSI.
 func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
-	if c.Sessions == nil {
-		log.Fatal(ErrUnknownIMSI)
-	}
 	for _, sess := range c.Sessions {
 		if imsi == sess.IMSI {
 			return sess, nil

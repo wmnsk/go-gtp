@@ -53,7 +53,20 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	// keep session information retrieved from the message.
 	// XXX - should return error if required IE is missing.
 	if ie := csReqFromMME.IMSI; ie != nil {
-		s11Session.IMSI = ie.IMSI()
+		imsi := ie.IMSI()
+		// remove previous session for the same subscriber if exists.
+		sess, err := s11Conn.GetSessionByIMSI(imsi)
+		if err != nil {
+			if err == v2.ErrUnknownIMSI {
+				// whole new session. just ignore.
+			} else {
+				return errors.Wrap(err, "got something unexpected")
+			}
+		} else {
+			s11Conn.RemoveSession(sess)
+		}
+
+		s11Session.IMSI = imsi
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.IMSI}
 	}
