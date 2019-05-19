@@ -226,9 +226,6 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
-	// assert type to refer to the struct field specific to the message.
-	// in general, no need to check if it can be type-asserted, as long as the MessageType is
-	// specified correctly in AddHandler().
 	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID())
 	if err != nil {
 		return err
@@ -240,6 +237,9 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 	s1uBearer := s11Session.GetDefaultBearer()
 	s5uBearer := s5cSession.GetDefaultBearer()
 
+	// assert type to refer to the struct field specific to the message.
+	// in general, no need to check if it can be type-asserted, as long as the MessageType is
+	// specified correctly in AddHandler().
 	mbReqFromMME := msg.(*messages.ModifyBearerRequest)
 	if brCtxIE := mbReqFromMME.BearerContextsToBeModified; brCtxIE != nil {
 		for _, ie := range brCtxIE.ChildIEs {
@@ -332,7 +332,6 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	failCh := make(chan error)
 	go func() {
 		var dsRspFromSGW *messages.DeleteSessionResponse
-		// respond to MME with DeleteSessionResponse.
 		s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
 		if err != nil {
 			failCh <- err
@@ -374,7 +373,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			return
 		}
 
-		sgw.loggerCh <- fmt.Sprintf("Session deleted with MME for Subscriber: %s", s11Session.IMSI)
+		sgw.loggerCh <- fmt.Sprintf("Session deleted for Subscriber: %s", s11Session.IMSI)
 		s11Conn.RemoveSession(s11Session)
 		doneCh <- struct{}{}
 	}()
@@ -384,6 +383,28 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	case err := <-failCh:
 		return err
 	}
+}
+
+func handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+
+	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID())
+	if err != nil {
+		return err
+	}
+
+	s5Session, err := sgw.s5cConn.GetSessionByIMSI(s11Session.IMSI)
+	if err != nil {
+		return err
+	}
+
+	if err := v2.PassMessageTo(s5Session, msg, 5*time.Second); err != nil {
+		return err
+	}
+
+	// remove bearer in handleDeleteBearerRequest instead of doing here,
+	// as Delete Bearer Request does not necessarily have EBI.
+	return nil
 }
 
 func handleFTEIDU(ie *ies.IE, session *v2.Session, bearer *v2.Bearer) error {

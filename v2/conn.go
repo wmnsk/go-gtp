@@ -473,7 +473,7 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
 	return sess, nil
 }
 
-// DeleteSession sends a DeleteSessionRequest with EBI associated with the TEID given.
+// DeleteSession sends a DeleteSessionRequest with TEID and IEs given..
 func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) error {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
@@ -492,7 +492,7 @@ func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) error {
 	return nil
 }
 
-// ModifyBearer sends a ModifyBearerRequest with EBI associated with the TEID given.
+// ModifyBearer sends a ModifyBearerRequest with TEID and IEs given..
 func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) error {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
@@ -505,6 +505,25 @@ func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) error {
 	}
 
 	if _, err := c.WriteTo(mbr, sess.PeerAddr); err != nil {
+		return err
+	}
+	sess.Sequence++
+	return nil
+}
+
+// DeleteBearer sends a DeleteBearerRequest TEID and with IEs given.
+func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) error {
+	sess, err := c.GetSessionByTEID(teid)
+	if err != nil {
+		return err
+	}
+
+	dbr, err := messages.NewDeleteBearerRequest(teid, sess.Sequence+1, ie...).Serialize()
+	if err != nil {
+		return err
+	}
+
+	if _, err := c.WriteTo(dbr, sess.PeerAddr); err != nil {
 		return err
 	}
 	sess.Sequence++

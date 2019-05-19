@@ -209,6 +209,15 @@ func (s *Session) RemoveBearer(name string) {
 	s.bearerMap.delete(name)
 }
 
+// RemoveBearerByEBI removes a Bearer looked up by name.
+func (s *Session) RemoveBearerByEBI(ebi uint8) {
+	name, err := s.LookupBearerNameByEBI(ebi)
+	if err != nil {
+		return
+	}
+	s.bearerMap.delete(name)
+}
+
 // GetDefaultBearer returns the pointer to default bearer.
 func (s *Session) GetDefaultBearer() *Bearer {
 	// it is not expected that the default bearer cannot be found.
@@ -252,6 +261,25 @@ func (s *Session) LookupBearerByEBI(ebi uint8) (*Bearer, error) {
 
 	}
 	return bearer, nil
+}
+
+// LookupBearerNameByEBI looks up name of Bearer by EBI.
+func (s *Session) LookupBearerNameByEBI(ebi uint8) (string, error) {
+	var name string
+	s.bearerMap.rangeWithFunc(func(n, br interface{}) bool {
+		bearer := br.(*Bearer)
+		if ebi == bearer.EBI {
+			name = n.(string)
+			return false
+		}
+		return true
+	})
+
+	if name == "" {
+		return "", ErrNoBearerFound
+
+	}
+	return name, nil
 }
 
 // LookupEBIByName returns EBI associated with Name given.
