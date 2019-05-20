@@ -365,3 +365,17 @@ func (b *bearerMap) delete(name string) {
 func (b *bearerMap) rangeWithFunc(fn func(name, bearer interface{}) bool) {
 	b.syncMap.Range(fn)
 }
+
+// BearerCount returns the number of bearers registered in Conn.
+func (s *Session) BearerCount() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var count int
+	s.bearerMap.rangeWithFunc(func(k, v interface{}) bool {
+		count++
+		return true
+	})
+
+	return count
+}

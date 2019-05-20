@@ -656,3 +656,31 @@ func generateUniqueUint32(vals []uint32) uint32 {
 
 	return generated
 }
+
+// SessionCount returns the number of sessions registered in Conn.
+func (c *Conn) SessionCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	var count int
+	for _, sess := range c.Sessions {
+		if sess.IsActive() {
+			count++
+		}
+	}
+	return count
+}
+
+// BearerCount returns the number of bearers registered in Conn.
+func (c *Conn) BearerCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	var count int
+	for _, sess := range c.Sessions {
+		if sess.IsActive() {
+			count += sess.BearerCount()
+		}
+	}
+	return count
+}
