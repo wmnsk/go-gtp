@@ -62,23 +62,16 @@ if _, err := uConn.WriteToGTP(teid, payload, addr); err != nil {
 }
 ```
 
-For SGSN/S-GW-ish nodes, this package provides a special feature: `Relay`. It relays a packet coming from a `UPlaneConn` to another.
+For SGSN/S-GW-ish nodes, this package provides a method to swap TEID and forward T-PDU packets efficiently.  
+By using `*UPlaneConn.RelayTo()`, the connection automatically handles the T-PDU packet in background with the least cost.
 
 ```go
-// s1Conn, s5Conn is UPlaneConn retrieved with Dial() or ListenAndServe().
-relay := v1.NewRelay(s1Conn, s5Conn)
-
-// associate incoming TEID on S1 with outgoing TEID and address on S5, and vice versa.
-relay.AddPeer(s1TEIDIn, s5TEIDOut, s5Addr)
-relay.AddPeer(s5TEIDIn, s1TEIDOut, s1Addr)
-
-// make it start working by Run(), often good to work background.
-// if no peer is registered, it just drops the packets.
-go relay.Run()
-defer relay.Close()
+// this is the example for S-GW that completed establishing a session and ready to forward U-Plane packets.
+s1uConn.RelayTo(s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
+s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
 ```
 
-Note: _package v1 does provide encapsulation/decapsulation and some networking features, but it does not provide routing of the decapsulated packets, nor capturing IP layer and above on the specified interface. This is because such kind of operations cannot be done without platform-specific codes._
+_Note: _package v1 does provide encapsulation/decapsulation and some networking features, but it does not provide routing of the decapsulated packets, nor capturing IP layer and above on the specified interface. This is because such kind of operations cannot be done without platform-specific codes, But **netlink support is on its way**; stay tuned!_
 
 ## Supported Features
 
@@ -89,7 +82,7 @@ The following Messages marked with "Yes" are currently available with their own 
 _Even there are some missing Messages, you can create any kind of Message by using `messages.NewGeneric()`._
 
 | ID        | Name                                        | Supported |
-|-----------|---------------------------------------------|-----------|
+| --------- | ------------------------------------------- | --------- |
 | 0         | (Spare/Reserved)                            | -         |
 | 1         | Echo Request                                | Yes       |
 | 2         | Echo Response                               | Yes       |
@@ -177,7 +170,7 @@ The following Information Elements marked with "Yes" are currently supported wit
 _Even there are some missing IEs, you can create any kind of IEs by using `ies.New()` function or by initializing ies.IE directly._
 
 | ID      | Name                                      | Supported |
-|---------|-------------------------------------------|-----------|
+| ------- | ----------------------------------------- | --------- |
 | 0       | (Spare/Reserved)                          | -         |
 | 1       | Cause                                     | Yes       |
 | 2       | IMSI                                      | Yes       |

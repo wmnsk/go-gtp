@@ -9,6 +9,9 @@ import (
 	"encoding/binary"
 	"net"
 	"sync"
+	"time"
+
+	"github.com/wmnsk/go-gtp/v2/messages"
 
 	"github.com/wmnsk/go-gtp/v2/ies"
 )
@@ -33,6 +36,7 @@ type Session struct {
 	isActive bool
 	*teidMap
 	*bearerMap
+	inflightCh chan messages.Message
 
 	// PeerAddr is a net.Addr of the peer of the Session.
 	PeerAddr net.Addr
@@ -82,6 +86,7 @@ func NewSessionWithNetlink(peerAddr net.Addr, sub *Subscriber, uVer uint32) *Ses
 			"default",
 			NewNetlinkBearer(uVer, 0, "", &QoSProfile{}),
 		),
+		inflightCh: make(chan messages.Message),
 	}
 
 	u32buf := make([]byte, 4)
@@ -195,6 +200,28 @@ func (s *Session) GetTEID(ifType uint8) (uint32, error) {
 	return 0, ErrTEIDNotFound
 }
 
+// PassMessageTo passes the message (typically "triggerred message") to the session
+// expecting to receive it.
+func PassMessageTo(s *Session, msg messages.Message, timeout time.Duration) error {
+	select {
+	case s.inflightCh <- msg:
+		return nil
+	case <-time.After(timeout):
+		return ErrTimeout
+	}
+}
+
+// WaitMessage waits for a message to come.
+// Unless the user does not use PassMessage() func, this always fails with timeout.
+func (s *Session) WaitMessage(timeout time.Duration) (messages.Message, error) {
+	select {
+	case msg := <-s.inflightCh:
+		return msg, nil
+	case <-time.After(timeout):
+		return nil, ErrTimeout
+	}
+}
+
 // AddBearer adds a Bearer to Session with arbitrary name given.
 //
 // In the single-bearer environment it is not used, as a bearer named "default" is
@@ -205,6 +232,15 @@ func (s *Session) AddBearer(name string, br *Bearer) {
 
 // RemoveBearer removes a Bearer looked up by name.
 func (s *Session) RemoveBearer(name string) {
+	s.bearerMap.delete(name)
+}
+
+// RemoveBearerByEBI removes a Bearer looked up by name.
+func (s *Session) RemoveBearerByEBI(ebi uint8) {
+	name, err := s.LookupBearerNameByEBI(ebi)
+	if err != nil {
+		return
+	}
 	s.bearerMap.delete(name)
 }
 
@@ -231,7 +267,7 @@ func (s *Session) LookupBearerByName(name string) (*Bearer, error) {
 		return br, nil
 	}
 
-	return nil, ErrNoBearerFound
+	return nil, &ErrNoBearerFound{IMSI: s.IMSI}
 }
 
 // LookupBearerByEBI looks up Bearer registered in Session by EBI.
@@ -247,10 +283,29 @@ func (s *Session) LookupBearerByEBI(ebi uint8) (*Bearer, error) {
 	})
 
 	if bearer == nil {
-		return nil, ErrNoBearerFound
+		return nil, &ErrNoBearerFound{IMSI: s.IMSI}
 
 	}
 	return bearer, nil
+}
+
+// LookupBearerNameByEBI looks up name of Bearer by EBI.
+func (s *Session) LookupBearerNameByEBI(ebi uint8) (string, error) {
+	var name string
+	s.bearerMap.rangeWithFunc(func(n, br interface{}) bool {
+		bearer := br.(*Bearer)
+		if ebi == bearer.EBI {
+			name = n.(string)
+			return false
+		}
+		return true
+	})
+
+	if name == "" {
+		return "", &ErrNoBearerFound{IMSI: s.IMSI}
+
+	}
+	return name, nil
 }
 
 // LookupEBIByName returns EBI associated with Name given.
@@ -341,4 +396,18 @@ func (b *bearerMap) delete(name string) {
 
 func (b *bearerMap) rangeWithFunc(fn func(name, bearer interface{}) bool) {
 	b.syncMap.Range(fn)
+}
+
+// BearerCount returns the number of bearers registered in Conn.
+func (s *Session) BearerCount() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var count int
+	s.bearerMap.rangeWithFunc(func(k, v interface{}) bool {
+		count++
+		return true
+	})
+
+	return count
 }

@@ -102,9 +102,9 @@ const (
 	CauseAllDynamicAddressesAreOccupied                                                 uint8 = 84
 	CauseUEContextWithoutTFTAlreadyActivated                                            uint8 = 85
 	CauseProtocolTypeNotSupported                                                       uint8 = 86
-	CauseUENotRespondinguint8                                                           uint8 = 87
+	CauseUENotResponding                                                                uint8 = 87
 	CauseUERefuses                                                                      uint8 = 88
-	CauseServiceDenieduint8                                                             uint8 = 89
+	CauseServiceDenied                                                                  uint8 = 89
 	CauseUnableToPageUE                                                                 uint8 = 90
 	CauseNoMemoryAvailable                                                              uint8 = 91
 	CauseUserAuthenticationFailed                                                       uint8 = 92

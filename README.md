@@ -21,12 +21,18 @@ Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol
 
 ### Prerequisites
 
-The following packages should be installed before starting.
+The following packages should be installed before starting.  
 
 ```shell-session
 go get -u github.com/pkg/errors
 go get -u github.com/google/go-cmp/cmp
 go get -u github.com/pascaldekloe/goe/verify
+```
+
+If you use Go 1.11+, you can also use Go Modules.
+
+```shell-session
+GO111MODULE=on go [test | build | run | etc...]
 ```
 
 ### Running examples
@@ -60,6 +66,8 @@ Examples works as it is by `go build` and executing commands in the following wa
 
 5. You will see the nodes exchanging Create Session and Modify Bearer on C-Plane, and ICMP Echo on U-Plane afterwards.
 
+_If you want to see fewer number of subscribers, please comment-out the `v2.Subscriber` definitions in `example/mme/main.go`._
+
 ### Developing by your own
 
 Each version has `net.PacketConn`-like APIs and GTP-specific ones which is often version-specific.
@@ -71,11 +79,11 @@ The basic idea behind the current implementation is;
 
 For the detailed usage of specific version, see README.md under each version's directory.
 
-| Version | Details                       |
-|---------|-------------------------------|
-| GTPv0   | [README.md](gtp/v0/README.md) |
-| GTPv1   | [README.md](gtp/v1/README.md) |
-| GTPv2   | [README.md](gtp/v2/README.md) |
+| Version | Details                   |
+| ------- | ------------------------- |
+| GTPv0   | [README.md](v0/README.md) |
+| GTPv1   | [README.md](v1/README.md) |
+| GTPv2   | [README.md](v2/README.md) |
 
 ## Supported Features
 
@@ -84,12 +92,12 @@ In other words, even if a message/IE is not marked as "Yes", you can make it wor
 
 Your contribution is welcome to implement helpers for all the types, of course!
 
-| Version           | Messages | IEs   | Networking (state machine)                           | Details                                                   |
-|-------------------|----------|-------|------------------------------------------------------|-----------------------------------------------------------|
-| GTPv0             | 35.7%    | 81.8% | not implemented yet                                  | [Supported Features](gtp/v0/README.md#supported-features) |
-| GTPv1             | 26.6%    | 30.1% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](gtp/v1/README.md#supported-features) |
-| GTPv2             | 32.0%    | 43.2% | almost functional                                    | [Supported Features](gtp/v2/README.md#supported-features) |
-| GTP' <br> (Prime) | N/A      | N/A   | N/A                                                  | _not planned_                                             |
+| Version           | Messages | IEs   | Networking (state machine)                           | Details                                               |
+| ----------------- | -------- | ----- | ---------------------------------------------------- | ----------------------------------------------------- |
+| GTPv0             | 35.7%    | 81.8% | not implemented yet                                  | [Supported Features](v0/README.md#supported-features) |
+| GTPv1             | 26.6%    | 30.1% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](v1/README.md#supported-features) |
+| GTPv2             | 32.0%    | 43.2% | almost functional                                    | [Supported Features](v2/README.md#supported-features) |
+| GTP' <br> (Prime) | N/A      | N/A   | N/A                                                  | _not planned_                                         |
 
 ## Disclaimer
 

@@ -5,6 +5,7 @@
 package v1
 
 import (
+	"encoding/binary"
 	"net"
 	"strings"
 	"sync"
@@ -31,6 +32,8 @@ type UPlaneConn struct {
 	tpduCh  chan *tpduSet
 	closeCh chan struct{}
 	errCh   chan error
+
+	relayMap map[uint32]*peer
 
 	// RestartCounter is the RestartCounter value in Recovery IE, which represents how many
 	// times the GTPv2-C endpoint is restarted.
@@ -139,8 +142,40 @@ func (u *UPlaneConn) serve() {
 			continue
 		}
 
-		msg, err := messages.Decode(u.rcvBuf[:n])
+		payload := u.rcvBuf[:n]
+		msg, err := messages.Decode(payload)
 		if err != nil {
+			continue
+		}
+
+		// just forward T-PDU instead of passing it to reader
+		// if relayer is configured.
+		if len(u.relayMap) != 0 {
+			// handle by handleMessage() if it's not T-PDU.
+			if msg.MessageType() != messages.MsgTypeTPDU {
+				if err := u.handleMessage(raddr, msg); err != nil {
+					// errors should be handled by user
+					go func() {
+						u.errCh <- err
+					}()
+					continue
+				}
+			}
+
+			u.mu.Lock()
+			peer, ok := u.relayMap[msg.TEID()]
+			u.mu.Unlock()
+			if !ok {
+				continue
+			}
+
+			// just use original packet not to get it slow.
+			binary.BigEndian.PutUint32(payload[4:8], peer.teid)
+			if _, err := peer.srcConn.WriteTo(payload, peer.addr); err != nil {
+				go func() {
+					u.errCh <- err
+				}()
+			}
 			continue
 		}
 
@@ -372,4 +407,21 @@ func (u *UPlaneConn) RespondTo(raddr net.Addr, received, toBeSent messages.Messa
 // Restarts returns the number of restarts in uint8.
 func (u *UPlaneConn) Restarts() uint8 {
 	return u.RestartCounter
+}
+
+type peer struct {
+	teid    uint32
+	addr    net.Addr
+	srcConn *UPlaneConn
+}
+
+// RelayTo relays T-PDU type of packet to peer node(specified by raddr) from the UPlaneConn given.
+//
+// By using this, owner of UPlaneConn won't be able to Read and Write the packets that has teidIn.
+func (u *UPlaneConn) RelayTo(c *UPlaneConn, teidIn, teidOut uint32, raddr net.Addr) error {
+	if u.relayMap == nil {
+		u.relayMap = map[uint32]*peer{}
+	}
+	u.relayMap[teidIn] = &peer{teid: teidOut, addr: raddr, srcConn: c}
+	return nil
 }

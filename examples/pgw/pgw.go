@@ -56,7 +56,21 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 	session := v2.NewSession(sgwAddr, &v2.Subscriber{Location: &v2.Location{}})
 	bearer := session.GetDefaultBearer()
 	if ie := csReqFromSGW.IMSI; ie != nil {
-		session.IMSI = ie.IMSI()
+		imsi := ie.IMSI()
+		session.IMSI = imsi
+
+		// remove previous session for the same subscriber if exists.
+		sess, err := c.GetSessionByIMSI(imsi)
+		if err != nil {
+			switch err.(type) {
+			case *v2.ErrUnknownIMSI:
+				// whole new session. just ignore.
+			default:
+				return errors.Wrap(err, "got something unexpected")
+			}
+		} else {
+			c.RemoveSession(sess)
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.IMSI}
 	}
@@ -176,13 +190,13 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 			}
 
 			rsp := make([]byte, n)
-			// swap IP
-			copy(rsp[12:16], buf[16:20])
-			copy(rsp[16:20], buf[12:16])
 			// update message type and checksum
 			copy(rsp, buf[:n])
 			rsp[20] = 0
 			rsp[22] = 0x9b
+			// swap IP
+			copy(rsp[12:16], buf[16:20])
+			copy(rsp[16:20], buf[12:16])
 
 			if _, err := uConn.WriteToGTP(teidOut, rsp, raddr); err != nil {
 				return

@@ -8,23 +8,16 @@ package main
 import (
 	"fmt"
 	"net"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	v1 "github.com/wmnsk/go-gtp/v1"
 	v2 "github.com/wmnsk/go-gtp/v2"
 	"github.com/wmnsk/go-gtp/v2/ies"
 	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
-var (
-	s5cConn *v2.Conn
-	relay   *v1.Relay
-)
-
 func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
-	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
 	s11Session := v2.NewSession(mmeAddr, &v2.Subscriber{Location: &v2.Location{}})
 	s11Bearer := s11Session.GetDefaultBearer()
@@ -55,17 +48,25 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	if err != nil {
 		return err
 	}
-	if s5cConn == nil {
-		s5cConn, err = v2.Dial(laddr, raddr, 0, errCh)
-		if err != nil {
-			return err
-		}
-	}
 
 	// keep session information retrieved from the message.
 	// XXX - should return error if required IE is missing.
 	if ie := csReqFromMME.IMSI; ie != nil {
-		s11Session.IMSI = ie.IMSI()
+		imsi := ie.IMSI()
+		// remove previous session for the same subscriber if exists.
+		sess, err := s11Conn.GetSessionByIMSI(imsi)
+		if err != nil {
+			switch err.(type) {
+			case *v2.ErrUnknownIMSI:
+				// whole new session. just ignore.
+			default:
+				return errors.Wrap(err, "got something unexpected")
+			}
+		} else {
+			s11Conn.RemoveSession(sess)
+		}
+
+		s11Session.IMSI = imsi
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.IMSI}
 	}
@@ -97,119 +98,11 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	}
 	s11Conn.AddSession(s11Session)
 
-	// register handlers in s11Conn before sending CreateSession to P-GW.
-	createCh := make(chan *messages.CreateSessionResponse)
-	s5cConn.AddHandler(
-		messages.MsgTypeCreateSessionResponse,
-		func(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
-			loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
+	s5cIP := laddr.IP.String()
+	s5cFTEID := sgw.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPC, s5cIP, "")
+	s5uFTEID := sgw.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s5cIP, "").WithInstance(2)
 
-			s5Session, err := s5cConn.GetSessionByTEID(msg.TEID())
-			if err != nil {
-				return err
-			}
-
-			// assert type to refer to the struct field specific to the message.
-			// in general, no need to check if it can be type-asserted, as long as the MessageType is
-			// specified correctly in AddHandler().
-			csRspFromPGW := msg.(*messages.CreateSessionResponse)
-
-			// check Cause value first.
-			if ie := csRspFromPGW.Cause; ie != nil {
-				if cause := ie.Cause(); cause != v2.CauseRequestAccepted {
-					s5cConn.RemoveSession(s5Session)
-					// this is not such a fatal error worth stopping the whole program.
-					// in the real case it is better to take some action based on the Cause, though.
-					return &v2.ErrCauseNotOK{
-						MsgType: csRspFromPGW.MessageTypeName(),
-						Cause:   cause,
-						Msg:     fmt.Sprintf("subscriber: %s", s5Session.IMSI),
-					}
-				}
-			} else {
-				s5cConn.RemoveSession(s5Session)
-				return &v2.ErrRequiredIEMissing{
-					Type: ies.Cause,
-				}
-			}
-
-			bearer := s5Session.GetDefaultBearer()
-			// retrieve values that P-GW gave.
-			if ie := csRspFromPGW.PAA; ie != nil {
-				bearer.SubscriberIP = ie.IPAddress()
-			} else {
-				s5cConn.RemoveSession(s5Session)
-				return &v2.ErrRequiredIEMissing{Type: ies.PDNAddressAllocation}
-			}
-			if ie := csRspFromPGW.PGWS5S8FTEIDC; ie != nil {
-				s5Session.AddTEID(ie.InterfaceType(), ie.TEID())
-			} else {
-				s5cConn.RemoveSession(s5Session)
-				return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
-			}
-
-			if brCtxIE := csRspFromPGW.BearerContextsCreated; brCtxIE != nil {
-				for _, ie := range brCtxIE.ChildIEs {
-					switch ie.Type {
-					case ies.Cause:
-						if cause := ie.Cause(); cause != v2.CauseRequestAccepted {
-							s5cConn.RemoveSession(s5Session)
-							return &v2.ErrCauseNotOK{
-								MsgType: csRspFromPGW.MessageTypeName(),
-								Cause:   cause,
-								Msg:     fmt.Sprintf("subscriber: %s", s5Session.IMSI),
-							}
-						}
-					case ies.EPSBearerID:
-						bearer.EBI = ie.EPSBearerID()
-					case ies.FullyQualifiedTEID:
-						if err := handleFTEIDU(ie, s5Session, bearer); err != nil {
-							return err
-						}
-					case ies.ChargingID:
-						bearer.ChargingID = ie.ChargingID()
-					}
-				}
-			} else {
-				s5cConn.RemoveSession(s5Session)
-				return &v2.ErrRequiredIEMissing{Type: ies.BearerContext}
-			}
-
-			if err := s5Session.Activate(); err != nil {
-				s5cConn.RemoveSession(s5Session)
-				return err
-			}
-
-			go func() {
-				createCh <- csRspFromPGW
-			}()
-			return nil
-		},
-	)
-	s5cConn.AddHandler(
-		messages.MsgTypeDeleteSessionResponse,
-		func(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
-			loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
-
-			session, err := s5cConn.GetSessionByTEID(msg.TEID())
-			if err != nil {
-				// this is not such a fatal error worth stopping the whole program.
-				loggerCh <- errors.Wrap(err, "Error").Error()
-				return nil
-			}
-
-			loggerCh <- fmt.Sprintf("Session deleted with P-GW for Subscriber: %s", session.IMSI)
-			s5cConn.RemoveSession(session)
-			delCh <- struct{}{}
-			return nil
-		},
-	)
-
-	s5cIP := strings.Split(laddr.IP.String(), ":")[0]
-	s5cFTEID := s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPC, s5cIP, "")
-	s5uFTEID := s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s5cIP, "").WithInstance(2)
-
-	s5Session, err := s5cConn.CreateSession(
+	s5Session, err := sgw.s5cConn.CreateSession(
 		raddr,
 		csReqFromMME.IMSI, csReqFromMME.MSISDN, csReqFromMME.MEI, csReqFromMME.ServingNetwork,
 		csReqFromMME.RATType, csReqFromMME.IndicationFlags, s5cFTEID, csReqFromMME.PGWS5S8FTEIDC,
@@ -227,9 +120,9 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return err
 	}
 	s5Session.AddTEID(s5uFTEID.InterfaceType(), s5uFTEID.TEID())
-	s5cConn.AddSession(s5Session)
+	sgw.s5cConn.AddSession(s5Session)
 
-	loggerCh <- fmt.Sprintf("Sent Create Session Request to %s for %s", pgwAddrString, s5Session.IMSI)
+	sgw.loggerCh <- fmt.Sprintf("Sent Create Session Request to %s for %s", pgwAddrString, s5Session.IMSI)
 
 	doneCh := make(chan struct{})
 	failCh := make(chan error)
@@ -240,27 +133,9 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			failCh <- err
 			return
 		}
-		select {
-		case csRspFromPGW := <-createCh:
-			// if everything in CreateSessionResponse seems OK, relay it to MME.
-			s11IP := strings.Split(*s11, ":")[0]
-			senderFTEID := s11Conn.NewFTEID(v2.IFTypeS11S4SGWGTPC, s11IP, "")
-			s1usgwFTEID := s11Conn.NewFTEID(v2.IFTypeS1USGWGTPU, s11IP, "")
-			csRspFromSGW = csRspFromPGW
-			csRspFromSGW.SenderFTEIDC = senderFTEID
-			csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedCSID(laddr.IP.String(), 1).WithInstance(1)
-			csRspFromSGW.BearerContextsCreated.Add(s1usgwFTEID)
-			csRspFromSGW.BearerContextsCreated.Remove(ies.ChargingID, 0)
-			csRspFromSGW.SetTEID(s11mmeTEID)
-			csRspFromSGW.SetLength()
 
-			if err := s11Conn.RespondTo(mmeAddr, csReqFromMME, csRspFromSGW); err != nil {
-				failCh <- err
-				return
-			}
-			s11Session.AddTEID(senderFTEID.InterfaceType(), senderFTEID.TEID())
-			s11Session.AddTEID(s1usgwFTEID.InterfaceType(), s1usgwFTEID.TEID())
-		case <-time.After(5 * time.Second):
+		message, err := s11Session.WaitMessage(5 * time.Second)
+		if err != nil {
 			csRspFromSGW = messages.NewCreateSessionResponse(
 				s11mmeTEID, 0,
 				ies.NewCause(v2.CauseNoResourcesAvailable, 0, 0, 0, nil),
@@ -270,10 +145,45 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 				failCh <- err
 				return
 			}
-			loggerCh <- fmt.Sprintf("Sent %s with failure code: %d, target subscriber: %s", csRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI)
-			failCh <- v2.ErrTimeout
+			sgw.loggerCh <- fmt.Sprintf(
+				"Sent %s with failure code: %d, target subscriber: %s",
+				csRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI,
+			)
+			failCh <- err
+			return
+
+		}
+
+		var csRspFromPGW *messages.CreateSessionResponse
+		switch m := message.(type) {
+		case *messages.CreateSessionResponse:
+			// move forward
+			csRspFromPGW = m
+		default:
+			failCh <- &v2.ErrUnexpectedType{Msg: message}
 			return
 		}
+		// if everything in CreateSessionResponse seems OK, relay it to MME.
+		s11IP, _, err := net.SplitHostPort(*s11)
+		if err != nil {
+			return
+		}
+		senderFTEID := s11Conn.NewFTEID(v2.IFTypeS11S4SGWGTPC, s11IP, "")
+		s1usgwFTEID := s11Conn.NewFTEID(v2.IFTypeS1USGWGTPU, s11IP, "")
+		csRspFromSGW = csRspFromPGW
+		csRspFromSGW.SenderFTEIDC = senderFTEID
+		csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedCSID(laddr.IP.String(), 1).WithInstance(1)
+		csRspFromSGW.BearerContextsCreated.Add(s1usgwFTEID)
+		csRspFromSGW.BearerContextsCreated.Remove(ies.ChargingID, 0)
+		csRspFromSGW.SetTEID(s11mmeTEID)
+		csRspFromSGW.SetLength()
+
+		if err := s11Conn.RespondTo(mmeAddr, csReqFromMME, csRspFromSGW); err != nil {
+			failCh <- err
+			return
+		}
+		s11Session.AddTEID(senderFTEID.InterfaceType(), senderFTEID.TEID())
+		s11Session.AddTEID(s1usgwFTEID.InterfaceType(), s1usgwFTEID.TEID())
 
 		s11sgwTEID, err := s11Session.GetTEID(v2.IFTypeS11S4SGWGTPC)
 		if err != nil {
@@ -290,7 +200,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			failCh <- err
 			return
 		}
-		loggerCh <- fmt.Sprintf(
+		sgw.loggerCh <- fmt.Sprintf(
 			"Session created with MME and P-GW for Subscriber: %s;\n\tS11 MME:  %s, TEID->: %#x, TEID<-: %#x\n\tS5C P-GW: %s, TEID->: %#x, TEID<-: %#x",
 			s5Session.Subscriber.IMSI, mmeAddr, s11mmeTEID, s11sgwTEID, pgwAddrString, s5cpgwTEID, s5csgwTEID,
 		)
@@ -300,7 +210,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	select {
 	case <-doneCh:
 		if s11Session.Activate(); err != nil {
-			loggerCh <- errors.Wrap(err, "Error").Error()
+			sgw.loggerCh <- errors.Wrap(err, "Error").Error()
 			s11Conn.RemoveSession(s11Session)
 			return nil
 		}
@@ -315,22 +225,22 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 }
 
 func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
-	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
-	// assert type to refer to the struct field specific to the message.
-	// in general, no need to check if it can be type-asserted, as long as the MessageType is
-	// specified correctly in AddHandler().
 	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID())
 	if err != nil {
 		return err
 	}
-	s5cSession, err := s5cConn.GetSessionByIMSI(s11Session.IMSI)
+	s5cSession, err := sgw.s5cConn.GetSessionByIMSI(s11Session.IMSI)
 	if err != nil {
 		return err
 	}
 	s1uBearer := s11Session.GetDefaultBearer()
 	s5uBearer := s5cSession.GetDefaultBearer()
 
+	// assert type to refer to the struct field specific to the message.
+	// in general, no need to check if it can be type-asserted, as long as the MessageType is
+	// specified correctly in AddHandler().
 	mbReqFromMME := msg.(*messages.ModifyBearerRequest)
 	if brCtxIE := mbReqFromMME.BearerContextsToBeModified; brCtxIE != nil {
 		for _, ie := range brCtxIE.ChildIEs {
@@ -360,10 +270,13 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 	if err != nil {
 		return err
 	}
-	s1uIP := strings.Split(*s1u, ":")[0]
-	relay.AddPeer(s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
-	relay.AddPeer(s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
+	sgw.s1uConn.RelayTo(sgw.s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
+	sgw.s5uConn.RelayTo(sgw.s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
 
+	s1uIP, _, err := net.SplitHostPort(*s1u)
+	if err != nil {
+		return err
+	}
 	mbRspFromSGW := messages.NewModifyBearerResponse(
 		s11mmeTEID, 0,
 		ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
@@ -378,7 +291,7 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 		return err
 	}
 
-	loggerCh <- fmt.Sprintf(
+	sgw.loggerCh <- fmt.Sprintf(
 		"Started listening on U-Plane for Subscriber: %s;\n\tS1-U: %s\n\tS5-U: %s",
 		s11Session.IMSI, *s1u, *s5u,
 	)
@@ -386,17 +299,19 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 }
 
 func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
-	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
 	// specified correctly in AddHandler().
+	dsReqFromMME := msg.(*messages.DeleteSessionRequest)
+
 	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID())
 	if err != nil {
 		return err
 	}
 
-	s5Session, err := s5cConn.GetSessionByIMSI(s11Session.IMSI)
+	s5Session, err := sgw.s5cConn.GetSessionByIMSI(s11Session.IMSI)
 	if err != nil {
 		return err
 	}
@@ -406,7 +321,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return err
 	}
 
-	if err := s5cConn.DeleteSession(
+	if err := sgw.s5cConn.DeleteSession(
 		s5cpgwTEID,
 		ies.NewEPSBearerID(s5Session.GetDefaultBearer().EBI),
 	); err != nil {
@@ -416,29 +331,53 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	// wait for response from P-GW for 5 seconds
 	doneCh := make(chan struct{})
 	failCh := make(chan error)
-	go func(delCh chan struct{}) {
-		select {
-		case <-delCh:
-			break
-		case <-time.After(5 * time.Second):
-			loggerCh <- "No Delete Session Response from P-GW, purging session with MME anyway"
-		}
-		// respond to MME with DeleteSessionResponse.
+	go func() {
+		var dsRspFromSGW *messages.DeleteSessionResponse
 		s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
 		if err != nil {
 			failCh <- err
 			return
 		}
-		dsRspFromSGW := messages.NewDeleteSessionResponse(s11mmeTEID, s11Session.Sequence)
+
+		message, err := s11Session.WaitMessage(5 * time.Second)
+		if err != nil {
+			dsRspFromSGW = messages.NewDeleteSessionResponse(
+				s11mmeTEID, 0,
+				ies.NewCause(v2.CausePGWNotResponding, 0, 0, 0, nil),
+			)
+
+			if err := s11Conn.RespondTo(mmeAddr, dsReqFromMME, dsRspFromSGW); err != nil {
+				failCh <- err
+				return
+			}
+			sgw.loggerCh <- fmt.Sprintf(
+				"Sent %s with failure code: %d, target subscriber: %s",
+				dsRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI,
+			)
+			failCh <- err
+			return
+		}
+
+		// use the cause as it is.
+		switch m := message.(type) {
+		case *messages.DeleteSessionResponse:
+			// move forward
+			dsRspFromSGW = m
+		default:
+			failCh <- &v2.ErrUnexpectedType{Msg: message}
+			return
+		}
+
+		dsRspFromSGW.SetTEID(s11mmeTEID)
 		if err := s11Conn.RespondTo(mmeAddr, msg, dsRspFromSGW); err != nil {
 			failCh <- err
 			return
 		}
 
-		loggerCh <- fmt.Sprintf("Session deleted with MME for Subscriber: %s", s11Session.IMSI)
+		sgw.loggerCh <- fmt.Sprintf("Session deleted for Subscriber: %s", s11Session.IMSI)
 		s11Conn.RemoveSession(s11Session)
 		doneCh <- struct{}{}
-	}(delCh)
+	}()
 	select {
 	case <-doneCh:
 		return nil
@@ -447,9 +386,31 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	}
 }
 
+func handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
+	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+
+	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID())
+	if err != nil {
+		return err
+	}
+
+	s5Session, err := sgw.s5cConn.GetSessionByIMSI(s11Session.IMSI)
+	if err != nil {
+		return err
+	}
+
+	if err := v2.PassMessageTo(s5Session, msg, 5*time.Second); err != nil {
+		return err
+	}
+
+	// remove bearer in handleDeleteBearerRequest instead of doing here,
+	// as Delete Bearer Request does not necessarily have EBI.
+	return nil
+}
+
 func handleFTEIDU(ie *ies.IE, session *v2.Session, bearer *v2.Bearer) error {
 	if ie.Type != ies.FullyQualifiedTEID {
-		return v2.ErrUnexpectedType
+		return &v2.ErrUnexpectedIE{IEType: ie.Type}
 	}
 
 	addr, err := net.ResolveUDPAddr("udp", ie.IPAddress()+":2152")

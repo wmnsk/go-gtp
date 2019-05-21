@@ -30,83 +30,80 @@ import (
 	"net"
 	"time"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
+	"github.com/pkg/errors"
 
+	v1 "github.com/wmnsk/go-gtp/v1"
 	v2 "github.com/wmnsk/go-gtp/v2"
 	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
-// command-line arguments
+// command-line arguments and global variables
 var (
 	s11 = flag.String("s11", "127.0.0.112:2123", "local IP:Port on S11 interface.")
 	s5c = flag.String("s5c", "127.0.0.51:2123", "local IP:Port on S5-C interface.")
 	s1u = flag.String("s1u", "127.0.0.2:2152", "local IP:Port on S1-U interface.")
 	s5u = flag.String("s5u", "127.0.0.3:2152", "local IP:Port on S5-U interface.")
+
+	sgw *sGateway
 )
 
-var (
-	delCh    = make(chan struct{})
-	loggerCh = make(chan string)
-	errCh    = make(chan error)
-)
+type sGateway struct {
+	s11Conn, s5cConn *v2.Conn
+	s1uConn, s5uConn *v1.UPlaneConn
 
-func main() {
-	flag.Parse()
-	log.SetPrefix("[S-GW] ")
+	loggerCh chan string
+	errCh    chan error
+	msgChCh  chan chan messages.Message
+}
 
-	// start listening on the specified IP:Port.
-	s11laddr, err := net.ResolveUDPAddr("udp", *s11)
-	if err != nil {
-		log.Fatal(err)
-	}
-	s1uladdr, err := net.ResolveUDPAddr("udp", *s1u)
-	if err != nil {
-		log.Fatal(err)
-	}
-	s5uladdr, err := net.ResolveUDPAddr("udp", *s5u)
-	if err != nil {
-		log.Fatal(err)
+func newSGW(s11, s5c, s1u, s5u net.Addr) (*sGateway, error) {
+	s := &sGateway{
+		loggerCh: make(chan string),
+		errCh:    make(chan error),
 	}
 
-	s11Conn, err := v2.ListenAndServe(s11laddr, 0, errCh)
+	var err error
+	s.s11Conn, err = v2.ListenAndServe(s11, 0, s.errCh)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	defer s11Conn.Close()
-	log.Printf("Started serving on %s", s11Conn.LocalAddr())
+	log.Printf("Started serving on %s", s.s11Conn.LocalAddr())
 
-	// register handlers for ALL the messages you expect remote endpoint to send.
-	s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionRequest: handleCreateSessionRequest,
-		messages.MsgTypeModifyBearerRequest:  handleModifyBearerRequest,
-		messages.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
-	})
-
-	// let relay start working here.
-	// this just drops packets until TEID and peer information is registered.
-	s1uConn, err := v1.ListenAndServeUPlane(s1uladdr, 0, errCh)
+	s.s5cConn, err = v2.ListenAndServe(s5c, 0, s.errCh)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	s5uConn, err := v1.ListenAndServeUPlane(s5uladdr, 0, errCh)
+	log.Printf("Started serving on %s", s.s5cConn.LocalAddr())
+
+	s.s1uConn, err = v1.ListenAndServeUPlane(s1u, 0, s.errCh)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	relay = v1.NewRelay(s1uConn, s5uConn)
-	go relay.Run()
-	defer relay.Close()
+	s.s5uConn, err = v1.ListenAndServeUPlane(s5u, 0, s.errCh)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return s, nil
+}
+
+func (s *sGateway) run() error {
+	defer func() {
+		s.s11Conn.Close()
+		s.s5cConn.Close()
+	}()
 
 	// wait for events(logs, errors, timers).
 	for {
 		select {
-		case str := <-loggerCh:
+		case str := <-s.loggerCh:
 			log.Println(str)
-		case err := <-errCh:
-			log.Printf("Warning: %s", err)
+		case err := <-s.errCh:
+			log.Printf("Warning: %s", errors.WithStack(err))
 		case <-time.After(10 * time.Second):
 			var activeIMSIs []string
-			for _, sess := range s11Conn.Sessions {
+			for _, sess := range s.s11Conn.Sessions {
 				if !sess.IsActive() {
 					continue
 				}
@@ -123,4 +120,45 @@ func main() {
 			activeIMSIs = nil
 		}
 	}
+}
+
+func main() {
+	flag.Parse()
+	log.SetPrefix("[S-GW] ")
+
+	// resolve specified IP:Port as net.UDPAddr.
+	s11, err := net.ResolveUDPAddr("udp", *s11)
+	if err != nil {
+		log.Fatal(err)
+	}
+	s5c, err := net.ResolveUDPAddr("udp", *s5c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	s1u, err := net.ResolveUDPAddr("udp", *s1u)
+	if err != nil {
+		log.Fatal(err)
+	}
+	s5u, err := net.ResolveUDPAddr("udp", *s5u)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sgw, err = newSGW(s11, s5c, s1u, s5u)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// register handlers for ALL the messages you expect remote endpoint to send.
+	sgw.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
+		messages.MsgTypeCreateSessionRequest: handleCreateSessionRequest,
+		messages.MsgTypeModifyBearerRequest:  handleModifyBearerRequest,
+		messages.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
+	})
+	sgw.s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
+		messages.MsgTypeCreateSessionResponse: handleCreateSessionResponse,
+		messages.MsgTypeDeleteSessionResponse: handleDeleteSessionResponse,
+	})
+
+	log.Fatal(sgw.run())
 }

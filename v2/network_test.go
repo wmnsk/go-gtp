@@ -37,12 +37,23 @@ func setup(doneCh chan struct{}, errCh chan error) (cliConn, srvConn *v2.Conn, e
 			messages.MsgTypeCreateSessionRequest,
 			func(c *v2.Conn, cliAddr net.Addr, msg messages.Message) error {
 				csReq := msg.(*messages.CreateSessionRequest)
-				if imsi := csReq.IMSI.IMSI(); imsi != "123451234567890" {
-					return errors.Errorf("unexpected IMSI: %s", imsi)
+				session := v2.NewSession(cliAddr, &v2.Subscriber{Location: &v2.Location{}})
+
+				if ie := csReq.IMSI; ie != nil {
+					imsi := ie.IMSI()
+					if imsi != "123451234567890" {
+						return errors.Errorf("unexpected IMSI: %s", imsi)
+					}
+					session.IMSI = imsi
 				}
+				c.AddSession(session)
 
 				csRsp := messages.NewCreateSessionResponse(0, 0, ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil))
 				if err := c.RespondTo(cliAddr, csReq, csRsp); err != nil {
+					return err
+				}
+
+				if err := session.Activate(); err != nil {
 					return err
 				}
 				doneCh <- struct{}{}
@@ -88,6 +99,12 @@ func TestCreateSession(t *testing.T) {
 				t.Fatal("invalid server address")
 			}
 
+			// session should be retrieved by msg.TEID() in the real case.
+			session, err := c.GetSessionByIMSI("123451234567890")
+			if err != nil {
+				return err
+			}
+
 			csRsp := msg.(*messages.CreateSessionResponse)
 			if causeIE := csRsp.Cause; causeIE != nil {
 				if cause := causeIE.Cause(); cause != v2.CauseRequestAccepted {
@@ -96,6 +113,10 @@ func TestCreateSession(t *testing.T) {
 						Cause:   cause,
 						Msg:     "something went wrong",
 					}
+				}
+
+				if err := session.Activate(); err != nil {
+					return err
 				}
 				rspOK <- struct{}{}
 			} else {
@@ -106,18 +127,30 @@ func TestCreateSession(t *testing.T) {
 		},
 	)
 
-	sess, err := cliConn.CreateSession(srvConn.LocalAddr(), ies.NewIMSI("123451234567890"))
+	session, err := cliConn.CreateSession(srvConn.LocalAddr(), ies.NewIMSI("123451234567890"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	cliConn.AddSession(sess)
+	cliConn.AddSession(session)
 
 	select {
 	case <-rspSent:
 		select {
 		case <-rspOK:
+			if count := cliConn.SessionCount(); count != 1 {
+				t.Errorf("wrong SessionCount in cliConn. want %d, got: %d", 1, count)
+			}
+			if count := cliConn.BearerCount(); count != 1 {
+				t.Errorf("wrong BearerCount in cliConn. want %d, got: %d", 1, count)
+			}
+			if count := srvConn.SessionCount(); count != 1 {
+				t.Errorf("wrong SessionCount in srvConn. want %d, got: %d", 1, count)
+			}
+			if count := srvConn.BearerCount(); count != 1 {
+				t.Errorf("wrong BearerCount in srvConn. want %d, got: %d", 1, count)
+			}
 			return
-		case <-time.After(1 * time.Second):
+		case <-time.After(3 * time.Second):
 			t.Fatal("timed out while waiting for validating Create Session Response")
 		}
 	case err := <-errCh:

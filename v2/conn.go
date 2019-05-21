@@ -154,7 +154,7 @@ func ListenAndServe(laddr net.Addr, counter uint8, errCh chan error) (*Conn, err
 		rcvBuf:            make([]byte, 2048),
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
-		errCh:             make(chan error),
+		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
 		RestartCounter:    counter,
 	}
@@ -192,13 +192,11 @@ func (c *Conn) serve() {
 			continue
 		}
 
-		if err := c.handleMessage(raddr, msg); err != nil {
-			// errors should be handled by user
-			go func() {
+		go func() {
+			if err := c.handleMessage(raddr, msg); err != nil {
 				c.errCh <- err
-			}()
-			continue
-		}
+			}
+		}()
 	}
 }
 
@@ -318,7 +316,7 @@ func (c *Conn) handleMessage(senderAddr net.Addr, msg messages.Message) error {
 
 	handle, ok := c.msgHandlerMap.load(msg.MessageType())
 	if !ok {
-		return ErrNoHandlersFound
+		return &ErrNoHandlersFound{MsgType: msg.MessageTypeName()}
 	}
 	go func() {
 		if err := handle(c, senderAddr, msg); err != nil {
@@ -357,7 +355,7 @@ func (c *Conn) validate(senderAddr net.Addr, msg messages.Message) error {
 	// check if TEID is known or not
 	if teid := msg.TEID(); teid != 0 {
 		if _, err := c.GetSessionByTEID(teid); err != nil {
-			return ErrInvalidTEID
+			return &ErrInvalidTEID{TEID: teid}
 		}
 	}
 	return nil
@@ -475,7 +473,7 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
 	return sess, nil
 }
 
-// DeleteSession sends a DeleteSessionRequest with EBI associated with the TEID given.
+// DeleteSession sends a DeleteSessionRequest with TEID and IEs given..
 func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) error {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
@@ -494,7 +492,7 @@ func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) error {
 	return nil
 }
 
-// ModifyBearer sends a ModifyBearerRequest with EBI associated with the TEID given.
+// ModifyBearer sends a ModifyBearerRequest with TEID and IEs given..
 func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) error {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
@@ -507,6 +505,25 @@ func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) error {
 	}
 
 	if _, err := c.WriteTo(mbr, sess.PeerAddr); err != nil {
+		return err
+	}
+	sess.Sequence++
+	return nil
+}
+
+// DeleteBearer sends a DeleteBearerRequest TEID and with IEs given.
+func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) error {
+	sess, err := c.GetSessionByTEID(teid)
+	if err != nil {
+		return err
+	}
+
+	dbr, err := messages.NewDeleteBearerRequest(teid, sess.Sequence+1, ie...).Serialize()
+	if err != nil {
+		return err
+	}
+
+	if _, err := c.WriteTo(dbr, sess.PeerAddr); err != nil {
 		return err
 	}
 	sess.Sequence++
@@ -546,7 +563,7 @@ func (c *Conn) GetSessionByTEID(teid uint32) (*Session, error) {
 		}
 	}
 
-	return nil, ErrInvalidTEID
+	return nil, &ErrInvalidTEID{TEID: teid}
 }
 
 // GetSessionByIMSI returns the current session looked up by IMSI.
@@ -557,7 +574,7 @@ func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
 		}
 	}
 
-	return nil, ErrUnknownIMSI
+	return nil, &ErrUnknownIMSI{IMSI: imsi}
 }
 
 // GetIMSIByTEID returns IMSI associated with TEID.
@@ -650,4 +667,32 @@ func generateUniqueUint32(vals []uint32) uint32 {
 	}
 
 	return generated
+}
+
+// SessionCount returns the number of sessions registered in Conn.
+func (c *Conn) SessionCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	var count int
+	for _, sess := range c.Sessions {
+		if sess.IsActive() {
+			count++
+		}
+	}
+	return count
+}
+
+// BearerCount returns the number of bearers registered in Conn.
+func (c *Conn) BearerCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	var count int
+	for _, sess := range c.Sessions {
+		if sess.IsActive() {
+			count += sess.BearerCount()
+		}
+	}
+	return count
 }
