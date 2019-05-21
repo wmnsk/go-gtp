@@ -154,7 +154,7 @@ func ListenAndServe(laddr net.Addr, counter uint8, errCh chan error) (*Conn, err
 		rcvBuf:            make([]byte, 2048),
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
-		errCh:             make(chan error),
+		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
 		RestartCounter:    counter,
 	}
