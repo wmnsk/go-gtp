@@ -55,10 +55,12 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 	// remove previous session for the same subscriber if exists.
 	sess, err := c.GetSessionByIMSI(sub.IMSI)
 	if err != nil {
-		if err == v2.ErrUnknownIMSI {
+		switch err.(type) {
+		case *v2.ErrUnknownIMSI:
 			// whole new session. just ignore.
+		default:
+			return errors.Wrap(err, "got something unexpected")
 		}
-		return errors.Wrap(err, "got something unexpected")
 	} else {
 		// send Delete Session Request to cleanup sessions in S/P-GW.
 		if err := sess.Delete(c, v2.IFTypeS11S4SGWGTPC); err != nil {

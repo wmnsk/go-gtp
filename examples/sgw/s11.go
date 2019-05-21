@@ -56,9 +56,10 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		// remove previous session for the same subscriber if exists.
 		sess, err := s11Conn.GetSessionByIMSI(imsi)
 		if err != nil {
-			if err == v2.ErrUnknownIMSI {
+			switch err.(type) {
+			case *v2.ErrUnknownIMSI:
 				// whole new session. just ignore.
-			} else {
+			default:
 				return errors.Wrap(err, "got something unexpected")
 			}
 		} else {
@@ -159,7 +160,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			// move forward
 			csRspFromPGW = m
 		default:
-			failCh <- v2.ErrUnexpectedType
+			failCh <- &v2.ErrUnexpectedType{Msg: message}
 			return
 		}
 		// if everything in CreateSessionResponse seems OK, relay it to MME.
@@ -363,7 +364,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			// move forward
 			dsRspFromSGW = m
 		default:
-			failCh <- v2.ErrUnexpectedType
+			failCh <- &v2.ErrUnexpectedType{Msg: message}
 			return
 		}
 
@@ -409,7 +410,7 @@ func handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 
 func handleFTEIDU(ie *ies.IE, session *v2.Session, bearer *v2.Bearer) error {
 	if ie.Type != ies.FullyQualifiedTEID {
-		return v2.ErrUnexpectedType
+		return &v2.ErrUnexpectedIE{IEType: ie.Type}
 	}
 
 	addr, err := net.ResolveUDPAddr("udp", ie.IPAddress()+":2152")
