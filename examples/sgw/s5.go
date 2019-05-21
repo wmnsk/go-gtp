@@ -233,7 +233,7 @@ func handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.
 			// move forward
 			dbRspFromSGW = m
 		default:
-			failCh <- v2.ErrUnexpectedType
+			failCh <- &v2.ErrUnexpectedType{Msg: message}
 			return
 		}
 

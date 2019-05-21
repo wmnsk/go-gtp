@@ -53,7 +53,7 @@ func handleEchoRequest(c *Conn, senderAddr net.Addr, msg messages.Message) error
 	// this should never happen, as the type should have been assured by
 	// msgHandlerMap before this function is called.
 	if _, ok := msg.(*messages.EchoRequest); !ok {
-		return ErrUnexpectedType
+		return &ErrUnexpectedType{Msg: msg}
 	}
 
 	// respond with EchoResponse.
@@ -66,7 +66,7 @@ func handleEchoResponse(c *Conn, senderAddr net.Addr, msg messages.Message) erro
 	// this should never happen, as the type should have been assured by
 	// msgHandlerMap before this function is called.
 	if _, ok := msg.(*messages.EchoResponse); !ok {
-		return ErrUnexpectedType
+		return &ErrUnexpectedType{Msg: msg}
 	}
 
 	// do nothing.
@@ -77,9 +77,9 @@ func handleVersionNotSupportedIndication(c *Conn, senderAddr net.Addr, msg messa
 	// this should never happen, as the type should have been assured by
 	// msgHandlerMap before this function is called.
 	if _, ok := msg.(*messages.VersionNotSupportedIndication); !ok {
-		return ErrUnexpectedType
+		return &ErrUnexpectedType{Msg: msg}
 	}
 
 	// let's just return err anyway.
-	return ErrInvalidVersion
+	return &ErrInvalidVersion{Version: msg.Version()}
 }

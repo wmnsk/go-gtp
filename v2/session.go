@@ -241,7 +241,7 @@ func (s *Session) LookupBearerByName(name string) (*Bearer, error) {
 		return br, nil
 	}
 
-	return nil, ErrNoBearerFound
+	return nil, &ErrNoBearerFound{IMSI: s.IMSI}
 }
 
 // LookupBearerByEBI looks up Bearer registered in Session by EBI.
@@ -257,7 +257,7 @@ func (s *Session) LookupBearerByEBI(ebi uint8) (*Bearer, error) {
 	})
 
 	if bearer == nil {
-		return nil, ErrNoBearerFound
+		return nil, &ErrNoBearerFound{IMSI: s.IMSI}
 
 	}
 	return bearer, nil
@@ -276,7 +276,7 @@ func (s *Session) LookupBearerNameByEBI(ebi uint8) (string, error) {
 	})
 
 	if name == "" {
-		return "", ErrNoBearerFound
+		return "", &ErrNoBearerFound{IMSI: s.IMSI}
 
 	}
 	return name, nil

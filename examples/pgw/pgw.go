@@ -62,10 +62,12 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 		// remove previous session for the same subscriber if exists.
 		sess, err := c.GetSessionByIMSI(imsi)
 		if err != nil {
-			if err == v2.ErrUnknownIMSI {
+			switch err.(type) {
+			case *v2.ErrUnknownIMSI:
 				// whole new session. just ignore.
+			default:
+				return errors.Wrap(err, "got something unexpected")
 			}
-			return errors.Wrap(err, "got something unexpected")
 		} else {
 			c.RemoveSession(sess)
 		}

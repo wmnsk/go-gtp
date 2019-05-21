@@ -316,7 +316,7 @@ func (c *Conn) handleMessage(senderAddr net.Addr, msg messages.Message) error {
 
 	handle, ok := c.msgHandlerMap.load(msg.MessageType())
 	if !ok {
-		return ErrNoHandlersFound
+		return &ErrNoHandlersFound{MsgType: msg.MessageTypeName()}
 	}
 	go func() {
 		if err := handle(c, senderAddr, msg); err != nil {
@@ -355,7 +355,7 @@ func (c *Conn) validate(senderAddr net.Addr, msg messages.Message) error {
 	// check if TEID is known or not
 	if teid := msg.TEID(); teid != 0 {
 		if _, err := c.GetSessionByTEID(teid); err != nil {
-			return ErrInvalidTEID
+			return &ErrInvalidTEID{TEID: teid}
 		}
 	}
 	return nil
@@ -563,7 +563,7 @@ func (c *Conn) GetSessionByTEID(teid uint32) (*Session, error) {
 		}
 	}
 
-	return nil, ErrInvalidTEID
+	return nil, &ErrInvalidTEID{TEID: teid}
 }
 
 // GetSessionByIMSI returns the current session looked up by IMSI.
@@ -574,7 +574,7 @@ func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
 		}
 	}
 
-	return nil, ErrUnknownIMSI
+	return nil, &ErrUnknownIMSI{IMSI: imsi}
 }
 
 // GetIMSIByTEID returns IMSI associated with TEID.
