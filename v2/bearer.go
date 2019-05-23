@@ -6,8 +6,6 @@ package v2
 
 import (
 	"net"
-
-	"github.com/wmnsk/go-gtp/v2/ies"
 )
 
 // QoSProfile is a QoS-related information that belongs to a Bearer.
@@ -36,11 +34,6 @@ func NewBearer(ebi uint8, apn string, qos *QoSProfile) *Bearer {
 	return &Bearer{
 		EBI: ebi, APN: apn, QoSProfile: qos,
 	}
-}
-
-// Modify is just an alias of (*Conn) ModifyBearer.
-func (b *Bearer) Modify(c *Conn, ie ...*ies.IE) error {
-	return c.ModifyBearer(b.teidOut, ie...)
 }
 
 // RemoteAddress returns the remote address associated with Bearer.

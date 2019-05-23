@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/wmnsk/go-gtp/v2/ies"
 	"github.com/wmnsk/go-gtp/v2/messages"
 )
@@ -28,6 +30,13 @@ type Conn struct {
 	errCh   chan error
 
 	*msgHandlerMap
+
+	// sequence is the last SequenceNumber used in the request.
+	//
+	// TS29.274 7.6  Reliable Delivery of Signalling Messages;
+	// The Sequence Number shall be unique for each outstanding Initial message sourced
+	// from the same IP/UDP endpoint(=Conn).
+	sequence uint32
 
 	// RestartCounter is the RestartCounter value in Recovery IE, which represents how many
 	// times the GTPv2-C endpoint is restarted.
@@ -50,6 +59,7 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
+		sequence:          0,
 		RestartCounter:    counter,
 	}
 
@@ -102,6 +112,7 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
+		sequence:          0,
 		RestartCounter:    counter,
 	}
 
@@ -156,6 +167,7 @@ func ListenAndServe(laddr net.Addr, counter uint8, errCh chan error) (*Conn, err
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
+		sequence:          0,
 		RestartCounter:    counter,
 	}
 
@@ -361,40 +373,82 @@ func (c *Conn) validate(senderAddr net.Addr, msg messages.Message) error {
 	return nil
 }
 
-// EchoRequest sends a EchoRequest.
-func (c *Conn) EchoRequest(raddr net.Addr) error {
-	b, err := messages.NewEchoRequest(0, ies.NewRecovery(c.RestartCounter)).Serialize()
+// SendMessageTo sends a message to specified addr.
+// By using this function instead of WriteTo, package sets the Sequence Number
+// properly and returns the one used to send the message.
+func (c *Conn) SendMessageTo(msg messages.Message, addr net.Addr) (uint32, error) {
+	seq := c.IncSequence()
+	msg.SetSequenceNumber(seq)
+
+	payload, err := messages.Serialize(msg)
 	if err != nil {
-		return err
+		seq = c.DecSequence()
+		return seq, errors.Wrapf(err, "failed to send %T", msg)
 	}
 
-	if _, err := c.pktConn.WriteTo(b, raddr); err != nil {
+	if _, err := c.WriteTo(payload, addr); err != nil {
+		seq = c.DecSequence()
+		return seq, errors.Wrapf(err, "failed to send %T", msg)
+	}
+	return seq, nil
+}
+
+// IncSequence increments the SequenceNumber associated with Conn.
+func (c *Conn) IncSequence() uint32 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.sequence++
+
+	// SequenceNumber is 3-octet long
+	if c.sequence > 0xffffff {
+		c.sequence = 0
+	}
+
+	return c.sequence
+}
+
+// DecSequence decrements the SequenceNumber associated with Conn.
+func (c *Conn) DecSequence() uint32 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.sequence--
+
+	return c.sequence
+}
+
+// SequenceNumber returns the current(=last used) SequenceNumber associated with Conn.
+func (c *Conn) SequenceNumber() uint32 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.sequence
+}
+
+// EchoRequest sends a EchoRequest.
+func (c *Conn) EchoRequest(raddr net.Addr) error {
+	msg := messages.NewEchoRequest(0, ies.NewRecovery(c.RestartCounter))
+
+	if _, err := c.SendMessageTo(msg, raddr); err != nil {
 		return err
 	}
 	return nil
 }
 
-// EchoResponse sends a EchoResponse.
-func (c *Conn) EchoResponse(raddr net.Addr) error {
-	b, err := messages.NewEchoResponse(0, ies.NewRecovery(c.RestartCounter)).Serialize()
-	if err != nil {
-		return err
-	}
+// EchoResponse sends a EchoResponse to the EchoRequest.
+func (c *Conn) EchoResponse(raddr net.Addr, req messages.Message) error {
+	res := messages.NewEchoResponse(0, ies.NewRecovery(c.RestartCounter))
 
-	if _, err := c.pktConn.WriteTo(b, raddr); err != nil {
+	if err := c.RespondTo(raddr, req, res); err != nil {
 		return err
 	}
 	return nil
 }
 
 // VersionNotSupportedIndication just sends VersionNotSupportedIndication message.
-func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, received messages.Message) error {
-	vsi, err := messages.NewVersionNotSupportedIndication(0, received.Sequence()).Serialize()
-	if err != nil {
-		return err
-	}
+func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Message) error {
+	res := messages.NewVersionNotSupportedIndication(0, req.Sequence())
 
-	if _, err := c.WriteTo(vsi, raddr); err != nil {
+	if err := c.RespondTo(raddr, req, res); err != nil {
 		return err
 	}
 	return nil
@@ -409,7 +463,7 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, received messages.M
 //
 // Note that this method doesn't care IEs given are sufficient or not, as the required IE
 // varies much depending on the context Create Session Request is used.
-func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
+func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, error) {
 	// retrieve values from IEs given.
 	sess := NewSession(raddr, &Subscriber{Location: &Location{}})
 	br := sess.GetDefaultBearer()
@@ -461,73 +515,62 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
 		}
 	}
 
-	// set IEs into CreateSessionRequest .
-	csr, err := messages.NewCreateSessionRequest(0, sess.Sequence, ie...).Serialize()
-	if err != nil {
-		return nil, err
-	}
+	// set IEs into CreateSessionRequest.
+	msg := messages.NewCreateSessionRequest(0, 0, ie...)
 
-	if _, err := c.WriteTo(csr, raddr); err != nil {
-		return nil, err
+	seq, err := c.SendMessageTo(msg, raddr)
+	if err != nil {
+		return nil, 0, err
 	}
-	return sess, nil
+	return sess, seq, nil
 }
 
 // DeleteSession sends a DeleteSessionRequest with TEID and IEs given..
-func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) error {
+func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	dsr, err := messages.NewDeleteSessionRequest(teid, sess.Sequence+1, ie...).Serialize()
+	msg := messages.NewDeleteSessionRequest(teid, 0, ie...)
+
+	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
 	if err != nil {
-		return err
+		return 0, err
 	}
-
-	if _, err := c.WriteTo(dsr, sess.PeerAddr); err != nil {
-		return err
-	}
-	sess.Sequence++
-	return nil
+	return seq, nil
 }
 
 // ModifyBearer sends a ModifyBearerRequest with TEID and IEs given..
-func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) error {
+func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	mbr, err := messages.NewModifyBearerRequest(teid, sess.Sequence+1, ie...).Serialize()
+	msg := messages.NewModifyBearerRequest(teid, 0, ie...)
+
+	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
 	if err != nil {
-		return err
+		return 0, err
 	}
-
-	if _, err := c.WriteTo(mbr, sess.PeerAddr); err != nil {
-		return err
-	}
-	sess.Sequence++
-	return nil
+	return seq, nil
 }
 
 // DeleteBearer sends a DeleteBearerRequest TEID and with IEs given.
-func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) error {
+func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	dbr, err := messages.NewDeleteBearerRequest(teid, sess.Sequence+1, ie...).Serialize()
+	msg := messages.NewDeleteBearerRequest(teid, 0, ie...)
+
+	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
 	if err != nil {
-		return err
+		return 0, err
 	}
-
-	if _, err := c.WriteTo(dbr, sess.PeerAddr); err != nil {
-		return err
-	}
-	sess.Sequence++
-	return nil
+	return seq, nil
 }
 
 // RespondTo sends a message(specified with "toBeSent" param) in response to
@@ -537,6 +580,7 @@ func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) error {
 func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) error {
 	toBeSent.SetSequenceNumber(received.Sequence())
 	b := make([]byte, toBeSent.Len())
+
 	if err := toBeSent.SerializeTo(b); err != nil {
 		return err
 	}
