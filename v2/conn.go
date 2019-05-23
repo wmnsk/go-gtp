@@ -59,15 +59,9 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
+		sequence:          0,
 		RestartCounter:    counter,
 	}
-
-	// start from a random sequence number, not to be estimated.
-	u32buf := make([]byte, 4)
-	if _, err := rand.Read(u32buf); err != nil {
-		u32buf = []byte{0x00, 0x00, 0x00, 0x00}
-	}
-	c.sequence = binary.BigEndian.Uint32(u32buf) & 0xffffff
 
 	// send EchoRequest to raddr.
 	if err := c.EchoRequest(raddr); err != nil {
@@ -118,15 +112,9 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
+		sequence:          0,
 		RestartCounter:    counter,
 	}
-
-	// start from a random sequence number, not to be estimated.
-	u32buf := make([]byte, 4)
-	if _, err := rand.Read(u32buf); err != nil {
-		u32buf = []byte{0x00, 0x00, 0x00, 0x00}
-	}
-	c.sequence = binary.BigEndian.Uint32(u32buf)
 
 	// setup underlying connection first.
 	// don't use Dial(), as it binds src/dst IP:Port and it makes it harder to
@@ -179,15 +167,9 @@ func ListenAndServe(laddr net.Addr, counter uint8, errCh chan error) (*Conn, err
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
+		sequence:          0,
 		RestartCounter:    counter,
 	}
-
-	// start from a random sequence number, not to be estimated.
-	u32buf := make([]byte, 4)
-	if _, err := rand.Read(u32buf); err != nil {
-		u32buf = []byte{0x00, 0x00, 0x00, 0x00}
-	}
-	c.sequence = binary.BigEndian.Uint32(u32buf)
 
 	var err error
 	c.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
@@ -417,6 +399,8 @@ func (c *Conn) IncSequence() uint32 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.sequence++
+
+	// SequenceNumber is 3-octet long
 	if c.sequence > 0xffffff {
 		c.sequence = 0
 	}
