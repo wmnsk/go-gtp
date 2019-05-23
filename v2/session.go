@@ -5,8 +5,6 @@
 package v2
 
 import (
-	"crypto/rand"
-	"encoding/binary"
 	"net"
 	"sync"
 	"time"
@@ -41,10 +39,6 @@ type Session struct {
 	// PeerAddr is a net.Addr of the peer of the Session.
 	PeerAddr net.Addr
 
-	// Sequence is the last SequenceNumber used in the request.
-	// This should be incremented when used manually by users.
-	Sequence uint32
-
 	// Subscriber is a Subscriber associated with the Session.
 	*Subscriber
 }
@@ -62,12 +56,6 @@ func NewSession(peerAddr net.Addr, sub *Subscriber) *Session {
 		Subscriber: sub,
 		inflightCh: make(chan messages.Message),
 	}
-
-	u32buf := make([]byte, 4)
-	if _, err := rand.Read(u32buf); err != nil {
-		u32buf = []byte{0x00, 0x00, 0x00, 0x00}
-	}
-	s.Sequence = binary.BigEndian.Uint32(u32buf)
 
 	return s
 }

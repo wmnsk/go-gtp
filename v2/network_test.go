@@ -36,6 +36,7 @@ func setup(doneCh chan struct{}, errCh chan error) (cliConn, srvConn *v2.Conn, e
 		srvConn.AddHandler(
 			messages.MsgTypeCreateSessionRequest,
 			func(c *v2.Conn, cliAddr net.Addr, msg messages.Message) error {
+
 				csReq := msg.(*messages.CreateSessionRequest)
 				session := v2.NewSession(cliAddr, &v2.Subscriber{Location: &v2.Location{}})
 
@@ -96,7 +97,10 @@ func TestCreateSession(t *testing.T) {
 		messages.MsgTypeCreateSessionResponse,
 		func(c *v2.Conn, srvAddr net.Addr, msg messages.Message) error {
 			if srvAddr.String() != "127.0.0.2:2123" {
-				t.Fatal("invalid server address")
+				t.Errorf("invalid server address: %s", srvAddr)
+			}
+			if msg.Sequence() != cliConn.SequenceNumber() {
+				t.Errorf("invalid sequence number. got: %d, want: %d", msg.Sequence(), cliConn.SequenceNumber())
 			}
 
 			// session should be retrieved by msg.TEID() in the real case.
