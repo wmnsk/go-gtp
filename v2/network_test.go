@@ -131,7 +131,7 @@ func TestCreateSession(t *testing.T) {
 		},
 	)
 
-	session, err := cliConn.CreateSession(srvConn.LocalAddr(), ies.NewIMSI("123451234567890"))
+	session, _, err := cliConn.CreateSession(srvConn.LocalAddr(), ies.NewIMSI("123451234567890"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/wmnsk/go-gtp/v2/messages"
-
-	"github.com/wmnsk/go-gtp/v2/ies"
 )
 
 // Location is a subscriber's location.
@@ -34,7 +32,8 @@ type Session struct {
 	isActive bool
 	*teidMap
 	*bearerMap
-	inflightCh chan messages.Message
+
+	seqChMap map[uint32]chan messages.Message
 
 	// PeerAddr is a net.Addr of the peer of the Session.
 	PeerAddr net.Addr
@@ -54,74 +53,10 @@ func NewSession(peerAddr net.Addr, sub *Subscriber) *Session {
 		teidMap:    newTeidMap(),
 		bearerMap:  newBearerMap("default", &Bearer{QoSProfile: &QoSProfile{}}),
 		Subscriber: sub,
-		inflightCh: make(chan messages.Message),
+		seqChMap:   map[uint32]chan messages.Message{},
 	}
 
 	return s
-}
-
-// CreateSession is an alias for (*Conn).CreateSessionRequest.
-// See (*Conn).CreateSessionRequest for details.
-func CreateSession(raddr net.Addr, c *Conn, ie ...*ies.IE) (*Session, error) {
-	return c.CreateSession(raddr, ie...)
-}
-
-// DeleteSession is an alias for (*Conn).DeleteSessionRequest.
-// See (*Conn).DeleteSessionRequest for details.
-func DeleteSession(c *Conn, teid uint32, ie ...*ies.IE) error {
-	return c.DeleteSession(teid, ie...)
-}
-
-// Delete sends a Delete Session Request toward the interface which
-// is specified with c and ifType.
-//
-// By default, IEs on the Delete Session Request is only EBI of default
-// bearer, but it can be overridden by giving EBI IE.
-// Also, other IEs can be added by giving them as ie.
-func (s *Session) Delete(c *Conn, ifType uint8, ie ...*ies.IE) error {
-	// do nothing for non-active Session
-	if !s.IsActive() {
-		return nil
-	}
-
-	teid, err := s.GetTEID(ifType)
-	if err != nil {
-		return err
-	}
-
-	// send EBI of default bearer by default, but if the same type of
-	// IE is given, the default one is replaced.
-	ieToSend := []*ies.IE{ies.NewEPSBearerID(s.GetDefaultBearer().EBI)}
-	for _, i := range ie {
-		if i.Type == ies.EPSBearerID {
-			ieToSend[0] = i
-			continue
-		}
-		// other IEs given are just put regardless of their type.
-		ieToSend = append(ieToSend, i)
-	}
-
-	return c.DeleteSession(teid, ieToSend...)
-}
-
-// ModifyBearer sends a Modify Bearer Request toward the interface which
-// is specified with c and ifType.
-//
-// By default, IEs on the Modify Bearer Request is only EBI of default
-// bearer, but it can be overridden by giving EBI IE.
-// Also, other IEs can be added by giving them as ie.
-func (s *Session) ModifyBearer(c *Conn, ifType uint8, ie ...*ies.IE) error {
-	// do nothing for non-active Session
-	if !s.IsActive() {
-		return nil
-	}
-
-	teid, err := s.GetTEID(ifType)
-	if err != nil {
-		return err
-	}
-
-	return c.ModifyBearer(teid, ie...)
 }
 
 // Activate marks a Session active.
@@ -164,9 +99,19 @@ func (s *Session) GetTEID(ifType uint8) (uint32, error) {
 
 // PassMessageTo passes the message (typically "triggerred message") to the session
 // expecting to receive it.
+//
+// Note that it should be ensured that WaitMessage is called before calling this.
+// Otherwise it may fail with ErrInvalidSequence.
 func PassMessageTo(s *Session, msg messages.Message, timeout time.Duration) error {
+	s.mu.Lock()
+	msgCh, ok := s.seqChMap[msg.Sequence()]
+	s.mu.Unlock()
+	if !ok {
+		return &ErrInvalidSequence{Seq: msg.Sequence()}
+	}
+
 	select {
-	case s.inflightCh <- msg:
+	case msgCh <- msg:
 		return nil
 	case <-time.After(timeout):
 		return ErrTimeout
@@ -175,9 +120,14 @@ func PassMessageTo(s *Session, msg messages.Message, timeout time.Duration) erro
 
 // WaitMessage waits for a message to come.
 // Unless the user does not use PassMessage() func, this always fails with timeout.
-func (s *Session) WaitMessage(timeout time.Duration) (messages.Message, error) {
+func (s *Session) WaitMessage(seq uint32, timeout time.Duration) (messages.Message, error) {
+	msgCh := make(chan messages.Message)
+	s.mu.Lock()
+	s.seqChMap[seq] = msgCh
+	s.mu.Unlock()
+
 	select {
-	case msg := <-s.inflightCh:
+	case msg := <-msgCh:
 		return msg, nil
 	case <-time.After(timeout):
 		return nil, ErrTimeout

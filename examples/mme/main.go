@@ -147,8 +147,10 @@ func main() {
 
 				enbIP := strings.Split(*s1enb, ":")[0]
 				enbFTEID := s11Conn.NewFTEID(v2.IFTypeS1UeNodeBGTPU, enbIP, "")
-				if err := sess.ModifyBearer(
-					s11Conn, v2.IFTypeS11S4SGWGTPC,
+
+				teid, err := sess.GetTEID(v2.IFTypeS11S4SGWGTPC)
+				if _, err := s11Conn.ModifyBearer(
+					teid,
 					ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 					ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), enbFTEID),
 				); err != nil {
@@ -163,7 +165,12 @@ func main() {
 		// delete all the sessions after 30 seconds
 		case <-time.After(30 * time.Second):
 			for _, sess := range s11Conn.Sessions {
-				if err := sess.Delete(s11Conn, v2.IFTypeS11S4SGWGTPC); err != nil {
+				teid, err := sess.GetTEID(v2.IFTypeS11S4SGWGTPC)
+				if err != nil {
+					errCh <- v2.ErrTEIDNotFound
+					return
+				}
+				if _, err := s11Conn.DeleteSession(teid); err != nil {
 					log.Printf("Warning: %s", err)
 				}
 				delWG.Add(1)

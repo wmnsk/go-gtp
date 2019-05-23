@@ -374,9 +374,8 @@ func (c *Conn) validate(senderAddr net.Addr, msg messages.Message) error {
 }
 
 // SendMessageTo sends a message to specified addr.
-// By using this function instead of WriteTo, package sets
-// the Sequence Number properly and returns the Sequence Number
-// used to send the message.
+// By using this function instead of WriteTo, package sets the Sequence Number
+// properly and returns the one used to send the message.
 func (c *Conn) SendMessageTo(msg messages.Message, addr net.Addr) (uint32, error) {
 	seq := c.IncSequence()
 	msg.SetSequenceNumber(seq)
@@ -464,7 +463,7 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Messag
 //
 // Note that this method doesn't care IEs given are sufficient or not, as the required IE
 // varies much depending on the context Create Session Request is used.
-func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
+func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, error) {
 	// retrieve values from IEs given.
 	sess := NewSession(raddr, &Subscriber{Location: &Location{}})
 	br := sess.GetDefaultBearer()
@@ -519,55 +518,59 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
 	// set IEs into CreateSessionRequest.
 	msg := messages.NewCreateSessionRequest(0, 0, ie...)
 
-	if _, err := c.SendMessageTo(msg, raddr); err != nil {
-		return nil, err
+	seq, err := c.SendMessageTo(msg, raddr)
+	if err != nil {
+		return nil, 0, err
 	}
-	return sess, nil
+	return sess, seq, nil
 }
 
 // DeleteSession sends a DeleteSessionRequest with TEID and IEs given..
-func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) error {
+func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	msg := messages.NewDeleteSessionRequest(teid, 0, ie...)
 
-	if _, err := c.SendMessageTo(msg, sess.PeerAddr); err != nil {
-		return err
+	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
+	if err != nil {
+		return 0, err
 	}
-	return nil
+	return seq, nil
 }
 
 // ModifyBearer sends a ModifyBearerRequest with TEID and IEs given..
-func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) error {
+func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	msg := messages.NewModifyBearerRequest(teid, 0, ie...)
 
-	if _, err := c.SendMessageTo(msg, sess.PeerAddr); err != nil {
-		return err
+	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
+	if err != nil {
+		return 0, err
 	}
-	return nil
+	return seq, nil
 }
 
 // DeleteBearer sends a DeleteBearerRequest TEID and with IEs given.
-func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) error {
+func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	msg := messages.NewDeleteBearerRequest(teid, 0, ie...)
 
-	if _, err := c.SendMessageTo(msg, sess.PeerAddr); err != nil {
-		return err
+	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
+	if err != nil {
+		return 0, err
 	}
-	return nil
+	return seq, nil
 }
 
 // RespondTo sends a message(specified with "toBeSent" param) in response to

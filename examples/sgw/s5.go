@@ -202,56 +202,43 @@ func handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.
 	}
 
 	// forward to MME
-	if err := sgw.s11Conn.DeleteBearer(s11mmeTEID, ebi); err != nil {
+	seq, err := sgw.s11Conn.DeleteBearer(s11mmeTEID, ebi)
+	if err != nil {
 		return err
 	}
 
 	// wait for response from MME for 5 seconds
-	doneCh := make(chan struct{})
-	failCh := make(chan error)
-	go func() {
-		message, err := s5Session.WaitMessage(5 * time.Second)
-		if err != nil {
-			dbRspFromSGW = messages.NewDeleteBearerResponse(
-				s5cpgwTEID, 0,
-				ies.NewCause(v2.CauseNoResourcesAvailable, 0, 0, 0, nil),
-			)
+	message, err := s5Session.WaitMessage(seq, 5*time.Second)
+	if err != nil {
+		dbRspFromSGW = messages.NewDeleteBearerResponse(
+			s5cpgwTEID, 0,
+			ies.NewCause(v2.CauseNoResourcesAvailable, 0, 0, 0, nil),
+		)
 
-			if err := s5cConn.RespondTo(pgwAddr, dbReqFromPGW, dbRspFromSGW); err != nil {
-				failCh <- err
-				return
-			}
-			// remove anyway, as P-GW no longer keeps bearer locally
-			s5Session.RemoveBearerByEBI(ebi.EPSBearerID())
-			s11Session.RemoveBearerByEBI(ebi.EPSBearerID())
-			failCh <- err
-			return
+		if err := s5cConn.RespondTo(pgwAddr, dbReqFromPGW, dbRspFromSGW); err != nil {
+			return err
 		}
-
-		switch m := message.(type) {
-		case *messages.DeleteBearerResponse:
-			// move forward
-			dbRspFromSGW = m
-		default:
-			failCh <- &v2.ErrUnexpectedType{Msg: message}
-			return
-		}
-
-		dbRspFromSGW.SetTEID(s5cpgwTEID)
-		if err := s5cConn.RespondTo(pgwAddr, msg, dbRspFromSGW); err != nil {
-			failCh <- err
-			return
-		}
-
+		// remove anyway, as P-GW no longer keeps bearer locally
 		s5Session.RemoveBearerByEBI(ebi.EPSBearerID())
 		s11Session.RemoveBearerByEBI(ebi.EPSBearerID())
-		doneCh <- struct{}{}
-	}()
-
-	select {
-	case <-doneCh:
-		return nil
-	case err := <-failCh:
 		return err
 	}
+
+	switch m := message.(type) {
+	case *messages.DeleteBearerResponse:
+		// move forward
+		dbRspFromSGW = m
+	default:
+		return &v2.ErrUnexpectedType{Msg: message}
+	}
+
+	dbRspFromSGW.SetTEID(s5cpgwTEID)
+	if err := s5cConn.RespondTo(pgwAddr, msg, dbRspFromSGW); err != nil {
+		return err
+	}
+
+	s5Session.RemoveBearerByEBI(ebi.EPSBearerID())
+	s11Session.RemoveBearerByEBI(ebi.EPSBearerID())
+
+	return nil
 }
