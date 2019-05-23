@@ -199,12 +199,12 @@ func (c *Conn) serve() {
 			continue
 		}
 
-		msg, err := messages.Decode(c.rcvBuf[:n])
-		if err != nil {
-			continue
-		}
-
 		go func() {
+			msg, err := messages.Decode(c.rcvBuf[:n])
+			if err != nil {
+				return
+			}
+
 			if err := c.handleMessage(raddr, msg); err != nil {
 				c.errCh <- err
 			}
@@ -330,11 +330,9 @@ func (c *Conn) handleMessage(senderAddr net.Addr, msg messages.Message) error {
 	if !ok {
 		return &ErrNoHandlersFound{MsgType: msg.MessageTypeName()}
 	}
-	go func() {
-		if err := handle(c, senderAddr, msg); err != nil {
-			c.errCh <- err
-		}
-	}()
+	if err := handle(c, senderAddr, msg); err != nil {
+		c.errCh <- err
+	}
 
 	return nil
 }
