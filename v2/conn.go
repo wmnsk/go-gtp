@@ -24,8 +24,6 @@ type Conn struct {
 
 	validationEnabled bool
 
-	rcvBuf []byte
-
 	closeCh chan struct{}
 	errCh   chan error
 
@@ -53,7 +51,6 @@ type Conn struct {
 func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
-		rcvBuf:            make([]byte, 2048),
 		pktConn:           pktConn,
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
@@ -64,15 +61,16 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 	}
 
 	// send EchoRequest to raddr.
-	if err := c.EchoRequest(raddr); err != nil {
+	if _, err := c.EchoRequest(raddr); err != nil {
 		return nil, err
 	}
 
+	buf := make([]byte, 1600)
 	// if no response coming within 3 seconds, returns error without retrying.
 	if err := c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
 		return nil, err
 	}
-	n, raddr, err := c.pktConn.ReadFrom(c.rcvBuf)
+	n, raddr, err := c.pktConn.ReadFrom(buf)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +79,7 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 	}
 
 	// decode incoming message and let it be handled by default handler funcs.
-	msg, err := messages.Decode(c.rcvBuf[:n])
+	msg, err := messages.Decode(buf[:n])
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +105,6 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
-		rcvBuf:            make([]byte, 2048),
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
@@ -126,15 +123,17 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 	}
 
 	// send EchoRequest to raddr.
-	if err := c.EchoRequest(raddr); err != nil {
+	if _, err := c.EchoRequest(raddr); err != nil {
 		return nil, err
 	}
+
+	buf := make([]byte, 1600)
 
 	// if no response coming within 3 seconds, returns error without retrying.
 	if err := c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
 		return nil, err
 	}
-	n, raddr, err := c.pktConn.ReadFrom(c.rcvBuf)
+	n, raddr, err := c.pktConn.ReadFrom(buf)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +142,7 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 	}
 
 	// decode incoming message and let it be handled by default handler funcs.
-	msg, err := messages.Decode(c.rcvBuf[:n])
+	msg, err := messages.Decode(buf[:n])
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +161,6 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 func ListenAndServe(laddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
-		rcvBuf:            make([]byte, 2048),
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
@@ -186,6 +184,7 @@ func (c *Conn) closed() <-chan struct{} {
 }
 
 func (c *Conn) serve() {
+	buf := make([]byte, 1600)
 	for {
 		select {
 		case <-c.closed():
@@ -194,13 +193,13 @@ func (c *Conn) serve() {
 			// do nothing and go forward.
 		}
 
-		n, raddr, err := c.pktConn.ReadFrom(c.rcvBuf)
+		n, raddr, err := c.pktConn.ReadFrom(buf)
 		if err != nil {
 			continue
 		}
 
 		go func() {
-			msg, err := messages.Decode(c.rcvBuf[:n])
+			msg, err := messages.Decode(buf[:n])
 			if err != nil {
 				return
 			}
@@ -423,13 +422,14 @@ func (c *Conn) SequenceNumber() uint32 {
 }
 
 // EchoRequest sends a EchoRequest.
-func (c *Conn) EchoRequest(raddr net.Addr) error {
+func (c *Conn) EchoRequest(raddr net.Addr) (uint32, error) {
 	msg := messages.NewEchoRequest(0, ies.NewRecovery(c.RestartCounter))
 
-	if _, err := c.SendMessageTo(msg, raddr); err != nil {
-		return err
+	seq, err := c.SendMessageTo(msg, raddr)
+	if err != nil {
+		return 0, err
 	}
-	return nil
+	return seq, nil
 }
 
 // EchoResponse sends a EchoResponse to the EchoRequest.
@@ -591,6 +591,9 @@ func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) er
 
 // GetSessionByTEID returns the current session looked up by InterfaceType and TEID of the message.
 func (c *Conn) GetSessionByTEID(teid uint32) (*Session, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	var session *Session
 	for _, sess := range c.Sessions {
 		sess.teidMap.rangeWithFunc(func(i, t interface{}) bool {
@@ -610,6 +613,9 @@ func (c *Conn) GetSessionByTEID(teid uint32) (*Session, error) {
 
 // GetSessionByIMSI returns the current session looked up by IMSI.
 func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	for _, sess := range c.Sessions {
 		if imsi == sess.IMSI {
 			return sess, nil
@@ -621,6 +627,9 @@ func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
 
 // GetIMSIByTEID returns IMSI associated with TEID.
 func (c *Conn) GetIMSIByTEID(teid uint32) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
 		return "", err
@@ -632,6 +641,9 @@ func (c *Conn) GetIMSIByTEID(teid uint32) (string, error) {
 // AddSession adds a session to c.Sessions.
 // If the session given already exists, this removes the old one.
 func (c *Conn) AddSession(session *Session) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	// TODO: any smarter way?
 	if len(c.Sessions) == 0 {
 		c.Sessions = []*Session{session}
@@ -659,6 +671,9 @@ func (c *Conn) AddSession(session *Session) {
 
 // RemoveSession removes a session from c.Session.
 func (c *Conn) RemoveSession(session *Session) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	var newSessions []*Session
 	for _, sess := range c.Sessions {
 		if session.IMSI == sess.IMSI {
@@ -673,6 +688,9 @@ func (c *Conn) RemoveSession(session *Session) {
 // NewFTEID creates a new F-TEID with random TEID value that is different from existing one.
 // If there's a lot of Session on the Conn, it may take a long time to find unique one.
 func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	var teids []uint32
 	for _, sess := range c.Sessions {
 		if teid, ok := sess.teidMap.load(ifType); ok {
@@ -700,6 +718,8 @@ func generateUniqueUint32(vals []uint32) uint32 {
 }
 
 // SessionCount returns the number of sessions registered in Conn.
+//
+// This may have impact on performance in case of large number of Session exists.
 func (c *Conn) SessionCount() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -714,6 +734,9 @@ func (c *Conn) SessionCount() int {
 }
 
 // BearerCount returns the number of bearers registered in Conn.
+//
+// This may have impact on performance in case of large number of Session and
+// Bearer exist.
 func (c *Conn) BearerCount() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()

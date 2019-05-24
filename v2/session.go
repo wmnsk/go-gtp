@@ -61,26 +61,31 @@ func NewSession(peerAddr net.Addr, sub *Subscriber) *Session {
 
 // Activate marks a Session active.
 func (s *Session) Activate() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.IMSI == "" {
 		return &ErrRequiredParameterMissing{"IMSI", "Session must have IMSI set"}
 	}
 
-	s.mu.Lock()
 	s.isActive = true
-	s.mu.Unlock()
 	return nil
 }
 
 // Deactivate marks a Session inactive.
 func (s *Session) Deactivate() error {
 	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.isActive = false
-	s.mu.Unlock()
 	return nil
 }
 
 // IsActive reports whether a Session is active or not.
 func (s *Session) IsActive() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	return s.isActive
 }
 
