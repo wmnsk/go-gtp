@@ -198,16 +198,14 @@ func (c *Conn) serve() {
 			continue
 		}
 
-		go func() {
-			msg, err := messages.Decode(buf[:n])
-			if err != nil {
-				return
-			}
+		msg, err := messages.Decode(buf[:n])
+		if err != nil {
+			continue
+		}
 
-			if err := c.handleMessage(raddr, msg); err != nil {
-				c.errCh <- err
-			}
-		}()
+		if err := c.handleMessage(raddr, msg); err != nil {
+			c.errCh <- err
+		}
 	}
 }
 
