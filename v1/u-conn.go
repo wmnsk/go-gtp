@@ -28,7 +28,6 @@ type UPlaneConn struct {
 	pktConn net.PacketConn
 	*msgHandlerMap
 
-	rcvBuf  []byte
 	tpduCh  chan *tpduSet
 	closeCh chan struct{}
 	errCh   chan error
@@ -46,8 +45,6 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
-
-		rcvBuf: make([]byte, 2048),
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
@@ -67,13 +64,15 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 	if err := u.pktConn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
 		return nil, err
 	}
+
+	buf := make([]byte, 1600)
 	for {
 		// send EchoRequest to raddr.
 		if err := u.EchoRequest(raddr); err != nil {
 			return nil, err
 		}
 
-		n, _, err := u.pktConn.ReadFrom(u.rcvBuf)
+		n, _, err := u.pktConn.ReadFrom(buf)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +81,7 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 		}
 
 		// decode incoming message and let it be handled by default handler funcs.
-		msg, err := messages.Decode(u.rcvBuf[:n])
+		msg, err := messages.Decode(buf[:n])
 		if err != nil {
 			return nil, err
 		}
@@ -102,8 +101,6 @@ func ListenAndServeUPlane(laddr net.Addr, counter uint8, errCh chan error) (*UPl
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
-
-		rcvBuf: make([]byte, 2048),
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
@@ -129,6 +126,7 @@ func (u *UPlaneConn) closed() <-chan struct{} {
 }
 
 func (u *UPlaneConn) serve() {
+	buf := make([]byte, 1600)
 	for {
 		select {
 		case <-u.closed():
@@ -137,12 +135,12 @@ func (u *UPlaneConn) serve() {
 			// do nothing and go forward.
 		}
 
-		n, raddr, err := u.pktConn.ReadFrom(u.rcvBuf)
+		n, raddr, err := u.pktConn.ReadFrom(buf)
 		if err != nil {
-			continue
+			return
 		}
 
-		payload := u.rcvBuf[:n]
+		payload := buf[:n]
 		msg, err := messages.Decode(payload)
 		if err != nil {
 			continue
@@ -419,9 +417,19 @@ type peer struct {
 //
 // By using this, owner of UPlaneConn won't be able to Read and Write the packets that has teidIn.
 func (u *UPlaneConn) RelayTo(c *UPlaneConn, teidIn, teidOut uint32, raddr net.Addr) error {
+	u.mu.Lock()
+	defer u.mu.Unlock()
 	if u.relayMap == nil {
 		u.relayMap = map[uint32]*peer{}
 	}
 	u.relayMap[teidIn] = &peer{teid: teidOut, addr: raddr, srcConn: c}
+	return nil
+}
+
+// CloseRelay stops relaying T-PDU from a conn to conn.
+func (u *UPlaneConn) CloseRelay(teidIn uint32) error {
+	u.mu.Lock()
+	delete(u.relayMap, teidIn)
+	u.mu.Unlock()
 	return nil
 }
