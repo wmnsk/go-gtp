@@ -629,9 +629,6 @@ func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
 
 // GetIMSIByTEID returns IMSI associated with TEID.
 func (c *Conn) GetIMSIByTEID(teid uint32) (string, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
 		return "", err
