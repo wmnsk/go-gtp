@@ -99,8 +99,12 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	s11Conn.AddSession(s11Session)
 
 	s5cIP := laddr.IP.String()
+	s5uIP, _, err := net.SplitHostPort(*s5u)
+	if err != nil {
+		return err
+	}
 	s5cFTEID := sgw.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPC, s5cIP, "")
-	s5uFTEID := sgw.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s5cIP, "").WithInstance(2)
+	s5uFTEID := sgw.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s5uIP, "").WithInstance(2)
 
 	s5Session, seq, err := sgw.s5cConn.CreateSession(
 		raddr,
@@ -114,7 +118,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			ies.NewBearerQoS(1, 2, 1, 0xff, 0, 0, 0, 0),
 		),
 		csReqFromMME.MMEFQCSID,
-		ies.NewFullyQualifiedCSID(s5cIP, 1).WithInstance(1),
+		ies.NewFullyQualifiedCSID(s5uIP, 1).WithInstance(1),
 	)
 	if err != nil {
 		return err
@@ -164,11 +168,15 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		s11Conn.RemoveSession(s11Session)
 		return errors.Wrap(err, "failed to get IP for S11")
 	}
+	s1uIP, _, err := net.SplitHostPort(*s1u)
+	if err != nil {
+		return errors.Wrap(err, "failed to get IP for S1-U")
+	}
 	senderFTEID := s11Conn.NewFTEID(v2.IFTypeS11S4SGWGTPC, s11IP, "")
-	s1usgwFTEID := s11Conn.NewFTEID(v2.IFTypeS1USGWGTPU, s11IP, "")
+	s1usgwFTEID := s11Conn.NewFTEID(v2.IFTypeS1USGWGTPU, s1uIP, "")
 	csRspFromSGW = csRspFromPGW
 	csRspFromSGW.SenderFTEIDC = senderFTEID
-	csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedCSID(laddr.IP.String(), 1).WithInstance(1)
+	csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedCSID(s1uIP, 1).WithInstance(1)
 	csRspFromSGW.BearerContextsCreated.Add(s1usgwFTEID)
 	csRspFromSGW.BearerContextsCreated.Remove(ies.ChargingID, 0)
 	csRspFromSGW.SetTEID(s11mmeTEID)
