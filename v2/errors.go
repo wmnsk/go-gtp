@@ -83,6 +83,16 @@ func (e *ErrInvalidVersion) Error() string {
 	return fmt.Sprintf("version: %d is not acceptable for the receiver", e.Version)
 }
 
+// ErrInvalidSequence indicates that the Sequence Number is invalid.
+type ErrInvalidSequence struct {
+	Seq uint32
+}
+
+// Error returns violating Sequence Number.
+func (e *ErrInvalidSequence) Error() string {
+	return fmt.Sprintf("got invalid Sequence Number: %d", e.Seq)
+}
+
 // ErrInvalidTEID indicates that the TEID value is different from expected one or
 // not registered in TEIDMap.
 type ErrInvalidTEID struct {

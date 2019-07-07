@@ -154,10 +154,12 @@ func main() {
 		messages.MsgTypeCreateSessionRequest: handleCreateSessionRequest,
 		messages.MsgTypeModifyBearerRequest:  handleModifyBearerRequest,
 		messages.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
+		messages.MsgTypeDeleteBearerResponse: handleDeleteBearerResponse,
 	})
 	sgw.s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
 		messages.MsgTypeCreateSessionResponse: handleCreateSessionResponse,
 		messages.MsgTypeDeleteSessionResponse: handleDeleteSessionResponse,
+		messages.MsgTypeDeleteBearerRequest:   handleDeleteBearerRequest,
 	})
 
 	log.Fatal(sgw.run())

@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/wmnsk/go-gtp/v2/ies"
 	"github.com/wmnsk/go-gtp/v2/messages"
 )
@@ -22,12 +24,17 @@ type Conn struct {
 
 	validationEnabled bool
 
-	rcvBuf []byte
-
 	closeCh chan struct{}
 	errCh   chan error
 
 	*msgHandlerMap
+
+	// sequence is the last SequenceNumber used in the request.
+	//
+	// TS29.274 7.6  Reliable Delivery of Signalling Messages;
+	// The Sequence Number shall be unique for each outstanding Initial message sourced
+	// from the same IP/UDP endpoint(=Conn).
+	sequence uint32
 
 	// RestartCounter is the RestartCounter value in Recovery IE, which represents how many
 	// times the GTPv2-C endpoint is restarted.
@@ -44,25 +51,26 @@ type Conn struct {
 func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
-		rcvBuf:            make([]byte, 2048),
 		pktConn:           pktConn,
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
+		sequence:          0,
 		RestartCounter:    counter,
 	}
 
 	// send EchoRequest to raddr.
-	if err := c.EchoRequest(raddr); err != nil {
+	if _, err := c.EchoRequest(raddr); err != nil {
 		return nil, err
 	}
 
+	buf := make([]byte, 1600)
 	// if no response coming within 3 seconds, returns error without retrying.
 	if err := c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
 		return nil, err
 	}
-	n, raddr, err := c.pktConn.ReadFrom(c.rcvBuf)
+	n, raddr, err := c.pktConn.ReadFrom(buf)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +79,7 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 	}
 
 	// decode incoming message and let it be handled by default handler funcs.
-	msg, err := messages.Decode(c.rcvBuf[:n])
+	msg, err := messages.Decode(buf[:n])
 	if err != nil {
 		return nil, err
 	}
@@ -97,11 +105,11 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
-		rcvBuf:            make([]byte, 2048),
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
+		sequence:          0,
 		RestartCounter:    counter,
 	}
 
@@ -115,15 +123,17 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 	}
 
 	// send EchoRequest to raddr.
-	if err := c.EchoRequest(raddr); err != nil {
+	if _, err := c.EchoRequest(raddr); err != nil {
 		return nil, err
 	}
+
+	buf := make([]byte, 1600)
 
 	// if no response coming within 3 seconds, returns error without retrying.
 	if err := c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
 		return nil, err
 	}
-	n, raddr, err := c.pktConn.ReadFrom(c.rcvBuf)
+	n, raddr, err := c.pktConn.ReadFrom(buf)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +142,7 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 	}
 
 	// decode incoming message and let it be handled by default handler funcs.
-	msg, err := messages.Decode(c.rcvBuf[:n])
+	msg, err := messages.Decode(buf[:n])
 	if err != nil {
 		return nil, err
 	}
@@ -151,11 +161,11 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 func ListenAndServe(laddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
-		rcvBuf:            make([]byte, 2048),
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
+		sequence:          0,
 		RestartCounter:    counter,
 	}
 
@@ -174,6 +184,7 @@ func (c *Conn) closed() <-chan struct{} {
 }
 
 func (c *Conn) serve() {
+	buf := make([]byte, 1600)
 	for {
 		select {
 		case <-c.closed():
@@ -182,17 +193,19 @@ func (c *Conn) serve() {
 			// do nothing and go forward.
 		}
 
-		n, raddr, err := c.pktConn.ReadFrom(c.rcvBuf)
+		n, raddr, err := c.pktConn.ReadFrom(buf)
 		if err != nil {
 			continue
 		}
 
-		msg, err := messages.Decode(c.rcvBuf[:n])
-		if err != nil {
-			continue
-		}
-
+		raw := make([]byte, n)
+		copy(raw, buf)
 		go func() {
+			msg, err := messages.Decode(raw)
+			if err != nil {
+				return
+			}
+
 			if err := c.handleMessage(raddr, msg); err != nil {
 				c.errCh <- err
 			}
@@ -318,11 +331,9 @@ func (c *Conn) handleMessage(senderAddr net.Addr, msg messages.Message) error {
 	if !ok {
 		return &ErrNoHandlersFound{MsgType: msg.MessageTypeName()}
 	}
-	go func() {
-		if err := handle(c, senderAddr, msg); err != nil {
-			c.errCh <- err
-		}
-	}()
+	if err := handle(c, senderAddr, msg); err != nil {
+		c.errCh <- err
+	}
 
 	return nil
 }
@@ -361,40 +372,83 @@ func (c *Conn) validate(senderAddr net.Addr, msg messages.Message) error {
 	return nil
 }
 
-// EchoRequest sends a EchoRequest.
-func (c *Conn) EchoRequest(raddr net.Addr) error {
-	b, err := messages.NewEchoRequest(0, ies.NewRecovery(c.RestartCounter)).Serialize()
+// SendMessageTo sends a message to specified addr.
+// By using this function instead of WriteTo, package sets the Sequence Number
+// properly and returns the one used to send the message.
+func (c *Conn) SendMessageTo(msg messages.Message, addr net.Addr) (uint32, error) {
+	seq := c.IncSequence()
+	msg.SetSequenceNumber(seq)
+
+	payload, err := messages.Serialize(msg)
 	if err != nil {
-		return err
+		seq = c.DecSequence()
+		return seq, errors.Wrapf(err, "failed to send %T", msg)
 	}
 
-	if _, err := c.pktConn.WriteTo(b, raddr); err != nil {
-		return err
+	if _, err := c.WriteTo(payload, addr); err != nil {
+		seq = c.DecSequence()
+		return seq, errors.Wrapf(err, "failed to send %T", msg)
 	}
-	return nil
+	return seq, nil
 }
 
-// EchoResponse sends a EchoResponse.
-func (c *Conn) EchoResponse(raddr net.Addr) error {
-	b, err := messages.NewEchoResponse(0, ies.NewRecovery(c.RestartCounter)).Serialize()
-	if err != nil {
-		return err
+// IncSequence increments the SequenceNumber associated with Conn.
+func (c *Conn) IncSequence() uint32 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.sequence++
+
+	// SequenceNumber is 3-octet long
+	if c.sequence > 0xffffff {
+		c.sequence = 0
 	}
 
-	if _, err := c.pktConn.WriteTo(b, raddr); err != nil {
+	return c.sequence
+}
+
+// DecSequence decrements the SequenceNumber associated with Conn.
+func (c *Conn) DecSequence() uint32 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.sequence--
+
+	return c.sequence
+}
+
+// SequenceNumber returns the current(=last used) SequenceNumber associated with Conn.
+func (c *Conn) SequenceNumber() uint32 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.sequence
+}
+
+// EchoRequest sends a EchoRequest.
+func (c *Conn) EchoRequest(raddr net.Addr) (uint32, error) {
+	msg := messages.NewEchoRequest(0, ies.NewRecovery(c.RestartCounter))
+
+	seq, err := c.SendMessageTo(msg, raddr)
+	if err != nil {
+		return 0, err
+	}
+	return seq, nil
+}
+
+// EchoResponse sends a EchoResponse to the EchoRequest.
+func (c *Conn) EchoResponse(raddr net.Addr, req messages.Message) error {
+	res := messages.NewEchoResponse(0, ies.NewRecovery(c.RestartCounter))
+
+	if err := c.RespondTo(raddr, req, res); err != nil {
 		return err
 	}
 	return nil
 }
 
 // VersionNotSupportedIndication just sends VersionNotSupportedIndication message.
-func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, received messages.Message) error {
-	vsi, err := messages.NewVersionNotSupportedIndication(0, received.Sequence()).Serialize()
-	if err != nil {
-		return err
-	}
+func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Message) error {
+	res := messages.NewVersionNotSupportedIndication(0, req.Sequence())
 
-	if _, err := c.WriteTo(vsi, raddr); err != nil {
+	if err := c.RespondTo(raddr, req, res); err != nil {
 		return err
 	}
 	return nil
@@ -409,7 +463,7 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, received messages.M
 //
 // Note that this method doesn't care IEs given are sufficient or not, as the required IE
 // varies much depending on the context Create Session Request is used.
-func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
+func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, error) {
 	// retrieve values from IEs given.
 	sess := NewSession(raddr, &Subscriber{Location: &Location{}})
 	br := sess.GetDefaultBearer()
@@ -461,73 +515,62 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
 		}
 	}
 
-	// set IEs into CreateSessionRequest .
-	csr, err := messages.NewCreateSessionRequest(0, sess.Sequence, ie...).Serialize()
-	if err != nil {
-		return nil, err
-	}
+	// set IEs into CreateSessionRequest.
+	msg := messages.NewCreateSessionRequest(0, 0, ie...)
 
-	if _, err := c.WriteTo(csr, raddr); err != nil {
-		return nil, err
+	seq, err := c.SendMessageTo(msg, raddr)
+	if err != nil {
+		return nil, 0, err
 	}
-	return sess, nil
+	return sess, seq, nil
 }
 
 // DeleteSession sends a DeleteSessionRequest with TEID and IEs given..
-func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) error {
+func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	dsr, err := messages.NewDeleteSessionRequest(teid, sess.Sequence+1, ie...).Serialize()
+	msg := messages.NewDeleteSessionRequest(teid, 0, ie...)
+
+	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
 	if err != nil {
-		return err
+		return 0, err
 	}
-
-	if _, err := c.WriteTo(dsr, sess.PeerAddr); err != nil {
-		return err
-	}
-	sess.Sequence++
-	return nil
+	return seq, nil
 }
 
 // ModifyBearer sends a ModifyBearerRequest with TEID and IEs given..
-func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) error {
+func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	mbr, err := messages.NewModifyBearerRequest(teid, sess.Sequence+1, ie...).Serialize()
+	msg := messages.NewModifyBearerRequest(teid, 0, ie...)
+
+	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
 	if err != nil {
-		return err
+		return 0, err
 	}
-
-	if _, err := c.WriteTo(mbr, sess.PeerAddr); err != nil {
-		return err
-	}
-	sess.Sequence++
-	return nil
+	return seq, nil
 }
 
 // DeleteBearer sends a DeleteBearerRequest TEID and with IEs given.
-func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) error {
+func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	dbr, err := messages.NewDeleteBearerRequest(teid, sess.Sequence+1, ie...).Serialize()
+	msg := messages.NewDeleteBearerRequest(teid, 0, ie...)
+
+	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
 	if err != nil {
-		return err
+		return 0, err
 	}
-
-	if _, err := c.WriteTo(dbr, sess.PeerAddr); err != nil {
-		return err
-	}
-	sess.Sequence++
-	return nil
+	return seq, nil
 }
 
 // RespondTo sends a message(specified with "toBeSent" param) in response to
@@ -537,6 +580,7 @@ func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) error {
 func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) error {
 	toBeSent.SetSequenceNumber(received.Sequence())
 	b := make([]byte, toBeSent.Len())
+
 	if err := toBeSent.SerializeTo(b); err != nil {
 		return err
 	}
@@ -549,6 +593,9 @@ func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) er
 
 // GetSessionByTEID returns the current session looked up by InterfaceType and TEID of the message.
 func (c *Conn) GetSessionByTEID(teid uint32) (*Session, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	var session *Session
 	for _, sess := range c.Sessions {
 		sess.teidMap.rangeWithFunc(func(i, t interface{}) bool {
@@ -568,6 +615,9 @@ func (c *Conn) GetSessionByTEID(teid uint32) (*Session, error) {
 
 // GetSessionByIMSI returns the current session looked up by IMSI.
 func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	for _, sess := range c.Sessions {
 		if imsi == sess.IMSI {
 			return sess, nil
@@ -590,6 +640,9 @@ func (c *Conn) GetIMSIByTEID(teid uint32) (string, error) {
 // AddSession adds a session to c.Sessions.
 // If the session given already exists, this removes the old one.
 func (c *Conn) AddSession(session *Session) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	// TODO: any smarter way?
 	if len(c.Sessions) == 0 {
 		c.Sessions = []*Session{session}
@@ -628,6 +681,8 @@ func (c *Conn) RemoveSession(session *Session) {
 		session.bearerMap.delete(name)
 		return true
 	})
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	var newSessions []*Session
 	for _, sess := range c.Sessions {
@@ -643,6 +698,9 @@ func (c *Conn) RemoveSession(session *Session) {
 // NewFTEID creates a new F-TEID with random TEID value that is different from existing one.
 // If there's a lot of Session on the Conn, it may take a long time to find unique one.
 func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	var teids []uint32
 	for _, sess := range c.Sessions {
 		if teid, ok := sess.teidMap.load(ifType); ok {
@@ -670,6 +728,8 @@ func generateUniqueUint32(vals []uint32) uint32 {
 }
 
 // SessionCount returns the number of sessions registered in Conn.
+//
+// This may have impact on performance in case of large number of Session exists.
 func (c *Conn) SessionCount() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -684,6 +744,9 @@ func (c *Conn) SessionCount() int {
 }
 
 // BearerCount returns the number of bearers registered in Conn.
+//
+// This may have impact on performance in case of large number of Session and
+// Bearer exist.
 func (c *Conn) BearerCount() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()

@@ -8,7 +8,6 @@ import (
 	"net"
 
 	"github.com/vishvananda/netlink"
-	"github.com/wmnsk/go-gtp/v2/ies"
 )
 
 // QoSProfile is a QoS-related information that belongs to a Bearer.
@@ -50,11 +49,6 @@ func NewNetlinkBearer(ver uint32, ebi uint8, apn string, qos *QoSProfile) *Beare
 		EBI: ebi, APN: apn, QoSProfile: qos,
 		PDP: &netlink.PDP{Version: ver},
 	}
-}
-
-// Modify is just an alias of (*Conn) ModifyBearer.
-func (b *Bearer) Modify(c *Conn, ie ...*ies.IE) error {
-	return c.ModifyBearer(b.teidOut, ie...)
 }
 
 // RemoteAddress returns the remote address associated with Bearer.
