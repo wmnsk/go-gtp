@@ -11,8 +11,19 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/vishvananda/netlink"
 	"github.com/wmnsk/go-gtp/v1/ies"
 	"github.com/wmnsk/go-gtp/v1/messages"
+)
+
+// Role is a role for Kernel GTP-U.
+type Role int
+
+// Role definitions.
+const (
+	RoleGGSN Role = iota
+	RoleSGSN
 )
 
 type tpduSet struct {
@@ -34,8 +45,12 @@ type UPlaneConn struct {
 
 	relayMap map[uint32]*peer
 
+	// for Linux kernel GTP with netlink
+	kernGTPEnabled bool
+	GTPLink        *netlink.GTP
+
 	// RestartCounter is the RestartCounter value in Recovery IE, which represents how many
-	// times the GTPv2-C endpoint is restarted.
+	// times the GTPv1-U endpoint is restarted.
 	RestartCounter uint8
 }
 
@@ -119,14 +134,127 @@ func ListenAndServeUPlane(laddr net.Addr, counter uint8, errCh chan error) (*UPl
 	return u, nil
 }
 
-// closed would be used in multiple goroutines.
-// never send struct{}{} to it; instead, use close(u.closeCh).
-func (u *UPlaneConn) closed() <-chan struct{} {
-	return u.closeCh
+// DialUPlaneKernel works similar to DialUPlane but uses Linux Kernel GTP-U
+// instead of handling G-DPU message in userland.
+func DialUPlaneKernel(devname string, role Role, laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
+	u := &UPlaneConn{
+		mu:            sync.Mutex{},
+		msgHandlerMap: defaultHandlerMap,
+
+		tpduCh:  make(chan *tpduSet),
+		closeCh: make(chan struct{}),
+		errCh:   errCh,
+
+		RestartCounter: counter,
+	}
+
+	// setup UDPConn first.
+	var err error
+	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
+	if err != nil {
+		return nil, err
+	}
+
+	// if no response coming within 5 seconds, returns error.
+	if err := u.pktConn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		return nil, err
+	}
+
+	buf := make([]byte, 1600)
+	for {
+		// send EchoRequest to raddr.
+		if err := u.EchoRequest(raddr); err != nil {
+			return nil, err
+		}
+
+		n, _, err := u.pktConn.ReadFrom(buf)
+		if err != nil {
+			return nil, err
+		}
+		if err := u.pktConn.SetReadDeadline(time.Time{}); err != nil {
+			return nil, err
+		}
+
+		// decode incoming message and let it be handled by default handler funcs.
+		msg, err := messages.Decode(buf[:n])
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := msg.(*messages.EchoResponse); !ok {
+			continue
+		}
+
+		break
+	}
+
+	f, _ := u.pktConn.(*net.UDPConn).File()
+	u.GTPLink = &netlink.GTP{
+		LinkAttrs: netlink.LinkAttrs{
+			Name: devname,
+		},
+		FD1:  int(f.Fd()),
+		Role: int(role),
+	}
+	if err := netlink.LinkAdd(u.GTPLink); err != nil {
+		return nil, errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
+	}
+	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
+		return nil, errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
+	}
+	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
+		return nil, errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
+	}
+	u.kernGTPEnabled = true
+
+	go u.serve()
+	return u, nil
+}
+
+// ListenAndServeUPlaneKernel works similar to ListenAndServeUPlane but uses Linux Kernel GTP-U
+// instead of handling G-DPU message in userland.
+func ListenAndServeUPlaneKernel(devname string, role Role, laddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
+	u := &UPlaneConn{
+		mu:            sync.Mutex{},
+		msgHandlerMap: defaultHandlerMap,
+
+		tpduCh:  make(chan *tpduSet),
+		closeCh: make(chan struct{}),
+		errCh:   errCh,
+
+		RestartCounter: counter,
+	}
+
+	var err error
+	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
+	if err != nil {
+		return nil, err
+	}
+
+	f, _ := u.pktConn.(*net.UDPConn).File()
+	u.GTPLink = &netlink.GTP{
+		LinkAttrs: netlink.LinkAttrs{
+			Name: devname,
+		},
+		FD1:  int(f.Fd()),
+		Role: int(role),
+	}
+	if err := netlink.LinkAdd(u.GTPLink); err != nil {
+		return nil, errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
+	}
+	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
+		return nil, errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
+	}
+	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
+		return nil, errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
+	}
+	u.kernGTPEnabled = true
+
+	go u.serve()
+	return u, nil
 }
 
 func (u *UPlaneConn) serve() {
-	buf := make([]byte, 1600)
+	buf := make([]byte, 1500)
 	for {
 		select {
 		case <-u.closed():
@@ -190,6 +318,8 @@ func (u *UPlaneConn) serve() {
 // ReadFrom can be made to time out and return
 // an Error with Timeout() == true after a fixed time limit;
 // see SetDeadline and SetReadDeadline.
+//
+// Note that valid GTP-U packets handled by Kernel can NOT be retrieved by this.
 func (u *UPlaneConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 	return u.pktConn.ReadFrom(p)
 }
@@ -197,6 +327,8 @@ func (u *UPlaneConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 // ReadFromGTP reads a packet from the connection, copying the payload without
 // GTP header into p. It returns the number of bytes copied into p, the return
 // address that was on the packet, TEID in the GTP header.
+//
+// Note that valid GTP-U packets handled by Kernel can NOT be retrieved by this.
 func (u *UPlaneConn) ReadFromGTP(p []byte) (n int, addr net.Addr, teid uint32, err error) {
 	select {
 	case <-u.closed():
@@ -235,22 +367,27 @@ func (u *UPlaneConn) WriteToGTP(teid uint32, p []byte, addr net.Addr) (n int, er
 	return len(b), nil
 }
 
+// closed would be used in multiple goroutines.
+// never send struct{}{} to it; instead, use close(u.closeCh).
+func (u *UPlaneConn) closed() <-chan struct{} {
+	return u.closeCh
+}
+
 // Close closes the connection.
 // Any blocked Read or Write operations will be unblocked and return errors.
 func (u *UPlaneConn) Close() error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
-
 	u.msgHandlerMap = defaultHandlerMap
-	u.RestartCounter = 0
-	close(u.errCh)
 	close(u.closeCh)
+	u.relayMap = nil
+
+	if u.kernGTPEnabled {
+		_ = netlink.LinkDel(u.GTPLink)
+	}
 
 	// triggers error in blocking Read() / Write() after 1ms.
-	if err := u.pktConn.SetDeadline(time.Now().Add(1 * time.Millisecond)); err != nil {
-		return err
-	}
-	return nil
+	return u.pktConn.SetDeadline(time.Now().Add(1 * time.Millisecond))
 }
 
 // LocalAddr returns the local network address.
@@ -398,31 +535,4 @@ func (u *UPlaneConn) RespondTo(raddr net.Addr, received, toBeSent messages.Messa
 // Restarts returns the number of restarts in uint8.
 func (u *UPlaneConn) Restarts() uint8 {
 	return u.RestartCounter
-}
-
-type peer struct {
-	teid    uint32
-	addr    net.Addr
-	srcConn *UPlaneConn
-}
-
-// RelayTo relays T-PDU type of packet to peer node(specified by raddr) from the UPlaneConn given.
-//
-// By using this, owner of UPlaneConn won't be able to Read and Write the packets that has teidIn.
-func (u *UPlaneConn) RelayTo(c *UPlaneConn, teidIn, teidOut uint32, raddr net.Addr) error {
-	u.mu.Lock()
-	defer u.mu.Unlock()
-	if u.relayMap == nil {
-		u.relayMap = map[uint32]*peer{}
-	}
-	u.relayMap[teidIn] = &peer{teid: teidOut, addr: raddr, srcConn: c}
-	return nil
-}
-
-// CloseRelay stops relaying T-PDU from a conn to conn.
-func (u *UPlaneConn) CloseRelay(teidIn uint32) error {
-	u.mu.Lock()
-	delete(u.relayMap, teidIn)
-	u.mu.Unlock()
-	return nil
 }
