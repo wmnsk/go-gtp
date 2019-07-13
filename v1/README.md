@@ -1,6 +1,6 @@
 # v1: GTPv1 in Golang
 
-Package v1 provides the simple and painless handling of GTPv2-C protocol in pure Golang.
+Package v1 provides the simple and painless handling of GTPv1-C and GTPv1-U protocols in pure Golang.
 
 ## Getting Started
 
@@ -17,13 +17,117 @@ _NOT IMPLEMENTED YET!_
 
 ### Opening a U-Plane connection
 
-Use `Dial()` or `ListenAndServe()` to retrieve `UPlaneConn`.The difference between the two functions is;
+#### On Linux
 
-* `Dial()` sends Echo Request and returns `UPlaneConn` if it succeeds.
+Linux Kernel supports native GTP-U support since 4.12, which is quite performant and easy to use. `go-gtp` provides some APIs to handle it in the customizable way.
+
+Use `DialUPlaneKernel()` or `ListenAndServeKernel()` to retrieve `UPlaneConn`.The difference between the two functions is;
+
+* `DialUPlaneKernel()` sends Echo Request and returns `UPlaneConn` if it succeeds.
+
+```go
+// give name for GTP device, role(GGSN/SGSN), local/remote net.Addr, restart counter,
+// channel to let background process pass the errors.
+uConn, err := v1.DialUPlaneKernel("gtp0", v1.RoleGGSN, laddr, raddr, 0, errCh)
+if err != nil {
+    // ...
+}
+```
+
+* `ListenAndServeKernel()` just returns `UPlaneConn` without any validation.
+
+```go
+// give name for GTP device, role(GGSN/SGSN), local net.Addr, restart counter,
+// channel to let background process pass the errors.
+uConn, err := v1.ListenAndServeKernel("gtp0", v1.RoleSGSN, laddr, 0, errCh)
+if err != nil {
+    // ...
+}
+```
+
+With `UPlaneConn`, you can add and delete tunnels, and manipulate device directly.
+
+* Adding tunnels
+
+Use `AddTunnel()` or `AddTunnelOverride()` to add a tunnel.
+
+The latter one deletes the existing tunnel with the same IP and/or incoming TEID before creating a tunnel,
+while the former fails if there's any duplication.
+
+```go
+// add a tunnel by giving GTP peer's IP, subscriber's IP,
+if err := uConn.AddTunnelOverride(
+	net.ParseIP("10.10.10.10"), // GTP peer's IP
+	net.ParseIP("1.1.1.1"),     // subscriber's IP
+	0x55667788,                 // outgoing TEID
+	0x11223344,                 // incoming TEID
+); err != nil {
+	// ...
+}
+```
+
+* Deleting tunnels
+
+Use `DelTunnelByITEI()` or `DelTunnelByMSAddress()` to delete a tunnel.
+
+Or, by `Close()`-ing the `UPlaneConn`, all the tunnels associated will the cleared.
+
+```go
+// delete a tunnel by giving an incoming TEID.
+if err := uConn.DelTunnelByITEI(0x11223344); err != nil {
+	// ...
+}
+
+// delete a tunnel by giving an IP address assigned to a subscriber.
+if err := uConn.DelTunnelByMSAddress(net.ParseIP("1.1.1.1")); err != nil {
+	// ...
+}
+```
+
+The packets not forwarded by the Kernel can be handled automatically by giving a handler to `UPlaneConn`.
+
+Handlers for T-PDU, Echo Request/Response, and Error Indication are registered by default.
+
+```go
+uConn.AddHandler(messages.MsgTypeEchoRequest, func(c v1.Conn, senderAddr net.Addr, msg messages.Message) error {
+    // do anything you want for Echo Request here.
+    // errors returned here are passed to `errCh` that is given to UPlaneConn at the beginning.
+	return nil
+})
+```
+
+Manipulate the unhandled T-PDUs directly with `ReadFromGTP()` and send something with `WriteToGTP()`.
+
+* `ReadFromGTP()` reads from `UPlaneConn`, and returns the number of bytes copied into the given buffer(not including header), sender's net.Addr, incoming TEID set in GTP header, and error if occurred.
+
+```go
+buf := make([]byte, 1500)
+n, raddr, teid, err := uConn.ReadFromGTP(buf)
+if err != nil {
+    // ...
+}
+
+fmt.Printf("%x", buf[:n]) // prints the payload encapsulated in the GTP header.
+```
+
+* `WriteToGTP()` writes the payload encapsulated with GTP header to the specified addr over `UPlaneConn`.
+
+```go
+// first return value is the number of bytes written.
+if _, err := uConn.WriteToGTP(teid, payload, addr); err != nil {
+    // ...
+}
+```
+
+#### On non-Linux platform
+
+Use `DialUPlane()` or `ListenAndServe()` to retrieve `UPlaneConn`.The difference between the two functions is;
+
+* `DialUPlane()` sends Echo Request and returns `UPlaneConn` if it succeeds.
 
 ```go
 // give local/remote net.Addr, restart counter, channel to let background process pass the errors.
-uConn, err := v1.Dial(laddr, raddr, 0, errCh)
+uConn, err := v1.DialUPlane(laddr, raddr, 0, errCh)
 if err != nil {
     // ...
 }
@@ -71,7 +175,7 @@ s1uConn.RelayTo(s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteA
 s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
 ```
 
-_Note: _package v1 does provide encapsulation/decapsulation and some networking features, but it does not provide routing of the decapsulated packets, nor capturing IP layer and above on the specified interface. This is because such kind of operations cannot be done without platform-specific codes, But **netlink support is on its way**; stay tuned!_
+_Note: _package v1 does provide encapsulation/decapsulation and some networking features, but it does not provide routing of the decapsulated packets, nor capturing IP layer and above on the specified interface. This is because such kind of operations cannot be done without platform-specific codes._
 
 ## Supported Features
 
