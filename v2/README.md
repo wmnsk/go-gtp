@@ -263,8 +263,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 200     | Update PDN Connection Set Request               |           |
 | 201     | Update PDN Connection Set Response              |           |
 | 202-210 | (Spare/Reserved)                                | -         |
-| 211     | Modify Access Bearers Request                   |           |
-| 212     | Modify Access Bearers Response                  |           |
+| 211     | Modify Access Bearers Request                   | Yes       |
+| 212     | Modify Access Bearers Response                  | Yes       |
 | 213-230 | (Spare/Reserved)                                | -         |
 | 231     | MBMS Session Start Request                      |           |
 | 232     | MBMS Session Start Response                     |           |
