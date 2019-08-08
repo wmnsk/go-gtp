@@ -335,6 +335,8 @@ func Decode(b []byte) (Message, error) {
 		m = &ContextAcknowledge{}
 	case MsgTypeReleaseAccessBearersRequest:
 		m = &ReleaseAccessBearersRequest{}
+	case MsgTypeReleaseAccessBearersResponse:
+		m = &ReleaseAccessBearersResponse{}
 	default:
 		m = &Generic{}
 	}
