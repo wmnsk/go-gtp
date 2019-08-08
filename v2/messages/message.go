@@ -339,6 +339,8 @@ func Decode(b []byte) (Message, error) {
 		m = &ReleaseAccessBearersResponse{}
 	case MsgTypeStopPagingIndication:
 		m = &StopPagingIndication{}
+	case MsgTypeModifyAccessBearersRequest:
+		m = &ModifyAccessBearersRequest{}
 	default:
 		m = &Generic{}
 	}
