@@ -251,8 +251,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 167     | Create Indirect Data Forwarding Tunnel Response |           |
 | 168     | Delete Indirect Data Forwarding Tunnel Request  |           |
 | 169     | Delete Indirect Data Forwarding Tunnel Response |           |
-| 170     | Release Access Bearers Request                  |           |
-| 171     | Release Access Bearers Response                 |           |
+| 170     | Release Access Bearers Request                  | Yes       |
+| 171     | Release Access Bearers Response                 | Yes       |
 | 172-175 | (Spare/Reserved)                                | -         |
 | 176     | Downlink Data Notification                      |           |
 | 177     | Downlink Data Notification Acknowledge          |           |
