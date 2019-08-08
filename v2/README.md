@@ -202,7 +202,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 70      | Downlink Data Notification Failure Indication   |           |
 | 71      | Trace Session Activation                        |           |
 | 72      | Trace Session Deactivation                      |           |
-| 73      | Stop Paging Indication                          |           |
+| 73      | Stop Paging Indication                          | Yes       |
 | 74-94   | (Spare/Reserved)                                | -         |
 | 95      | Create Bearer Request                           | Yes       |
 | 96      | Create Bearer Response                          | Yes       |
