@@ -18,5 +18,11 @@ func NewMSISDN(mei string) *IE {
 // MSISDN returns MSISDN in string if the
 // type of IE matches.
 func (i *IE) MSISDN() string {
+	if i.Type != MSISDN {
+		return ""
+	}
+	if len(i.Payload) == 0 {
+		return ""
+	}
 	return utils.SwappedBytesToStr(i.Payload, true)
 }

@@ -19,6 +19,9 @@ func (i *IE) AggregateMaximumBitRateUp() uint32 {
 	if i.Type != AggregateMaximumBitRate {
 		return 0
 	}
+	if len(i.Payload) < 4 {
+		return 0
+	}
 
 	return binary.BigEndian.Uint32(i.Payload[0:4])
 }
@@ -27,6 +30,9 @@ func (i *IE) AggregateMaximumBitRateUp() uint32 {
 // if the type of IE matches.
 func (i *IE) AggregateMaximumBitRateDown() uint32 {
 	if i.Type != AggregateMaximumBitRate {
+		return 0
+	}
+	if len(i.Payload) < 8 {
 		return 0
 	}
 

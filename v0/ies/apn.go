@@ -25,6 +25,9 @@ func (i *IE) AccessPointName() string {
 	if i.Type != AccessPointName {
 		return ""
 	}
+	if len(i.Payload) == 0 {
+		return ""
+	}
 
 	var (
 		apn    []string
@@ -37,6 +40,9 @@ func (i *IE) AccessPointName() string {
 			break
 		}
 		l := int(i.Payload[offset])
+		if offset+l+1 >= max {
+			break
+		}
 		apn = append(apn, string(i.Payload[offset+1:offset+l+1]))
 		offset += l + 1
 	}

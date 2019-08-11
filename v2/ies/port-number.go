@@ -13,8 +13,15 @@ func NewPortNumber(port uint16) *IE {
 
 // PortNumber returns PortNumber in uint16 if the type of IE matches.
 func (i *IE) PortNumber() uint16 {
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	switch i.Type {
 	case PortNumber:
+		if len(i.Payload) < 2 {
+			return 0
+		}
 		return binary.BigEndian.Uint16(i.Payload[0:2])
 	default:
 		return 0

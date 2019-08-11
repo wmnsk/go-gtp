@@ -20,6 +20,10 @@ func NewServingNetwork(mcc, mnc string) *IE {
 
 // ServingNetwork returns ServingNetwork(MCC and MNC) in string if the type of IE matches.
 func (i *IE) ServingNetwork() string {
+	if len(i.Payload) < 3 {
+		return ""
+	}
+
 	if i.Type != ServingNetwork {
 		return ""
 	}
@@ -34,6 +38,10 @@ func (i *IE) ServingNetwork() string {
 
 // MCC returns MCC in string if the type of IE matches.
 func (i *IE) MCC() string {
+	if len(i.Payload) < 3 {
+		return ""
+	}
+
 	switch i.Type {
 	case ServingNetwork, PLMNID:
 		mcc, _, err := utils.DecodePLMN(i.Payload)
@@ -54,6 +62,10 @@ func (i *IE) MCC() string {
 
 // MNC returns MNC in string if the type of IE matches.
 func (i *IE) MNC() string {
+	if len(i.Payload) < 3 {
+		return ""
+	}
+
 	switch i.Type {
 	case ServingNetwork, PLMNID:
 		_, mnc, err := utils.DecodePLMN(i.Payload)

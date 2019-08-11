@@ -23,6 +23,9 @@ func (i *IE) PLMNID() string {
 	if i.Type != PLMNID {
 		return ""
 	}
+	if len(i.Payload) < 3 {
+		return ""
+	}
 
 	mcc, mnc, err := utils.DecodePLMN(i.Payload)
 	if err != nil {

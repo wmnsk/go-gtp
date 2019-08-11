@@ -11,6 +11,10 @@ func NewPDNType(pdn uint8) *IE {
 
 // PDNType returns the PDNType value in uint8 if the type of IE matches.
 func (i *IE) PDNType() uint8 {
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	switch i.Type {
 	case PDNType, PDNAddressAllocation:
 		return i.Payload[0]

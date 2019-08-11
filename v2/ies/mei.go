@@ -18,5 +18,11 @@ func NewMobileEquipmentIdentity(mei string) *IE {
 // MobileEquipmentIdentity returns MobileEquipmentIdentity in string if the
 // type of IE matches.
 func (i *IE) MobileEquipmentIdentity() string {
+	if i.Type != MobileEquipmentIdentity {
+		return ""
+	}
+	if len(i.Payload) == 0 {
+		return ""
+	}
 	return utils.SwappedBytesToStr(i.Payload, true)
 }

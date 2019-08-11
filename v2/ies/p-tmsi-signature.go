@@ -18,5 +18,9 @@ func (i *IE) PTMSISignature() uint32 {
 	if i.Type != PTMSISignature {
 		return 0
 	}
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	return utils.Uint24To32(i.Payload)
 }

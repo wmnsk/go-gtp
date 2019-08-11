@@ -23,6 +23,9 @@ func NewTraceReference(mcc, mnc string, traceID uint32) *IE {
 func (i *IE) TraceID() uint32 {
 	switch i.Type {
 	case TraceReference, TraceInformation:
+		if len(i.Payload) < 6 {
+			return 0
+		}
 		return utils.Uint24To32(i.Payload[3:6])
 	default:
 		return 0

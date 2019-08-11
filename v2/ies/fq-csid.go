@@ -52,6 +52,10 @@ func NewFullyQualifiedCSID(nodeID string, csIDs ...uint16) *IE {
 
 // NodeIDType returns NodeIDType in uint8 if the type of IE matches.
 func (i *IE) NodeIDType() uint8 {
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	switch i.Type {
 	case FullyQualifiedCSID:
 		return (i.Payload[0] >> 4) & 0x0f
@@ -62,12 +66,22 @@ func (i *IE) NodeIDType() uint8 {
 
 // NodeID returns NodeID in []byte if the type of IE matches.
 func (i *IE) NodeID() []byte {
+	if len(i.Payload) == 0 {
+		return nil
+	}
+
 	switch i.Type {
 	case FullyQualifiedCSID:
 		switch (i.Payload[0] >> 4) & 0x0f {
 		case nodeIDIPv4, nodeIDOther:
+			if len(i.Payload) < 6 {
+				return nil
+			}
 			return i.Payload[1:5]
 		case nodeIDIPv6:
+			if len(i.Payload) < 18 {
+				return nil
+			}
 			return i.Payload[1:17]
 		default:
 			return nil
@@ -79,6 +93,10 @@ func (i *IE) NodeID() []byte {
 
 // CSIDs returns CSIDs in []uint16 if the type of IE matches.
 func (i *IE) CSIDs() []uint16 {
+	if len(i.Payload) == 0 {
+		return nil
+	}
+
 	switch i.Type {
 	case FullyQualifiedCSID:
 		offset := 0
@@ -93,10 +111,11 @@ func (i *IE) CSIDs() []uint16 {
 
 		var csids []uint16
 		for {
-			if offset >= len(i.Payload) {
+			if offset+2 > len(i.Payload) {
 				break
 			}
 			csids = append(csids, binary.BigEndian.Uint16(i.Payload[offset:offset+2]))
+			offset += 2
 		}
 		return csids
 	default:

@@ -23,6 +23,9 @@ func NewTEIDDataII(teid uint32) *IE {
 
 // TEID returns TEID value if type matches.
 func (i *IE) TEID() uint32 {
+	if len(i.Payload) < 4 {
+		return 0
+	}
 	switch i.Type {
 	case TEIDCPlane, TEIDDataI, TEIDDataII:
 		return binary.BigEndian.Uint32(i.Payload)

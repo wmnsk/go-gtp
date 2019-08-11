@@ -101,6 +101,10 @@ func NewBearerContextWithinContextAcknowledge(ebi, fwdFTEID *IE) *IE {
 
 // BearerContext returns the []*IE inside BearerContext IE.
 func (i *IE) BearerContext() []*IE {
+	if len(i.Payload) == 0 {
+		return nil
+	}
+
 	ies, err := ParseMultiIEs(i.Payload)
 	if err != nil {
 		return nil

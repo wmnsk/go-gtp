@@ -14,6 +14,9 @@ func (i *IE) HopCounter() uint8 {
 	if i.Type != HopCounter {
 		return 0
 	}
+	if len(i.Payload) == 0 {
+		return 0
+	}
 
 	return i.Payload[0]
 }

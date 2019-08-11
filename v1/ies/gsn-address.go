@@ -24,5 +24,9 @@ func (i *IE) GSNAddress() string {
 	if i.Type != GSNAddress {
 		return ""
 	}
+	if len(i.Payload) < 4 {
+		return ""
+	}
+
 	return net.IP(i.Payload).String()
 }

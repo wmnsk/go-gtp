@@ -33,6 +33,10 @@ func (i *IE) TimeZone() time.Duration {
 	if i.Type != UETimeZone {
 		return 0
 	}
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	unsigned := i.Payload[0] & 0xf7
 	dec := int((unsigned >> 4) + (unsigned&0x0f)*10)
 	if (i.Payload[0]&0x08)>>3 == 1 {
@@ -45,6 +49,9 @@ func (i *IE) TimeZone() time.Duration {
 // DaylightSaving returns DaylightSaving in uint8 if the type of IE matches.
 func (i *IE) DaylightSaving() uint8 {
 	if i.Type != UETimeZone {
+		return 0
+	}
+	if len(i.Payload) < 2 {
 		return 0
 	}
 

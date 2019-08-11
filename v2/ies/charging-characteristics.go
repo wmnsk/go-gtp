@@ -16,6 +16,9 @@ func (i *IE) ChargingCharacteristics() uint16 {
 	if i.Type != ChargingCharacteristics {
 		return 0
 	}
+	if len(i.Payload) < 2 {
+		return 0
+	}
 
 	return binary.BigEndian.Uint16(i.Payload)
 }

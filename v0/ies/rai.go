@@ -40,6 +40,9 @@ func (i *IE) RouteingAreaIdentity() []byte {
 func (i *IE) MCC() string {
 	switch i.Type {
 	case RouteingAreaIdentity:
+		if len(i.Payload) < 2 {
+			return ""
+		}
 		return utils.SwappedBytesToStr(i.Payload[0:2], false)
 	default:
 		return ""
@@ -50,6 +53,9 @@ func (i *IE) MCC() string {
 func (i *IE) MNC() string {
 	switch i.Type {
 	case RouteingAreaIdentity:
+		if len(i.Payload) < 2 {
+			return ""
+		}
 		return utils.SwappedBytesToStr(i.Payload[1:2], true)
 	default:
 		return ""
@@ -60,6 +66,9 @@ func (i *IE) MNC() string {
 func (i *IE) LAC() uint16 {
 	switch i.Type {
 	case RouteingAreaIdentity:
+		if len(i.Payload) < 5 {
+			return 0
+		}
 		return binary.BigEndian.Uint16(i.Payload[3:5])
 	default:
 		return 0
@@ -70,6 +79,9 @@ func (i *IE) LAC() uint16 {
 func (i *IE) RAC() uint8 {
 	switch i.Type {
 	case RouteingAreaIdentity:
+		if len(i.Payload) < 6 {
+			return 0
+		}
 		return i.Payload[5]
 	default:
 		return 0

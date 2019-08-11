@@ -16,6 +16,9 @@ func (i *IE) ChargingID() uint32 {
 	if i.Type != ChargingID {
 		return 0
 	}
+	if len(i.Payload) < 4 {
+		return 0
+	}
 
 	return binary.BigEndian.Uint32(i.Payload)
 }

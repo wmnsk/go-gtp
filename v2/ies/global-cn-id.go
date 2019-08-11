@@ -26,6 +26,9 @@ func NewGlobalCNID(mcc, mnc string, cnid uint16) *IE {
 
 // CNID returns CNID in uinte16 if the type of IE matches.
 func (i *IE) CNID() uint16 {
+	if len(i.Payload) < 5 {
+		return 0
+	}
 	switch i.Type {
 	case GlobalCNID:
 		return binary.BigEndian.Uint16(i.Payload[3:5])

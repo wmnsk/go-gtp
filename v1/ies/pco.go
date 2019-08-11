@@ -123,6 +123,10 @@ func ParsePCOPayload(b []byte) (*PCOPayload, error) {
 
 // UnmarshalBinary decodes given bytes into PCOPayload.
 func (p *PCOPayload) UnmarshalBinary(b []byte) error {
+	if len(b) == 0 {
+		return ErrTooShortToParse
+	}
+
 	p.ConfigurationProtocol = b[0] & 0x07
 
 	offset := 1
@@ -135,6 +139,7 @@ func (p *PCOPayload) UnmarshalBinary(b []byte) error {
 			return err
 		}
 		p.ConfigurationProtocolOptions = append(p.ConfigurationProtocolOptions, opt)
+		offset += opt.MarshalLen()
 	}
 }
 

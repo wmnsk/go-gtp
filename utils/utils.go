@@ -34,6 +34,10 @@ func StrToSwappedBytes(s, filler string) ([]byte, error) {
 //
 // The second parameter is to decide whether to cut the last digit or not.
 func SwappedBytesToStr(raw []byte, cutLastDigit bool) string {
+	if len(raw) == 0 {
+		return ""
+	}
+
 	s := hex.EncodeToString(swap(raw))
 	if cutLastDigit {
 		s = s[:len(s)-1]

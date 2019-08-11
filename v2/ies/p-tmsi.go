@@ -16,5 +16,9 @@ func (i *IE) PacketTMSI() uint32 {
 	if i.Type != PacketTMSI {
 		return 0
 	}
+	if len(i.Payload) < 4 {
+		return 0
+	}
+
 	return binary.BigEndian.Uint32(i.Payload)
 }

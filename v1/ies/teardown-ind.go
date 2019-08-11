@@ -17,5 +17,9 @@ func (i *IE) TeardownInd() bool {
 	if i.Type != TeardownInd {
 		return false
 	}
+	if len(i.Payload) == 0 {
+		return false
+	}
+
 	return i.Payload[0]%2 == 1
 }

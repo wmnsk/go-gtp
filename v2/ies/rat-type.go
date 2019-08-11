@@ -11,6 +11,10 @@ func NewRATType(rat uint8) *IE {
 
 // RATType returns RATType in uint8 if the type of IE matches.
 func (i *IE) RATType() uint8 {
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	switch i.Type {
 	case RATType:
 		return i.Payload[0]

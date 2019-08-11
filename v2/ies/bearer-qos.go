@@ -24,8 +24,14 @@ func NewBearerQoS(pci, pl, pvi, qci uint8, umbr, dmbr, ugbr, dgbr uint64) *IE {
 func (i *IE) QCILabel() uint8 {
 	switch i.Type {
 	case BearerQoS:
+		if len(i.Payload) < 2 {
+			return 0
+		}
 		return i.Payload[1]
 	case FlowQoS:
+		if len(i.Payload) < 1 {
+			return 0
+		}
 		return i.Payload[0]
 	default:
 		return 0
@@ -36,8 +42,14 @@ func (i *IE) QCILabel() uint8 {
 func (i *IE) MBRForUplink() uint64 {
 	switch i.Type {
 	case BearerQoS:
+		if len(i.Payload) < 7 {
+			return 0
+		}
 		return utils.Uint40To64(i.Payload[3:7])
 	case FlowQoS:
+		if len(i.Payload) < 6 {
+			return 0
+		}
 		return utils.Uint40To64(i.Payload[2:6])
 	default:
 		return 0
@@ -48,8 +60,14 @@ func (i *IE) MBRForUplink() uint64 {
 func (i *IE) MBRForDownlink() uint64 {
 	switch i.Type {
 	case BearerQoS:
+		if len(i.Payload) < 12 {
+			return 0
+		}
 		return utils.Uint40To64(i.Payload[7:12])
 	case FlowQoS:
+		if len(i.Payload) < 11 {
+			return 0
+		}
 		return utils.Uint40To64(i.Payload[6:11])
 	default:
 		return 0
@@ -60,8 +78,14 @@ func (i *IE) MBRForDownlink() uint64 {
 func (i *IE) GBRForUplink() uint64 {
 	switch i.Type {
 	case BearerQoS:
+		if len(i.Payload) < 17 {
+			return 0
+		}
 		return utils.Uint40To64(i.Payload[12:17])
 	case FlowQoS:
+		if len(i.Payload) < 16 {
+			return 0
+		}
 		return utils.Uint40To64(i.Payload[11:16])
 	default:
 		return 0
@@ -72,8 +96,14 @@ func (i *IE) GBRForUplink() uint64 {
 func (i *IE) GBRForDownlink() uint64 {
 	switch i.Type {
 	case BearerQoS:
+		if len(i.Payload) < 22 {
+			return 0
+		}
 		return utils.Uint40To64(i.Payload[17:22])
 	case FlowQoS:
+		if len(i.Payload) < 21 {
+			return 0
+		}
 		return utils.Uint40To64(i.Payload[16:21])
 	default:
 		return 0

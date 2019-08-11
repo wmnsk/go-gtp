@@ -14,6 +14,9 @@ func (i *IE) LocalDistinguishedName() string {
 	if i.Type != LocalDistinguishedName {
 		return ""
 	}
+	if len(i.Payload) == 0 {
+		return ""
+	}
 
 	return string(i.Payload)
 }

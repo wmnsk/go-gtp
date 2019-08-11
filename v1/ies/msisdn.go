@@ -20,5 +20,9 @@ func (i *IE) MSISDN() string {
 	if i.Type != MSISDN {
 		return ""
 	}
+	if len(i.Payload) < 2 {
+		return ""
+	}
+
 	return utils.SwappedBytesToStr(i.Payload[1:], false)
 }

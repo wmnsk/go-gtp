@@ -24,5 +24,9 @@ func (i *IE) ChargingGatewayAddress() string {
 	if i.Type != ChargingGatewayAddress {
 		return ""
 	}
+	if len(i.Payload) < 4 {
+		return ""
+	}
+
 	return net.IP(i.Payload).String()
 }

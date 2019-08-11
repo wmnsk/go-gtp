@@ -13,6 +13,10 @@ func NewTMSI(tmsi uint32) *IE {
 
 // TMSI returns TMSI in uint32 if the type of IE matches.
 func (i *IE) TMSI() uint32 {
+	if len(i.Payload) < 4 {
+		return 0
+	}
+
 	switch i.Type {
 	case TMSI:
 		return binary.BigEndian.Uint32(i.Payload)
