@@ -77,9 +77,9 @@ const (
 
 // Message is an interface that defines Message messages.
 type Message interface {
-	SerializeTo([]byte) error
-	DecodeFromBytes(b []byte) error
-	Len() int
+	MarshalTo([]byte) error
+	UnmarshalBinary(b []byte) error
+	MarshalLen() int
 	Version() int
 	MessageType() uint8
 	MessageTypeName() string
@@ -89,19 +89,19 @@ type Message interface {
 	SetSequenceNumber(uint16)
 }
 
-// Serialize returns the byte sequence generated from a Message instance.
-// Better to use SerializeXxx instead if you know the name of message to be serialized.
-func Serialize(g Message) ([]byte, error) {
-	b := make([]byte, g.Len())
-	if err := g.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a Message instance.
+// Better to use MarshalXxx instead if you know the name of message to be serialized.
+func Marshal(g Message) ([]byte, error) {
+	b := make([]byte, g.MarshalLen())
+	if err := g.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// Decode decodes the given bytes as Message.
-func Decode(b []byte) (Message, error) {
+// Parse decodes the given bytes as Message.
+func Parse(b []byte) (Message, error) {
 	var m Message
 
 	switch b[1] {
@@ -185,7 +185,7 @@ func Decode(b []byte) (Message, error) {
 		m = &Generic{}
 	}
 
-	if err := m.DecodeFromBytes(b); err != nil {
+	if err := m.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return m, nil

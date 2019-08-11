@@ -52,88 +52,88 @@ func NewDeletePDPContextResponse(teid uint32, seq uint16, ie ...*ies.IE) *Delete
 	return d
 }
 
-// Serialize returns the byte sequence generated from a DeletePDPContextResponse.
-func (d *DeletePDPContextResponse) Serialize() ([]byte, error) {
-	b := make([]byte, d.Len())
-	if err := d.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a DeletePDPContextResponse.
+func (d *DeletePDPContextResponse) Marshal() ([]byte, error) {
+	b := make([]byte, d.MarshalLen())
+	if err := d.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (d *DeletePDPContextResponse) SerializeTo(b []byte) error {
-	if len(b) < d.Len() {
-		return ErrTooShortToSerialize
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (d *DeletePDPContextResponse) MarshalTo(b []byte) error {
+	if len(b) < d.MarshalLen() {
+		return ErrTooShortToMarshal
 	}
-	d.Header.Payload = make([]byte, d.Len()-d.Header.Len())
+	d.Header.Payload = make([]byte, d.MarshalLen()-d.Header.MarshalLen())
 
 	offset := 0
 	if ie := d.Cause; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.PCO; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.ULI; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.MSTimeZone; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.ULITimestamp; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range d.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(d.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	d.Header.SetLength()
-	return d.Header.SerializeTo(b)
+	return d.Header.MarshalTo(b)
 }
 
-// DecodeDeletePDPContextResponse decodes a given byte sequence as a DeletePDPContextResponse.
-func DecodeDeletePDPContextResponse(b []byte) (*DeletePDPContextResponse, error) {
+// ParseDeletePDPContextResponse decodes a given byte sequence as a DeletePDPContextResponse.
+func ParseDeletePDPContextResponse(b []byte) (*DeletePDPContextResponse, error) {
 	d := &DeletePDPContextResponse{}
-	if err := d.DecodeFromBytes(b); err != nil {
+	if err := d.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return d, nil
 }
 
-// DecodeFromBytes decodes a given byte sequence as a DeletePDPContextResponse.
-func (d *DeletePDPContextResponse) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes a given byte sequence as a DeletePDPContextResponse.
+func (d *DeletePDPContextResponse) UnmarshalBinary(b []byte) error {
 	var err error
-	d.Header, err = DecodeHeader(b)
+	d.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func (d *DeletePDPContextResponse) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	ie, err := ies.DecodeMultiIEs(d.Header.Payload)
+	ie, err := ies.ParseMultiIEs(d.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -170,41 +170,41 @@ func (d *DeletePDPContextResponse) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length of Data.
-func (d *DeletePDPContextResponse) Len() int {
-	l := d.Header.Len() - len(d.Header.Payload)
+// MarshalLen returns the serial length of Data.
+func (d *DeletePDPContextResponse) MarshalLen() int {
+	l := d.Header.MarshalLen() - len(d.Header.Payload)
 
 	if ie := d.Cause; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.PCO; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.ULI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.MSTimeZone; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.ULITimestamp; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range d.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (d *DeletePDPContextResponse) SetLength() {
-	d.Length = uint16(d.Len() - 8)
+	d.Length = uint16(d.MarshalLen() - 8)
 }
 
 // MessageTypeName returns the name of protocol.

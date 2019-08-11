@@ -9,7 +9,7 @@ import "github.com/pkg/errors"
 // Error definitions.
 var (
 	ErrInvalidLength       = errors.New("got invalid length ")
-	ErrTooShortToSerialize = errors.New("too short to serialize")
-	ErrTooShortToDecode    = errors.New("too short to decode as GTPv1")
+	ErrTooShortToMarshal = errors.New("too short to serialize")
+	ErrTooShortToParse    = errors.New("too short to decode as GTPv1")
 	ErrInvalidMessageType  = errors.New("got invalid message type")
 )

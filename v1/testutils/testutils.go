@@ -12,21 +12,21 @@ import (
 	"github.com/wmnsk/go-gtp/v1/messages"
 )
 
-// Serializeable is just for testing v2.Messages. Don't use this.
-type Serializeable interface {
-	Serialize() ([]byte, error)
-	Len() int
+// Marshalable is just for testing v2.Messages. Don't use this.
+type Marshalable interface {
+	Marshal() ([]byte, error)
+	MarshalLen() int
 }
 
 // TestCase is just for testing v2.Messages. Don't use this.
 type TestCase struct {
 	Description string
-	Structured  Serializeable
-	Serialized  []byte
+	Structured  Marshalable
+	Marshald  []byte
 }
 
-// DecodeFunc is just for testing v2.Messages. Don't use this.
-type DecodeFunc func([]byte) (Serializeable, error)
+// ParseFunc is just for testing v2.Messages. Don't use this.
+type ParseFunc func([]byte) (Marshalable, error)
 
 // TestBearerInfo is just for testing v2.Messages. Don't use this.
 var TestBearerInfo = struct {
@@ -35,13 +35,13 @@ var TestBearerInfo = struct {
 }{0x11223344, 0x00000001}
 
 // Run is just for testing v2.Messages. Don't use this.
-func Run(t *testing.T, cases []TestCase, decode DecodeFunc) {
+func Run(t *testing.T, cases []TestCase, decode ParseFunc) {
 	t.Helper()
 
 	for _, c := range cases {
 		t.Run(c.Description, func(t *testing.T) {
-			t.Run("Decode", func(t *testing.T) {
-				v, err := decode(c.Serialized)
+			t.Run("Parse", func(t *testing.T) {
+				v, err := decode(c.Marshald)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -51,19 +51,19 @@ func Run(t *testing.T, cases []TestCase, decode DecodeFunc) {
 				}
 			})
 
-			t.Run("Serialize", func(t *testing.T) {
-				b, err := c.Structured.Serialize()
+			t.Run("Marshal", func(t *testing.T) {
+				b, err := c.Structured.Marshal()
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				if got, want := b, c.Serialized; !verify.Values(t, "", got, want) {
+				if got, want := b, c.Marshald; !verify.Values(t, "", got, want) {
 					t.Fail()
 				}
 			})
 
 			t.Run("Len", func(t *testing.T) {
-				if got, want := c.Structured.Len(), len(c.Serialized); got != want {
+				if got, want := c.Structured.MarshalLen(), len(c.Marshald); got != want {
 					t.Fatalf("got %v want %v", got, want)
 				}
 			})
@@ -78,7 +78,7 @@ func Run(t *testing.T, cases []TestCase, decode DecodeFunc) {
 					return
 				}
 
-				decoded, err := messages.Decode(c.Serialized)
+				decoded, err := messages.Parse(c.Marshald)
 				if err != nil {
 					t.Fatal(err)
 				}

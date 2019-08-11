@@ -21,7 +21,7 @@ func TestErrorIndication(t *testing.T) {
 				ies.NewTEIDDataI(0xdeadbeef),
 				ies.NewGSNAddress("1.1.1.1"),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x32, 0x1a, 0x00, 0x10, 0x11, 0x22, 0x33, 0x44,
 				0x00, 0x01, 0x00, 0x00,
@@ -33,8 +33,8 @@ func TestErrorIndication(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeErrorIndication(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseErrorIndication(b)
 		if err != nil {
 			return nil, err
 		}

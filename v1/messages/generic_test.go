@@ -16,15 +16,15 @@ func TestGeneric(t *testing.T) {
 		{
 			Description: "Normal",
 			Structured:  messages.NewGeneric(messages.MsgTypeEchoRequest, 0, 0),
-			Serialized: []byte{
+			Marshald: []byte{
 				0x32, 0x01, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00,
 			},
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeGeneric(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseGeneric(b)
 		if err != nil {
 			return nil, err
 		}

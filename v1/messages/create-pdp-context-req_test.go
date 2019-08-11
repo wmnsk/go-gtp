@@ -40,7 +40,7 @@ func TestCreatePDPContextRequest(t *testing.T) {
 				ies.NewUserLocationInformationWithSAI("123", "45", 0x1111, 0x2222),
 				ies.NewMSTimeZone(0x00, 0x00),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x32, 0x10, 0x00, 0x7f, 0x11, 0x22, 0x33, 0x44,
 				0x00, 0x01, 0x00, 0x00,
@@ -92,8 +92,8 @@ func TestCreatePDPContextRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeCreatePDPContextRequest(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseCreatePDPContextRequest(b)
 		if err != nil {
 			return nil, err
 		}

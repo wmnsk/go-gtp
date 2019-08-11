@@ -23,18 +23,18 @@ func NewConfigurationProtocolOption(pid uint16, contents []byte) *ConfigurationP
 	return c
 }
 
-// Serialize serializes ConfigurationProtocolOption.
-func (c *ConfigurationProtocolOption) Serialize() ([]byte, error) {
-	b := make([]byte, c.Len())
-	if err := c.SerializeTo(b); err != nil {
+// Marshal serializes ConfigurationProtocolOption.
+func (c *ConfigurationProtocolOption) Marshal() ([]byte, error) {
+	b := make([]byte, c.MarshalLen())
+	if err := c.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// SerializeTo serializes ConfigurationProtocolOption.
-func (c *ConfigurationProtocolOption) SerializeTo(b []byte) error {
+// MarshalTo serializes ConfigurationProtocolOption.
+func (c *ConfigurationProtocolOption) MarshalTo(b []byte) error {
 	binary.BigEndian.PutUint16(b[0:2], c.ProtocolID)
 	b[2] = c.Length
 	if c.Length != 0 {
@@ -44,20 +44,20 @@ func (c *ConfigurationProtocolOption) SerializeTo(b []byte) error {
 	return nil
 }
 
-// DecodeConfigurationProtocolOption decodes ConfigurationProtocolOption.
-func DecodeConfigurationProtocolOption(b []byte) (*ConfigurationProtocolOption, error) {
+// ParseConfigurationProtocolOption decodes ConfigurationProtocolOption.
+func ParseConfigurationProtocolOption(b []byte) (*ConfigurationProtocolOption, error) {
 	c := &ConfigurationProtocolOption{}
-	if err := c.DecodeFromBytes(b); err != nil {
+	if err := c.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 
 	return c, nil
 }
 
-// DecodeFromBytes decodes given bytes into ConfigurationProtocolOption.
-func (c *ConfigurationProtocolOption) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes into ConfigurationProtocolOption.
+func (c *ConfigurationProtocolOption) UnmarshalBinary(b []byte) error {
 	if len(b) < 4 {
-		return ErrTooShortToDecode
+		return ErrTooShortToParse
 	}
 	c.ProtocolID = binary.BigEndian.Uint16(b[0:2])
 	c.Length = b[2]
@@ -68,8 +68,8 @@ func (c *ConfigurationProtocolOption) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length of ConfigurationProtocolOption in int.
-func (c *ConfigurationProtocolOption) Len() int {
+// MarshalLen returns the serial length of ConfigurationProtocolOption in int.
+func (c *ConfigurationProtocolOption) MarshalLen() int {
 	return 3 + len(c.Contents)
 }
 
@@ -87,42 +87,42 @@ func NewPCOPayload(configProto uint8, opts ...*ConfigurationProtocolOption) *PCO
 	return p
 }
 
-// Serialize serializes PCOPayload.
-func (p *PCOPayload) Serialize() ([]byte, error) {
-	b := make([]byte, p.Len())
-	if err := p.SerializeTo(b); err != nil {
+// Marshal serializes PCOPayload.
+func (p *PCOPayload) Marshal() ([]byte, error) {
+	b := make([]byte, p.MarshalLen())
+	if err := p.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// SerializeTo serializes PCOPayload.
-func (p *PCOPayload) SerializeTo(b []byte) error {
+// MarshalTo serializes PCOPayload.
+func (p *PCOPayload) MarshalTo(b []byte) error {
 	b[0] = (p.ConfigurationProtocol & 0x07) | 0x80
 	offset := 1
 	for _, opt := range p.ConfigurationProtocolOptions {
-		if err := opt.SerializeTo(b[offset:]); err != nil {
+		if err := opt.MarshalTo(b[offset:]); err != nil {
 			return err
 		}
-		offset += opt.Len()
+		offset += opt.MarshalLen()
 	}
 
 	return nil
 }
 
-// DecodePCOPayload decodes PCOPayload.
-func DecodePCOPayload(b []byte) (*PCOPayload, error) {
+// ParsePCOPayload decodes PCOPayload.
+func ParsePCOPayload(b []byte) (*PCOPayload, error) {
 	p := &PCOPayload{}
-	if err := p.DecodeFromBytes(b); err != nil {
+	if err := p.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 
 	return p, nil
 }
 
-// DecodeFromBytes decodes given bytes into PCOPayload.
-func (p *PCOPayload) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes into PCOPayload.
+func (p *PCOPayload) UnmarshalBinary(b []byte) error {
 	p.ConfigurationProtocol = b[0] & 0x07
 
 	offset := 1
@@ -130,7 +130,7 @@ func (p *PCOPayload) DecodeFromBytes(b []byte) error {
 		if offset >= len(b) {
 			return nil
 		}
-		opt, err := DecodeConfigurationProtocolOption(b[offset:])
+		opt, err := ParseConfigurationProtocolOption(b[offset:])
 		if err != nil {
 			return err
 		}
@@ -138,11 +138,11 @@ func (p *PCOPayload) DecodeFromBytes(b []byte) error {
 	}
 }
 
-// Len returns the actual length of PCOPayload in int.
-func (p *PCOPayload) Len() int {
+// MarshalLen returns the serial length of PCOPayload in int.
+func (p *PCOPayload) MarshalLen() int {
 	l := 1
 	for _, opt := range p.ConfigurationProtocolOptions {
-		l += opt.Len()
+		l += opt.MarshalLen()
 	}
 
 	return l
@@ -152,8 +152,8 @@ func (p *PCOPayload) Len() int {
 func NewProtocolConfigurationOptions(configProto uint8, options ...*ConfigurationProtocolOption) *IE {
 	pco := NewPCOPayload(configProto, options...)
 
-	i := New(ProtocolConfigurationOptions, make([]byte, pco.Len()))
-	if err := pco.SerializeTo(i.Payload); err != nil {
+	i := New(ProtocolConfigurationOptions, make([]byte, pco.MarshalLen()))
+	if err := pco.MarshalTo(i.Payload); err != nil {
 		return nil
 	}
 
@@ -167,7 +167,7 @@ func (i *IE) ProtocolConfigurationOptions() *PCOPayload {
 		return nil
 	}
 
-	pco, err := DecodePCOPayload(i.Payload)
+	pco, err := ParsePCOPayload(i.Payload)
 	if err != nil {
 		return nil
 	}

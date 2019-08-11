@@ -42,19 +42,19 @@ func NewHeaderFlags(v, p, e, s, n int) uint8 {
 	)
 }
 
-// Serialize returns the byte sequence generated from an IE instance.
-func (h *Header) Serialize() ([]byte, error) {
-	b := make([]byte, h.Len())
-	if err := h.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from an IE instance.
+func (h *Header) Marshal() ([]byte, error) {
+	b := make([]byte, h.MarshalLen())
+	if err := h.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (h *Header) SerializeTo(b []byte) error {
-	if len(b) < h.Len() {
-		return ErrTooShortToSerialize
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (h *Header) MarshalTo(b []byte) error {
+	if len(b) < h.MarshalLen() {
+		return ErrTooShortToMarshal
 	}
 
 	b[0] = h.Flags
@@ -73,20 +73,20 @@ func (h *Header) SerializeTo(b []byte) error {
 	return nil
 }
 
-// DecodeHeader decodes given byte sequence as a GTPv1 header.
-func DecodeHeader(b []byte) (*Header, error) {
+// ParseHeader decodes given byte sequence as a GTPv1 header.
+func ParseHeader(b []byte) (*Header, error) {
 	h := &Header{}
-	if err := h.DecodeFromBytes(b); err != nil {
+	if err := h.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return h, nil
 }
 
-// DecodeFromBytes sets the values retrieved from byte sequence in GTPv1 header.
-func (h *Header) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary sets the values retrieved from byte sequence in GTPv1 header.
+func (h *Header) UnmarshalBinary(b []byte) error {
 	l := len(b)
 	if l < 11 {
-		return ErrTooShortToDecode
+		return ErrTooShortToParse
 	}
 	var offset = 4
 	h.Flags = b[0]
@@ -130,8 +130,8 @@ func (h *Header) SetSequenceNumber(seq uint16) {
 	h.SequenceNumber = seq
 }
 
-// Len returns the actual length of Header.
-func (h *Header) Len() int {
+// MarshalLen returns the serial length of Header.
+func (h *Header) MarshalLen() int {
 	l := len(h.Payload) + 8
 	if h.HasSequence() {
 		l += 4
@@ -142,7 +142,7 @@ func (h *Header) Len() int {
 
 // SetLength sets the length in Length field.
 func (h *Header) SetLength() {
-	h.Length = uint16(h.Len() - 8)
+	h.Length = uint16(h.MarshalLen() - 8)
 }
 
 // Version returns GTP version in int.
