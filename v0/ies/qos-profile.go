@@ -27,6 +27,10 @@ func (i *IE) QoSDelay() uint8 {
 	if i.Type != QualityOfServiceProfile {
 		return 0
 	}
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	return i.Payload[0] & 0x38
 }
 
@@ -35,6 +39,10 @@ func (i *IE) QoSReliability() uint8 {
 	if i.Type != QualityOfServiceProfile {
 		return 0
 	}
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	return i.Payload[0] & 0x07
 }
 
@@ -43,6 +51,10 @@ func (i *IE) QoSPeak() uint8 {
 	if i.Type != QualityOfServiceProfile {
 		return 0
 	}
+	if len(i.Payload) < 2 {
+		return 0
+	}
+
 	return i.Payload[1] & 0xf0
 }
 
@@ -51,6 +63,10 @@ func (i *IE) QoSPrecedence() uint8 {
 	if i.Type != QualityOfServiceProfile {
 		return 0
 	}
+	if len(i.Payload) < 2 {
+		return 0
+	}
+
 	return i.Payload[1] & 0x07
 }
 
@@ -59,5 +75,9 @@ func (i *IE) QoSMean() uint8 {
 	if i.Type != QualityOfServiceProfile {
 		return 0
 	}
+	if len(i.Payload) < 3 {
+		return 0
+	}
+
 	return i.Payload[2] & 0x0f
 }

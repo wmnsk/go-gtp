@@ -20,6 +20,9 @@ func (i *IE) IMSI() string {
 	if i.Type != IMSI {
 		return ""
 	}
+	if len(i.Payload) == 0 {
+		return ""
+	}
 
 	return utils.SwappedBytesToStr(i.Payload, true)
 }
