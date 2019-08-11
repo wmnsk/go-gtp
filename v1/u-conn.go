@@ -96,7 +96,7 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 		}
 
 		// decode incoming message and let it be handled by default handler funcs.
-		msg, err := messages.Decode(buf[:n])
+		msg, err := messages.Parse(buf[:n])
 		if err != nil {
 			return nil, err
 		}
@@ -176,7 +176,7 @@ func DialUPlaneKernel(devname string, role Role, laddr, raddr net.Addr, counter 
 		}
 
 		// decode incoming message and let it be handled by default handler funcs.
-		msg, err := messages.Decode(buf[:n])
+		msg, err := messages.Parse(buf[:n])
 		if err != nil {
 			return nil, err
 		}
@@ -293,7 +293,7 @@ func (u *UPlaneConn) serve() {
 			continue
 		}
 
-		msg, err := messages.Decode(buf[:n])
+		msg, err := messages.Parse(buf[:n])
 		if err != nil {
 			continue
 		}
@@ -356,7 +356,7 @@ func (u *UPlaneConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 
 // WriteToGTP writes a packet with TEID and payload to addr.
 func (u *UPlaneConn) WriteToGTP(teid uint32, p []byte, addr net.Addr) (n int, err error) {
-	b, err := Encapsulate(teid, p).Serialize()
+	b, err := Encapsulate(teid, p).Marshal()
 	if err != nil {
 		return
 	}
@@ -473,7 +473,7 @@ func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg messages.Message) er
 
 // EchoRequest sends a EchoRequest.
 func (u *UPlaneConn) EchoRequest(raddr net.Addr) error {
-	b, err := messages.NewEchoRequest(0, ies.NewRecovery(u.RestartCounter)).Serialize()
+	b, err := messages.NewEchoRequest(0, ies.NewRecovery(u.RestartCounter)).Marshal()
 	if err != nil {
 		return err
 	}
@@ -486,7 +486,7 @@ func (u *UPlaneConn) EchoRequest(raddr net.Addr) error {
 
 // EchoResponse sends a EchoResponse.
 func (u *UPlaneConn) EchoResponse(raddr net.Addr) error {
-	b, err := messages.NewEchoResponse(0, ies.NewRecovery(u.RestartCounter)).Serialize()
+	b, err := messages.NewEchoResponse(0, ies.NewRecovery(u.RestartCounter)).Marshal()
 	if err != nil {
 		return err
 	}
@@ -504,7 +504,7 @@ func (u *UPlaneConn) ErrorIndication(raddr net.Addr, received messages.Message) 
 		0, received.Sequence(),
 		ies.NewTEIDDataI(received.TEID()),
 		ies.NewGSNAddress(addr),
-	).Serialize()
+	).Marshal()
 	if err != nil {
 		return err
 	}
@@ -521,8 +521,8 @@ func (u *UPlaneConn) ErrorIndication(raddr net.Addr, received messages.Message) 
 // This is to make it easier to handle SequenceNumber.
 func (u *UPlaneConn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) error {
 	toBeSent.SetSequenceNumber(received.Sequence())
-	b := make([]byte, toBeSent.Len())
-	if err := toBeSent.SerializeTo(b); err != nil {
+	b := make([]byte, toBeSent.MarshalLen())
+	if err := toBeSent.MarshalTo(b); err != nil {
 		return err
 	}
 

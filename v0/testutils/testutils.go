@@ -12,21 +12,21 @@ import (
 	"github.com/wmnsk/go-gtp/v0/messages"
 )
 
-// Serializeable is just for testing v2.Messages. Don't use this.
-type Serializeable interface {
-	Serialize() ([]byte, error)
-	Len() int
+// Serializable is just for testing v2.Messages. Don't use this.
+type Serializable interface {
+	Marshal() ([]byte, error)
+	MarshalLen() int
 }
 
 // TestCase is just for testing v2.Messages. Don't use this.
 type TestCase struct {
 	Description string
-	Structured  Serializeable
+	Structured  Serializable
 	Serialized  []byte
 }
 
-// DecodeFunc is just for testing v2.Messages. Don't use this.
-type DecodeFunc func([]byte) (Serializeable, error)
+// ParseFunc is just for testing v2.Messages. Don't use this.
+type ParseFunc func([]byte) (Serializable, error)
 
 // TestFlow is just for testing v2.Messages. Don't use this.
 var TestFlow = struct {
@@ -37,13 +37,13 @@ var TestFlow = struct {
 }
 
 // Run is just for testing v2.Messages. Don't use this.
-func Run(t *testing.T, cases []TestCase, decode DecodeFunc) {
+func Run(t *testing.T, cases []TestCase, Parse ParseFunc) {
 	t.Helper()
 
 	for _, c := range cases {
 		t.Run(c.Description, func(t *testing.T) {
-			t.Run("Decode", func(t *testing.T) {
-				v, err := decode(c.Serialized)
+			t.Run("Parse", func(t *testing.T) {
+				v, err := Parse(c.Serialized)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -53,8 +53,8 @@ func Run(t *testing.T, cases []TestCase, decode DecodeFunc) {
 				}
 			})
 
-			t.Run("Serialize", func(t *testing.T) {
-				b, err := c.Structured.Serialize()
+			t.Run("Marshal", func(t *testing.T) {
+				b, err := c.Structured.Marshal()
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -65,7 +65,7 @@ func Run(t *testing.T, cases []TestCase, decode DecodeFunc) {
 			})
 
 			t.Run("Len", func(t *testing.T) {
-				if got, want := c.Structured.Len(), len(c.Serialized); got != want {
+				if got, want := c.Structured.MarshalLen(), len(c.Serialized); got != want {
 					t.Fatalf("got %v want %v", got, want)
 				}
 			})
@@ -80,21 +80,21 @@ func Run(t *testing.T, cases []TestCase, decode DecodeFunc) {
 					return
 				}
 
-				decoded, err := messages.Decode(c.Serialized)
+				Parsed, err := messages.Parse(c.Serialized)
 				if err != nil {
 					t.Fatal(err)
 				}
 
-				if got, want := decoded.Version(), c.Structured.(messages.Message).Version(); got != want {
+				if got, want := Parsed.Version(), c.Structured.(messages.Message).Version(); got != want {
 					t.Fatalf("got %v want %v", got, want)
 				}
-				if got, want := decoded.MessageType(), c.Structured.(messages.Message).MessageType(); got != want {
+				if got, want := Parsed.MessageType(), c.Structured.(messages.Message).MessageType(); got != want {
 					t.Fatalf("got %v want %v", got, want)
 				}
-				if got, want := decoded.MessageTypeName(), c.Structured.(messages.Message).MessageTypeName(); got != want {
+				if got, want := Parsed.MessageTypeName(), c.Structured.(messages.Message).MessageTypeName(); got != want {
 					t.Fatalf("got %v want %v", got, want)
 				}
-				if got, want := decoded.TID(), c.Structured.(messages.Message).TID(); got != want {
+				if got, want := Parsed.TID(), c.Structured.(messages.Message).TID(); got != want {
 					t.Fatalf("got %v want %v", got, want)
 				}
 			})

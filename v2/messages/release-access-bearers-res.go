@@ -50,81 +50,81 @@ func NewReleaseAccessBearersResponse(teid, seq uint32, ie ...*ies.IE) *ReleaseAc
 	return r
 }
 
-// Serialize serializes ReleaseAccessBearersResponse into bytes.
-func (r *ReleaseAccessBearersResponse) Serialize() ([]byte, error) {
-	b := make([]byte, r.Len())
-	if err := r.SerializeTo(b); err != nil {
+// Marshal serializes ReleaseAccessBearersResponse into bytes.
+func (r *ReleaseAccessBearersResponse) Marshal() ([]byte, error) {
+	b := make([]byte, r.MarshalLen())
+	if err := r.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo serializes ReleaseAccessBearersResponse into bytes.
-func (r *ReleaseAccessBearersResponse) SerializeTo(b []byte) error {
+// MarshalTo serializes ReleaseAccessBearersResponse into bytes.
+func (r *ReleaseAccessBearersResponse) MarshalTo(b []byte) error {
 	if r.Header.Payload != nil {
 		r.Header.Payload = nil
 	}
-	r.Header.Payload = make([]byte, r.Len()-r.Header.Len())
+	r.Header.Payload = make([]byte, r.MarshalLen()-r.Header.MarshalLen())
 
 	offset := 0
 	if ie := r.Cause; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := r.IndicationFlags; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := r.SGWNodeLoadControlInformation; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := r.SGWOverloadControlInformation; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := r.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range r.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(r.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	r.Header.SetLength()
-	return r.Header.SerializeTo(b)
+	return r.Header.MarshalTo(b)
 }
 
-// DecodeReleaseAccessBearersResponse decodes given bytes as ReleaseAccessBearersResponse.
-func DecodeReleaseAccessBearersResponse(b []byte) (*ReleaseAccessBearersResponse, error) {
+// ParseReleaseAccessBearersResponse decodes given bytes as ReleaseAccessBearersResponse.
+func ParseReleaseAccessBearersResponse(b []byte) (*ReleaseAccessBearersResponse, error) {
 	r := &ReleaseAccessBearersResponse{}
-	if err := r.DecodeFromBytes(b); err != nil {
+	if err := r.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return r, nil
 }
 
-// DecodeFromBytes decodes given bytes as ReleaseAccessBearersResponse.
-func (r *ReleaseAccessBearersResponse) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes as ReleaseAccessBearersResponse.
+func (r *ReleaseAccessBearersResponse) UnmarshalBinary(b []byte) error {
 	var err error
-	r.Header, err = DecodeHeader(b)
+	r.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (r *ReleaseAccessBearersResponse) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	decodedIEs, err := ies.DecodeMultiIEs(r.Header.Payload)
+	decodedIEs, err := ies.ParseMultiIEs(r.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -159,37 +159,37 @@ func (r *ReleaseAccessBearersResponse) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length in int.
-func (r *ReleaseAccessBearersResponse) Len() int {
-	l := r.Header.Len() - len(r.Header.Payload)
+// MarshalLen returns the serial length in int.
+func (r *ReleaseAccessBearersResponse) MarshalLen() int {
+	l := r.Header.MarshalLen() - len(r.Header.Payload)
 	if ie := r.Cause; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := r.IndicationFlags; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := r.SGWNodeLoadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := r.SGWOverloadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := r.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range r.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (r *ReleaseAccessBearersResponse) SetLength() {
-	r.Header.Length = uint16(r.Len() - 4)
+	r.Header.Length = uint16(r.MarshalLen() - 4)
 }
 
 // MessageTypeName returns the name of protocol.

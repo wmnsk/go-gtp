@@ -83,123 +83,123 @@ func NewDeleteSessionResponse(teid, seq uint32, ie ...*ies.IE) *DeleteSessionRes
 	return d
 }
 
-// Serialize serializes DeleteSessionResponse into bytes.
-func (d *DeleteSessionResponse) Serialize() ([]byte, error) {
-	b := make([]byte, d.Len())
-	if err := d.SerializeTo(b); err != nil {
+// Marshal serializes DeleteSessionResponse into bytes.
+func (d *DeleteSessionResponse) Marshal() ([]byte, error) {
+	b := make([]byte, d.MarshalLen())
+	if err := d.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo serializes DeleteSessionResponse into bytes.
-func (d *DeleteSessionResponse) SerializeTo(b []byte) error {
+// MarshalTo serializes DeleteSessionResponse into bytes.
+func (d *DeleteSessionResponse) MarshalTo(b []byte) error {
 	if d.Header.Payload != nil {
 		d.Header.Payload = nil
 	}
-	d.Header.Payload = make([]byte, d.Len()-d.Header.Len())
+	d.Header.Payload = make([]byte, d.MarshalLen()-d.Header.MarshalLen())
 
 	offset := 0
 	if ie := d.Cause; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.Recovery; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.PCO; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.IndicationFlags; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.PGWNodeLoadControlInformation; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.PGWAPNLoadControlInformation; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.SGWNodeLoadControlInformation; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.PGWOverloadControlInformation; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.SGWOverloadControlInformation; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.EPCO; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.APNRateControlStatus; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := d.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(d.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range d.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(d.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(d.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	d.Header.SetLength()
-	return d.Header.SerializeTo(b)
+	return d.Header.MarshalTo(b)
 }
 
-// DecodeDeleteSessionResponse decodes given bytes as DeleteSessionResponse.
-func DecodeDeleteSessionResponse(b []byte) (*DeleteSessionResponse, error) {
+// ParseDeleteSessionResponse decodes given bytes as DeleteSessionResponse.
+func ParseDeleteSessionResponse(b []byte) (*DeleteSessionResponse, error) {
 	d := &DeleteSessionResponse{}
-	if err := d.DecodeFromBytes(b); err != nil {
+	if err := d.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return d, nil
 }
 
-// DecodeFromBytes decodes given bytes as DeleteSessionResponse.
-func (d *DeleteSessionResponse) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes as DeleteSessionResponse.
+func (d *DeleteSessionResponse) UnmarshalBinary(b []byte) error {
 	var err error
-	d.Header, err = DecodeHeader(b)
+	d.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func (d *DeleteSessionResponse) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	decodedIEs, err := ies.DecodeMultiIEs(d.Header.Payload)
+	decodedIEs, err := ies.ParseMultiIEs(d.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -259,59 +259,59 @@ func (d *DeleteSessionResponse) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length in int.
-func (d *DeleteSessionResponse) Len() int {
-	l := d.Header.Len() - len(d.Header.Payload)
+// MarshalLen returns the serial length in int.
+func (d *DeleteSessionResponse) MarshalLen() int {
+	l := d.Header.MarshalLen() - len(d.Header.Payload)
 
 	if ie := d.Cause; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.Recovery; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.PCO; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.IndicationFlags; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.PGWNodeLoadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.PGWAPNLoadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.SGWNodeLoadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.PGWOverloadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.SGWOverloadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.EPCO; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.APNRateControlStatus; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := d.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range d.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (d *DeleteSessionResponse) SetLength() {
-	d.Header.Length = uint16(d.Len() - 4)
+	d.Header.Length = uint16(d.MarshalLen() - 4)
 }
 
 // MessageTypeName returns the name of protocol.

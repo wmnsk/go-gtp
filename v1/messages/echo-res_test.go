@@ -24,8 +24,8 @@ func TestEchoResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeEchoResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseEchoResponse(b)
 		if err != nil {
 			return nil, err
 		}

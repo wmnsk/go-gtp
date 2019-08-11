@@ -55,7 +55,7 @@ func TestMessage(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run("Encode/"+c.description, func(t *testing.T) {
-			got, err := Serialize(c.structured)
+			got, err := Marshal(c.structured)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -65,8 +65,8 @@ func TestMessage(t *testing.T) {
 			}
 		})
 
-		t.Run("Decode/"+c.description, func(t *testing.T) {
-			v, err := Decode(c.serialized)
+		t.Run("Parse/"+c.description, func(t *testing.T) {
+			v, err := Parse(c.serialized)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -76,14 +76,14 @@ func TestMessage(t *testing.T) {
 			}
 		})
 
-		t.Run("Len/"+c.description, func(t *testing.T) {
-			if got, want := c.structured.Len(), len(c.serialized); got != want {
+		t.Run("MarshalLen/"+c.description, func(t *testing.T) {
+			if got, want := c.structured.MarshalLen(), len(c.serialized); got != want {
 				t.Fatalf("got %v want %v", got, want)
 			}
 		})
 
 		t.Run("Interface/"+c.description, func(t *testing.T) {
-			decoded, err := Decode(c.serialized)
+			decoded, err := Parse(c.serialized)
 			if err != nil {
 				t.Fatal(err)
 			}

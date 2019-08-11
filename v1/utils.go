@@ -14,7 +14,7 @@ func Encapsulate(teid uint32, payload []byte) *messages.TPDU {
 
 // Decapsulate decapsulates given bytes and returns TEID, and Payload.
 func Decapsulate(b []byte) (uint32, []byte, error) {
-	header, err := messages.DecodeHeader(b)
+	header, err := messages.ParseHeader(b)
 	if err != nil {
 		return 0, nil, err
 	}

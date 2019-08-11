@@ -46,8 +46,8 @@ func TestHeader(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeHeader(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseHeader(b)
 		if err != nil {
 			return nil, err
 		}

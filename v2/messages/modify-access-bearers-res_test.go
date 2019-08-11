@@ -30,8 +30,8 @@ func TestModifyAccessBearersResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeModifyAccessBearersResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseModifyAccessBearersResponse(b)
 		if err != nil {
 			return nil, err
 		}

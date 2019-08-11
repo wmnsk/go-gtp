@@ -79,7 +79,7 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 	}
 
 	// decode incoming message and let it be handled by default handler funcs.
-	msg, err := messages.Decode(buf[:n])
+	msg, err := messages.Parse(buf[:n])
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 	}
 
 	// decode incoming message and let it be handled by default handler funcs.
-	msg, err := messages.Decode(buf[:n])
+	msg, err := messages.Parse(buf[:n])
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (c *Conn) serve() {
 		raw := make([]byte, n)
 		copy(raw, buf)
 		go func() {
-			msg, err := messages.Decode(raw)
+			msg, err := messages.Parse(raw)
 			if err != nil {
 				return
 			}
@@ -379,7 +379,7 @@ func (c *Conn) SendMessageTo(msg messages.Message, addr net.Addr) (uint32, error
 	seq := c.IncSequence()
 	msg.SetSequenceNumber(seq)
 
-	payload, err := messages.Serialize(msg)
+	payload, err := messages.Marshal(msg)
 	if err != nil {
 		seq = c.DecSequence()
 		return seq, errors.Wrapf(err, "failed to send %T", msg)
@@ -579,9 +579,9 @@ func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
 // This is to make it easier to handle SequenceNumber.
 func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) error {
 	toBeSent.SetSequenceNumber(received.Sequence())
-	b := make([]byte, toBeSent.Len())
+	b := make([]byte, toBeSent.MarshalLen())
 
-	if err := toBeSent.SerializeTo(b); err != nil {
+	if err := toBeSent.MarshalTo(b); err != nil {
 		return err
 	}
 

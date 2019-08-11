@@ -30,8 +30,8 @@ func TestDeleteSessionResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeDeleteSessionResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseDeleteSessionResponse(b)
 		if err != nil {
 			return nil, err
 		}

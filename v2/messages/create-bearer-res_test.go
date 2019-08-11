@@ -43,8 +43,8 @@ func TestCreateBearerResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeCreateBearerResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseCreateBearerResponse(b)
 		if err != nil {
 			return nil, err
 		}

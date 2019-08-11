@@ -41,63 +41,63 @@ func NewStopPagingIndication(teid, seq uint32, ie ...*ies.IE) *StopPagingIndicat
 	return s
 }
 
-// Serialize serializes StopPagingIndication into bytes.
-func (s *StopPagingIndication) Serialize() ([]byte, error) {
-	b := make([]byte, s.Len())
-	if err := s.SerializeTo(b); err != nil {
+// Marshal serializes StopPagingIndication into bytes.
+func (s *StopPagingIndication) Marshal() ([]byte, error) {
+	b := make([]byte, s.MarshalLen())
+	if err := s.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo serializes StopPagingIndication into bytes.
-func (s *StopPagingIndication) SerializeTo(b []byte) error {
+// MarshalTo serializes StopPagingIndication into bytes.
+func (s *StopPagingIndication) MarshalTo(b []byte) error {
 	if s.Header.Payload != nil {
 		s.Header.Payload = nil
 	}
-	s.Header.Payload = make([]byte, s.Len()-s.Header.Len())
+	s.Header.Payload = make([]byte, s.MarshalLen()-s.Header.MarshalLen())
 
 	offset := 0
 	if ie := s.IMSI; ie != nil {
-		if err := ie.SerializeTo(s.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(s.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := s.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(s.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(s.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range s.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(s.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(s.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	s.Header.SetLength()
-	return s.Header.SerializeTo(b)
+	return s.Header.MarshalTo(b)
 }
 
-// DecodeStopPagingIndication decodes given bytes as StopPagingIndication.
-func DecodeStopPagingIndication(b []byte) (*StopPagingIndication, error) {
+// ParseStopPagingIndication decodes given bytes as StopPagingIndication.
+func ParseStopPagingIndication(b []byte) (*StopPagingIndication, error) {
 	s := &StopPagingIndication{}
-	if err := s.DecodeFromBytes(b); err != nil {
+	if err := s.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return s, nil
 }
 
-// DecodeFromBytes decodes given bytes as StopPagingIndication.
-func (s *StopPagingIndication) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes as StopPagingIndication.
+func (s *StopPagingIndication) UnmarshalBinary(b []byte) error {
 	var err error
-	s.Header, err = DecodeHeader(b)
+	s.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (s *StopPagingIndication) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	decodedIEs, err := ies.DecodeMultiIEs(s.Header.Payload)
+	decodedIEs, err := ies.ParseMultiIEs(s.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -126,28 +126,28 @@ func (s *StopPagingIndication) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length in int.
-func (s *StopPagingIndication) Len() int {
-	l := s.Header.Len() - len(s.Header.Payload)
+// MarshalLen returns the serial length in int.
+func (s *StopPagingIndication) MarshalLen() int {
+	l := s.Header.MarshalLen() - len(s.Header.Payload)
 	if ie := s.IMSI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := s.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range s.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (s *StopPagingIndication) SetLength() {
-	s.Header.Length = uint16(s.Len() - 4)
+	s.Header.Length = uint16(s.MarshalLen() - 4)
 }
 
 // MessageTypeName returns the name of protocol.

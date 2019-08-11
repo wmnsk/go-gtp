@@ -66,8 +66,8 @@ func TestCreateSessionResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeCreateSessionResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseCreateSessionResponse(b)
 		if err != nil {
 			return nil, err
 		}

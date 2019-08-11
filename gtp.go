@@ -12,38 +12,42 @@ import (
 
 // Message is an interface that defines all versions of GTP messages.
 type Message interface {
-	SerializeTo([]byte) error
-	DecodeFromBytes(b []byte) error
-	Len() int
+	MarshalTo([]byte) error
+	UnmarshalBinary(b []byte) error
+	MarshalLen() int
 	Version() int
 	MessageType() uint8
 	MessageTypeName() string
+
+	// deprecated
+	SerializeTo([]byte) error
+	DecodeFromBytes(b []byte) error
 }
 
-// Serialize returns the byte sequence generated from a Message instance.
-// Better to use SerializeXxx instead if you know the name of message to be serialized.
-func Serialize(m Message) ([]byte, error) {
-	b := make([]byte, m.Len())
-	if err := m.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a Message instance.
+// Better to use (*MessageName).Marshal instead if you know the name of message to be serialized.
+func Marshal(m Message) ([]byte, error) {
+	b := make([]byte, m.MarshalLen())
+	if err := m.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// Decode decodes given bytes as Message.
-func Decode(b []byte) (Message, error) {
+// Parse decodes given bytes as Message.
+func Parse(b []byte) (Message, error) {
 	if len(b) < 8 {
-		return nil, ErrTooShortToDecode
+		return nil, ErrTooShortToParse
 	}
 
 	switch b[0] >> 5 {
 	case 0:
-		return v0msg.Decode(b)
+		return v0msg.Parse(b)
 	case 1:
-		return v1msg.Decode(b)
+		return v1msg.Parse(b)
 	case 2:
-		return v2msg.Decode(b)
+		return v2msg.Parse(b)
 	default:
 		return nil, ErrInvalidVersion
 	}

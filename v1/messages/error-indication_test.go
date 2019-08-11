@@ -33,8 +33,8 @@ func TestErrorIndication(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeErrorIndication(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseErrorIndication(b)
 		if err != nil {
 			return nil, err
 		}

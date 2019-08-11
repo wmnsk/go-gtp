@@ -46,19 +46,19 @@ func HeaderFlags(v, p, s int) uint8 {
 	)
 }
 
-// Serialize returns the byte sequence generated from an IE instance.
-func (h *Header) Serialize() ([]byte, error) {
-	b := make([]byte, h.Len())
-	if err := h.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from an IE instance.
+func (h *Header) Marshal() ([]byte, error) {
+	b := make([]byte, h.MarshalLen())
+	if err := h.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (h *Header) SerializeTo(b []byte) error {
-	if len(b) < h.Len() {
-		return ErrTooShortToSerialize
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (h *Header) MarshalTo(b []byte) error {
+	if len(b) < h.MarshalLen() {
+		return ErrTooShortToMarshal
 	}
 
 	b[0] = h.Flags
@@ -69,24 +69,24 @@ func (h *Header) SerializeTo(b []byte) error {
 	binary.BigEndian.PutUint32(b[8:12], uint32(int(h.SndcpNumber)<<24|0xffffff))
 	binary.BigEndian.PutUint64(b[12:20], h.TID)
 	// two bytes of padding before payload.
-	copy(b[20:h.Len()], h.Payload)
+	copy(b[20:h.MarshalLen()], h.Payload)
 	return nil
 }
 
-// DecodeHeader decodes given byte sequence as a GTPv1 header.
-func DecodeHeader(b []byte) (*Header, error) {
+// ParseHeader Parses given byte sequence as a GTPv1 header.
+func ParseHeader(b []byte) (*Header, error) {
 	h := &Header{}
-	if err := h.DecodeFromBytes(b); err != nil {
+	if err := h.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return h, nil
 }
 
-// DecodeFromBytes sets the values retrieved from byte sequence in GTPv1 header.
-func (h *Header) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary sets the values retrieved from byte sequence in GTPv1 header.
+func (h *Header) UnmarshalBinary(b []byte) error {
 	l := len(b)
 	if l < 11 {
-		return ErrTooShortToDecode
+		return ErrTooShortToParse
 	}
 	h.Flags = b[0]
 	h.Type = b[1]
@@ -104,8 +104,8 @@ func (h *Header) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length of Header.
-func (h *Header) Len() int {
+// MarshalLen returns the serial length of Header.
+func (h *Header) MarshalLen() int {
 	return 20 + len(h.Payload)
 }
 

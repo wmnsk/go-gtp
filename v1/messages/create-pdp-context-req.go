@@ -159,286 +159,286 @@ func NewCreatePDPContextRequest(teid uint32, seq uint16, ie ...*ies.IE) *CreateP
 	return c
 }
 
-// Serialize returns the byte sequence generated from a CreatePDPContextRequest.
-func (c *CreatePDPContextRequest) Serialize() ([]byte, error) {
-	b := make([]byte, c.Len())
-	if err := c.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a CreatePDPContextRequest.
+func (c *CreatePDPContextRequest) Marshal() ([]byte, error) {
+	b := make([]byte, c.MarshalLen())
+	if err := c.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (c *CreatePDPContextRequest) SerializeTo(b []byte) error {
-	if len(b) < c.Len() {
-		return ErrTooShortToSerialize
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (c *CreatePDPContextRequest) MarshalTo(b []byte) error {
+	if len(b) < c.MarshalLen() {
+		return ErrTooShortToMarshal
 	}
-	c.Header.Payload = make([]byte, c.Len()-c.Header.Len())
+	c.Header.Payload = make([]byte, c.MarshalLen()-c.Header.MarshalLen())
 
 	offset := 0
 	if ie := c.IMSI; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.RAI; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.Recovery; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.SelectionMode; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TEIDDataI; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TEIDCPlane; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.NSAPI; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.LinkedNSAPI; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.ChargingCharacteristics; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TraceReference; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TraceType; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.EndUserAddress; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.APN; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.PCO; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.SGSNAddressForSignalling; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.SGSNAddressForUserTraffic; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.MSISDN; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.QoSProfile; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TFT; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TriggerID; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.OMCIdentity; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.CommonFlags; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.APNRestriction; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.RATType; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.UserLocationInformation; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.MSTimeZone; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.IMEI; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.CAMELChargingInformationContainer; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.AdditionalTraceInfo; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.CorrelationID; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.EvolvedARPI; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.ExtendedCommonFlags; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.UCI; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.APNAMBR; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.SignallingPriorityIndication; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.CNOperatorSelectionEntity; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.MappedUEUsageType; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.UPFunctionSelectionIndicationFlags; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range c.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(c.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	c.Header.SetLength()
-	return c.Header.SerializeTo(b)
+	return c.Header.MarshalTo(b)
 }
 
-// DecodeCreatePDPContextRequest decodes a given byte sequence as a CreatePDPContextRequest.
-func DecodeCreatePDPContextRequest(b []byte) (*CreatePDPContextRequest, error) {
+// ParseCreatePDPContextRequest decodes a given byte sequence as a CreatePDPContextRequest.
+func ParseCreatePDPContextRequest(b []byte) (*CreatePDPContextRequest, error) {
 	c := &CreatePDPContextRequest{}
-	if err := c.DecodeFromBytes(b); err != nil {
+	if err := c.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return c, nil
 }
 
-// DecodeFromBytes decodes a given byte sequence as a CreatePDPContextRequest.
-func (c *CreatePDPContextRequest) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes a given byte sequence as a CreatePDPContextRequest.
+func (c *CreatePDPContextRequest) UnmarshalBinary(b []byte) error {
 	var err error
-	c.Header, err = DecodeHeader(b)
+	c.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -446,7 +446,7 @@ func (c *CreatePDPContextRequest) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	ie, err := ies.DecodeMultiIEs(c.Header.Payload)
+	ie, err := ies.ParseMultiIEs(c.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -549,140 +549,140 @@ func (c *CreatePDPContextRequest) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length of Data.
-func (c *CreatePDPContextRequest) Len() int {
-	l := c.Header.Len() - len(c.Header.Payload)
+// MarshalLen returns the serial length of Data.
+func (c *CreatePDPContextRequest) MarshalLen() int {
+	l := c.Header.MarshalLen() - len(c.Header.Payload)
 
 	if ie := c.IMSI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.RAI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.Recovery; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.SelectionMode; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TEIDDataI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TEIDCPlane; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.NSAPI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.LinkedNSAPI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.ChargingCharacteristics; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TraceReference; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TraceType; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.EndUserAddress; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.APN; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.PCO; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.SGSNAddressForSignalling; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.SGSNAddressForUserTraffic; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.MSISDN; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.QoSProfile; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TFT; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TriggerID; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.OMCIdentity; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.CommonFlags; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.APNRestriction; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.RATType; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.UserLocationInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.MSTimeZone; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.IMEI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.CAMELChargingInformationContainer; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.AdditionalTraceInfo; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.CorrelationID; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.EvolvedARPI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.ExtendedCommonFlags; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.UCI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.APNAMBR; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.SignallingPriorityIndication; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.CNOperatorSelectionEntity; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.MappedUEUsageType; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.UPFunctionSelectionIndicationFlags; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range c.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (c *CreatePDPContextRequest) SetLength() {
-	c.Length = uint16(c.Len() - 8)
+	c.Length = uint16(c.MarshalLen() - 8)
 }
 
 // MessageTypeName returns the name of protocol.

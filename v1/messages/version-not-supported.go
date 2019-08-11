@@ -31,51 +31,51 @@ func NewVersionNotSupported(teid uint32, seq uint16, ie ...*ies.IE) *VersionNotS
 	return v
 }
 
-// Serialize returns the byte sequence generated from a VersionNotSupported.
-func (v *VersionNotSupported) Serialize() ([]byte, error) {
-	b := make([]byte, v.Len())
-	if err := v.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a VersionNotSupported.
+func (v *VersionNotSupported) Marshal() ([]byte, error) {
+	b := make([]byte, v.MarshalLen())
+	if err := v.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (v *VersionNotSupported) SerializeTo(b []byte) error {
-	if len(b) < v.Len() {
-		return ErrTooShortToSerialize
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (v *VersionNotSupported) MarshalTo(b []byte) error {
+	if len(b) < v.MarshalLen() {
+		return ErrTooShortToMarshal
 	}
-	v.Header.Payload = make([]byte, v.Len()-v.Header.Len())
+	v.Header.Payload = make([]byte, v.MarshalLen()-v.Header.MarshalLen())
 
 	offset := 0
 	for _, ie := range v.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(v.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(v.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	v.Header.SetLength()
-	return v.Header.SerializeTo(b)
+	return v.Header.MarshalTo(b)
 }
 
-// DecodeVersionNotSupported decodes a given byte sequence as a VersionNotSupported.
-func DecodeVersionNotSupported(b []byte) (*VersionNotSupported, error) {
+// ParseVersionNotSupported decodes a given byte sequence as a VersionNotSupported.
+func ParseVersionNotSupported(b []byte) (*VersionNotSupported, error) {
 	v := &VersionNotSupported{}
-	if err := v.DecodeFromBytes(b); err != nil {
+	if err := v.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return v, nil
 }
 
-// DecodeFromBytes decodes a given byte sequence as a VersionNotSupported.
-func (v *VersionNotSupported) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes a given byte sequence as a VersionNotSupported.
+func (v *VersionNotSupported) UnmarshalBinary(b []byte) error {
 	var err error
-	v.Header, err = DecodeHeader(b)
+	v.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (v *VersionNotSupported) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	ie, err := ies.DecodeMultiIEs(v.Header.Payload)
+	ie, err := ies.ParseMultiIEs(v.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -97,22 +97,22 @@ func (v *VersionNotSupported) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length of Data.
-func (v *VersionNotSupported) Len() int {
-	l := v.Header.Len() - len(v.Header.Payload)
+// MarshalLen returns the serial length of Data.
+func (v *VersionNotSupported) MarshalLen() int {
+	l := v.Header.MarshalLen() - len(v.Header.Payload)
 
 	for _, ie := range v.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (v *VersionNotSupported) SetLength() {
-	v.Length = uint16(v.Len() - 8)
+	v.Length = uint16(v.MarshalLen() - 8)
 }
 
 // MessageTypeName returns the name of protocol.

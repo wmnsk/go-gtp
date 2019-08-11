@@ -26,8 +26,8 @@ func TestVersionNotSupported(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeVersionNotSupported(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseVersionNotSupported(b)
 		if err != nil {
 			return nil, err
 		}

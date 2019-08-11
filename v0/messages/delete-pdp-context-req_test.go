@@ -31,8 +31,8 @@ func TestDeletePDPContextRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeDeletePDPContextRequest(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseDeletePDPContextRequest(b)
 		if err != nil {
 			return nil, err
 		}

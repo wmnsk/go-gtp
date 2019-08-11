@@ -25,39 +25,39 @@ func NewTPDUWithSequence(teid uint32, seq uint16, payload []byte) *TPDU {
 	return t
 }
 
-// Serialize returns the byte sequence generated from a TPDU.
-func (t *TPDU) Serialize() ([]byte, error) {
-	b := make([]byte, t.Len())
-	if err := t.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a TPDU.
+func (t *TPDU) Marshal() ([]byte, error) {
+	b := make([]byte, t.MarshalLen())
+	if err := t.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (t *TPDU) SerializeTo(b []byte) error {
-	if len(b) < t.Len() {
-		return ErrTooShortToSerialize
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (t *TPDU) MarshalTo(b []byte) error {
+	if len(b) < t.MarshalLen() {
+		return ErrTooShortToMarshal
 	}
 
 	t.Header.SetLength()
-	return t.Header.SerializeTo(b)
+	return t.Header.MarshalTo(b)
 }
 
-// DecodeTPDU decodes a given byte sequence as a TPDU.
-func DecodeTPDU(b []byte) (*TPDU, error) {
+// ParseTPDU decodes a given byte sequence as a TPDU.
+func ParseTPDU(b []byte) (*TPDU, error) {
 	t := &TPDU{}
-	if err := t.DecodeFromBytes(b); err != nil {
+	if err := t.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return t, nil
 }
 
-// DecodeFromBytes decodes a given byte sequence as a TPDU.
-func (t *TPDU) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes a given byte sequence as a TPDU.
+func (t *TPDU) UnmarshalBinary(b []byte) error {
 	var err error
-	t.Header, err = DecodeHeader(b)
+	t.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -65,9 +65,9 @@ func (t *TPDU) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length of Data.
-func (t *TPDU) Len() int {
-	return t.Header.Len()
+// MarshalLen returns the serial length of Data.
+func (t *TPDU) MarshalLen() int {
+	return t.Header.MarshalLen()
 }
 
 // SetLength sets the length in Length field.

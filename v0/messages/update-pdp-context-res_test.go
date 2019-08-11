@@ -75,8 +75,8 @@ func TestUpdatePDPContextResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeUpdatePDPContextResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseUpdatePDPContextResponse(b)
 		if err != nil {
 			return nil, err
 		}

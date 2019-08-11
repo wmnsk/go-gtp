@@ -407,7 +407,7 @@ func TestIEs(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run("serialize/"+c.description, func(t *testing.T) {
-			got, err := c.structured.Serialize()
+			got, err := c.structured.Marshal()
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -418,7 +418,7 @@ func TestIEs(t *testing.T) {
 		})
 
 		t.Run("decode/"+c.description, func(t *testing.T) {
-			got, err := ies.Decode(c.serialized)
+			got, err := ies.Parse(c.serialized)
 			if err != nil {
 				t.Fatal(err)
 			}

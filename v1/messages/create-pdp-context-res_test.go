@@ -52,8 +52,8 @@ func TestCreatePDPContextResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeCreatePDPContextResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseCreatePDPContextResponse(b)
 		if err != nil {
 			return nil, err
 		}

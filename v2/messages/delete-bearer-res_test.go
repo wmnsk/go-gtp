@@ -31,8 +31,8 @@ func TestDeleteBearerResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeDeleteBearerResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseDeleteBearerResponse(b)
 		if err != nil {
 			return nil, err
 		}

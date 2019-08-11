@@ -74,105 +74,105 @@ func NewContextAcknowledge(teid, seq uint32, ie ...*ies.IE) *ContextAcknowledge 
 	return c
 }
 
-// Serialize serializes ContextAcknowledge into bytes.
-func (c *ContextAcknowledge) Serialize() ([]byte, error) {
-	b := make([]byte, c.Len())
-	if err := c.SerializeTo(b); err != nil {
+// Marshal serializes ContextAcknowledge into bytes.
+func (c *ContextAcknowledge) Marshal() ([]byte, error) {
+	b := make([]byte, c.MarshalLen())
+	if err := c.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo serializes ContextAcknowledge into bytes.
-func (c *ContextAcknowledge) SerializeTo(b []byte) error {
+// MarshalTo serializes ContextAcknowledge into bytes.
+func (c *ContextAcknowledge) MarshalTo(b []byte) error {
 	if c.Header.Payload != nil {
 		c.Header.Payload = nil
 	}
-	c.Header.Payload = make([]byte, c.Len()-c.Header.Len())
+	c.Header.Payload = make([]byte, c.MarshalLen()-c.Header.MarshalLen())
 
 	offset := 0
 	if ie := c.Cause; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.IndicationFlags; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.ForwardingFTEID; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.BearerContexts; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.SGSNNumber; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.MMENumberForMTSMS; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.SGSNIdentifierForMTSMS; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.MMEIdentifierForMTSMS; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range c.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(c.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	c.Header.SetLength()
-	return c.Header.SerializeTo(b)
+	return c.Header.MarshalTo(b)
 }
 
-// DecodeContextAcknowledge decodes given bytes as ContextAcknowledge.
-func DecodeContextAcknowledge(b []byte) (*ContextAcknowledge, error) {
+// ParseContextAcknowledge decodes given bytes as ContextAcknowledge.
+func ParseContextAcknowledge(b []byte) (*ContextAcknowledge, error) {
 	c := &ContextAcknowledge{}
-	if err := c.DecodeFromBytes(b); err != nil {
+	if err := c.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return c, nil
 }
 
-// DecodeFromBytes decodes given bytes as ContextAcknowledge.
-func (c *ContextAcknowledge) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes as ContextAcknowledge.
+func (c *ContextAcknowledge) UnmarshalBinary(b []byte) error {
 	var err error
-	c.Header, err = DecodeHeader(b)
+	c.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (c *ContextAcknowledge) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	decodedIEs, err := ies.DecodeMultiIEs(c.Header.Payload)
+	decodedIEs, err := ies.ParseMultiIEs(c.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -225,50 +225,50 @@ func (c *ContextAcknowledge) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length in int.
-func (c *ContextAcknowledge) Len() int {
-	l := c.Header.Len() - len(c.Header.Payload)
+// MarshalLen returns the serial length in int.
+func (c *ContextAcknowledge) MarshalLen() int {
+	l := c.Header.MarshalLen() - len(c.Header.Payload)
 
 	if ie := c.Cause; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.IndicationFlags; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.ForwardingFTEID; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.BearerContexts; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.SGSNNumber; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.MMENumberForMTSMS; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.SGSNIdentifierForMTSMS; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.MMEIdentifierForMTSMS; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range c.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (c *ContextAcknowledge) SetLength() {
-	c.Header.Length = uint16(c.Len() - 4)
+	c.Header.Length = uint16(c.MarshalLen() - 4)
 }
 
 // MessageTypeName returns the name of protocol.

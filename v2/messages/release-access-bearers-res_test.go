@@ -29,8 +29,8 @@ func TestReleaseAccessBearersResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeReleaseAccessBearersResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := messages.ParseReleaseAccessBearersResponse(b)
 		if err != nil {
 			return nil, err
 		}

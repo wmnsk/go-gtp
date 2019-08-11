@@ -137,195 +137,195 @@ func NewCreateBearerResponse(teid, seq uint32, ie ...*ies.IE) *CreateBearerRespo
 	return c
 }
 
-// Serialize serializes CreateBearerResponse into bytes.
-func (c *CreateBearerResponse) Serialize() ([]byte, error) {
-	b := make([]byte, c.Len())
-	if err := c.SerializeTo(b); err != nil {
+// Marshal serializes CreateBearerResponse into bytes.
+func (c *CreateBearerResponse) Marshal() ([]byte, error) {
+	b := make([]byte, c.MarshalLen())
+	if err := c.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo serializes CreateBearerResponse into bytes.
-func (c *CreateBearerResponse) SerializeTo(b []byte) error {
+// MarshalTo serializes CreateBearerResponse into bytes.
+func (c *CreateBearerResponse) MarshalTo(b []byte) error {
 	if c.Header.Payload != nil {
 		c.Header.Payload = nil
 	}
-	c.Header.Payload = make([]byte, c.Len()-c.Header.Len())
+	c.Header.Payload = make([]byte, c.MarshalLen()-c.Header.MarshalLen())
 
 	offset := 0
 	if ie := c.Cause; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.BearerContexts; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.Recovery; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.MMEFQCSID; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.SGWFQCSID; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.EPDGFQCSID; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TWANFQCSID; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.PCO; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.UETimeZone; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.ULI; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TWANIdentifier; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TWANIdentifierTimestamp; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.MMEOverloadControlInformation; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.SGWOverloadControlInformation; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.PresenceReportingAction; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.MMESGSNIdentifier; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.TWANePDGOverloadControlInformation; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.WLANLocationInformation; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.WLANLocationTimestamp; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.UELocalIPAddress; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.UEUDPPort; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.NBIFOMContainer; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.UETCPPort; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := c.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(c.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range c.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(c.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(c.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	c.Header.SetLength()
-	return c.Header.SerializeTo(b)
+	return c.Header.MarshalTo(b)
 }
 
-// DecodeCreateBearerResponse decodes given bytes as CreateBearerResponse.
-func DecodeCreateBearerResponse(b []byte) (*CreateBearerResponse, error) {
+// ParseCreateBearerResponse decodes given bytes as CreateBearerResponse.
+func ParseCreateBearerResponse(b []byte) (*CreateBearerResponse, error) {
 	c := &CreateBearerResponse{}
-	if err := c.DecodeFromBytes(b); err != nil {
+	if err := c.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return c, nil
 }
 
-// DecodeFromBytes decodes given bytes as CreateBearerResponse.
-func (c *CreateBearerResponse) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes as CreateBearerResponse.
+func (c *CreateBearerResponse) UnmarshalBinary(b []byte) error {
 	var err error
-	c.Header, err = DecodeHeader(b)
+	c.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -333,7 +333,7 @@ func (c *CreateBearerResponse) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	decodedIEs, err := ies.DecodeMultiIEs(c.Header.Payload)
+	decodedIEs, err := ies.ParseMultiIEs(c.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -417,95 +417,95 @@ func (c *CreateBearerResponse) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length in int.
-func (c *CreateBearerResponse) Len() int {
-	l := c.Header.Len() - len(c.Header.Payload)
+// MarshalLen returns the serial length in int.
+func (c *CreateBearerResponse) MarshalLen() int {
+	l := c.Header.MarshalLen() - len(c.Header.Payload)
 
 	if ie := c.Cause; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.BearerContexts; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.Recovery; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.MMEFQCSID; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.SGWFQCSID; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.EPDGFQCSID; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TWANFQCSID; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.PCO; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.UETimeZone; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.ULI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TWANIdentifier; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TWANIdentifierTimestamp; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.MMEOverloadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.SGWOverloadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.PresenceReportingAction; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.MMESGSNIdentifier; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.TWANePDGOverloadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.WLANLocationInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.WLANLocationTimestamp; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.UELocalIPAddress; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.UEUDPPort; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.NBIFOMContainer; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.UETCPPort; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := c.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range c.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (c *CreateBearerResponse) SetLength() {
-	c.Header.Length = uint16(c.Len() - 4)
+	c.Header.Length = uint16(c.MarshalLen() - 4)
 }
 
 // MessageTypeName returns the name of protocol.

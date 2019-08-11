@@ -176,8 +176,8 @@ func TestIEs(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		t.Run("Serialize/"+c.description, func(t *testing.T) {
-			got, err := c.structured.Serialize()
+		t.Run("Marshal/"+c.description, func(t *testing.T) {
+			got, err := c.structured.Marshal()
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -187,8 +187,8 @@ func TestIEs(t *testing.T) {
 			}
 		})
 
-		t.Run("Decode/"+c.description, func(t *testing.T) {
-			got, err := ies.Decode(c.serialized)
+		t.Run("Parse/"+c.description, func(t *testing.T) {
+			got, err := ies.Parse(c.serialized)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -44,17 +44,17 @@ func NewHeaderFlags(v, p, t int) uint8 {
 	)
 }
 
-// Serialize returns the byte sequence generated from a Header instance.
-func (h *Header) Serialize() ([]byte, error) {
-	b := make([]byte, h.Len())
-	if err := h.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a Header instance.
+func (h *Header) Marshal() ([]byte, error) {
+	b := make([]byte, h.MarshalLen())
+	if err := h.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (h *Header) SerializeTo(b []byte) error {
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (h *Header) MarshalTo(b []byte) error {
 	b[0] = h.Flags
 	b[1] = h.Type
 	binary.BigEndian.PutUint16(b[2:4], h.Length)
@@ -65,25 +65,25 @@ func (h *Header) SerializeTo(b []byte) error {
 	}
 	copy(b[offset:offset+3], utils.Uint32To24(h.SequenceNumber))
 	b[offset+3] = h.Spare
-	copy(b[offset+4:h.Len()], h.Payload)
+	copy(b[offset+4:h.MarshalLen()], h.Payload)
 
 	return nil
 }
 
-// DecodeHeader decodes given byte sequence as a GTPv2 header.
-func DecodeHeader(b []byte) (*Header, error) {
+// ParseHeader decodes given byte sequence as a GTPv2 header.
+func ParseHeader(b []byte) (*Header, error) {
 	h := &Header{}
-	if err := h.DecodeFromBytes(b); err != nil {
+	if err := h.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return h, nil
 }
 
-// DecodeFromBytes sets the values retrieved from byte sequence in GTPv2 header.
-func (h *Header) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary sets the values retrieved from byte sequence in GTPv2 header.
+func (h *Header) UnmarshalBinary(b []byte) error {
 	l := len(b)
 	if l < 12 {
-		return ErrTooShortToDecode
+		return ErrTooShortToParse
 	}
 	h.Flags = b[0]
 	h.Type = b[1]
@@ -112,8 +112,8 @@ func (h *Header) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns field length in integer.
-func (h *Header) Len() int {
+// MarshalLen returns field length in integer.
+func (h *Header) MarshalLen() int {
 	l := 8 + len(h.Payload)
 	if h.HasTEID() {
 		l += 4

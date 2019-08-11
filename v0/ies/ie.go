@@ -64,19 +64,19 @@ func New(t uint8, p []byte) *IE {
 	return i
 }
 
-// Serialize returns the byte sequence generated from an IE instance.
-func (i *IE) Serialize() ([]byte, error) {
-	b := make([]byte, i.Len())
-	if err := i.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from an IE instance.
+func (i *IE) Marshal() ([]byte, error) {
+	b := make([]byte, i.MarshalLen())
+	if err := i.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (i *IE) SerializeTo(b []byte) error {
-	if len(b) < i.Len() {
-		return ErrTooShortToSerialize
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (i *IE) MarshalTo(b []byte) error {
+	if len(b) < i.MarshalLen() {
+		return ErrTooShortToMarshal
 	}
 
 	var offset = 1
@@ -85,50 +85,50 @@ func (i *IE) SerializeTo(b []byte) error {
 		binary.BigEndian.PutUint16(b[1:3], i.Length)
 		offset += 2
 	}
-	copy(b[offset:i.Len()], i.Payload)
+	copy(b[offset:i.MarshalLen()], i.Payload)
 	return nil
 }
 
-// Decode decodes given byte sequence as a GTPv0 Information Element.
-func Decode(b []byte) (*IE, error) {
+// Parse Parses given byte sequence as a GTPv0 Information Element.
+func Parse(b []byte) (*IE, error) {
 	i := &IE{}
-	if err := i.DecodeFromBytes(b); err != nil {
+	if err := i.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return i, nil
 }
 
-// DecodeFromBytes sets the values retrieved from byte sequence in GTPv0 IE.
-func (i *IE) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary sets the values retrieved from byte sequence in GTPv0 IE.
+func (i *IE) UnmarshalBinary(b []byte) error {
 	if len(b) < 2 {
-		return ErrTooShortToDecode
+		return ErrTooShortToParse
 	}
 
 	i.Type = b[0]
 	if i.IsTV() {
-		return decodeTVFromBytes(i, b)
+		return ParseTVFromBytes(i, b)
 	}
-	return decodeTLVFromBytes(i, b)
+	return ParseTLVFromBytes(i, b)
 }
 
-func decodeTVFromBytes(i *IE, b []byte) error {
+func ParseTVFromBytes(i *IE, b []byte) error {
 	l := len(b)
 	if l < 2 {
-		return ErrTooShortToDecode
+		return ErrTooShortToParse
 	}
-	if i.Len() > l {
+	if i.MarshalLen() > l {
 		return ErrInvalidLength
 	}
 	i.Length = 0
-	i.Payload = b[1:i.Len()]
+	i.Payload = b[1:i.MarshalLen()]
 
 	return nil
 }
 
-func decodeTLVFromBytes(i *IE, b []byte) error {
+func ParseTLVFromBytes(i *IE, b []byte) error {
 	l := len(b)
 	if l < 3 {
-		return ErrTooShortToDecode
+		return ErrTooShortToParse
 	}
 
 	i.Length = binary.BigEndian.Uint16(b[1:3])
@@ -167,8 +167,8 @@ func (i *IE) IsTV() bool {
 	return int(i.Type) < 0x80
 }
 
-// Len returns the actual length of IE.
-func (i *IE) Len() int {
+// MarshalLen returns the serial length of IE.
+func (i *IE) MarshalLen() int {
 	if l, ok := tvLengthMap[i.Type]; ok {
 		return l + 1
 	}
@@ -197,21 +197,21 @@ func (i *IE) String() string {
 	)
 }
 
-// DecodeMultiIEs decodes multiple (unspecified number of) IEs to []*IE at a time.
-func DecodeMultiIEs(b []byte) ([]*IE, error) {
+// ParseMultiIEs Parses multiple (unspecified number of) IEs to []*IE at a time.
+func ParseMultiIEs(b []byte) ([]*IE, error) {
 	var ies []*IE
 	for {
 		if len(b) == 0 {
 			break
 		}
 
-		i, err := Decode(b)
+		i, err := Parse(b)
 		if err != nil {
 			return nil, err
 		}
 
 		ies = append(ies, i)
-		b = b[i.Len():]
+		b = b[i.MarshalLen():]
 		continue
 	}
 	return ies, nil
