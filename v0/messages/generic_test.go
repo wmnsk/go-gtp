@@ -19,7 +19,7 @@ func TestGeneric(t *testing.T) {
 			Structured: messages.NewGeneric(
 				messages.MsgTypeEchoRequest, testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x1e, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
 				0xff, 0xff, 0xff, 0xff, 0x21, 0x43, 0x65, 0x87,
@@ -31,7 +31,7 @@ func TestGeneric(t *testing.T) {
 				messages.MsgTypeEchoResponse, testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
 				ies.NewRecovery(0x80),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Hewader
 				0x1e, 0x02, 0x00, 0x02, 0x00, 0x01, 0x00, 0x00,
 				0xff, 0xff, 0xff, 0xff, 0x21, 0x43, 0x65, 0x87,
@@ -42,8 +42,8 @@ func TestGeneric(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeGeneric(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseGeneric(b)
 		if err != nil {
 			return nil, err
 		}

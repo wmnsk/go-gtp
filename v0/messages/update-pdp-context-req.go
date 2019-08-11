@@ -65,106 +65,106 @@ func NewUpdatePDPContextRequest(seq, label uint16, tid uint64, ie ...*ies.IE) *U
 	return u
 }
 
-// Serialize returns the byte sequence generated from a UpdatePDPContextRequest.
-func (u *UpdatePDPContextRequest) Serialize() ([]byte, error) {
-	b := make([]byte, u.Len())
-	if err := u.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a UpdatePDPContextRequest.
+func (u *UpdatePDPContextRequest) Marshal() ([]byte, error) {
+	b := make([]byte, u.MarshalLen())
+	if err := u.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (u *UpdatePDPContextRequest) SerializeTo(b []byte) error {
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (u *UpdatePDPContextRequest) MarshalTo(b []byte) error {
 	if u.Header.Payload != nil {
 		u.Header.Payload = nil
 	}
-	u.Header.Payload = make([]byte, u.Len()-u.Header.Len())
+	u.Header.Payload = make([]byte, u.MarshalLen()-u.Header.MarshalLen())
 
 	offset := 0
 	if ie := u.RAI; ie != nil {
-		if err := ie.SerializeTo(u.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := u.QoSProfile; ie != nil {
-		if err := ie.SerializeTo(u.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := u.Recovery; ie != nil {
-		if err := ie.SerializeTo(u.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := u.FlowLabelDataI; ie != nil {
-		if err := ie.SerializeTo(u.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := u.FlowLabelSignalling; ie != nil {
-		if err := ie.SerializeTo(u.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := u.EndUserAddress; ie != nil {
-		if err := ie.SerializeTo(u.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := u.SGSNAddressForSignalling; ie != nil {
-		if err := ie.SerializeTo(u.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := u.SGSNAddressForUserTraffic; ie != nil {
-		if err := ie.SerializeTo(u.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := u.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(u.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range u.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(u.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(u.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	u.Header.SetLength()
-	return u.Header.SerializeTo(b)
+	return u.Header.MarshalTo(b)
 }
 
-// DecodeUpdatePDPContextRequest decodes a given byte sequence as a UpdatePDPContextRequest.
-func DecodeUpdatePDPContextRequest(b []byte) (*UpdatePDPContextRequest, error) {
+// ParseUpdatePDPContextRequest Parses a given byte sequence as a UpdatePDPContextRequest.
+func ParseUpdatePDPContextRequest(b []byte) (*UpdatePDPContextRequest, error) {
 	u := &UpdatePDPContextRequest{}
-	if err := u.DecodeFromBytes(b); err != nil {
+	if err := u.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return u, nil
 }
 
-// DecodeFromBytes decodes a given byte sequence as a UpdatePDPContextRequest.
-func (u *UpdatePDPContextRequest) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary Parses a given byte sequence as a UpdatePDPContextRequest.
+func (u *UpdatePDPContextRequest) UnmarshalBinary(b []byte) error {
 	var err error
-	u.Header, err = DecodeHeader(b)
+	u.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func (u *UpdatePDPContextRequest) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	ie, err := ies.DecodeMultiIEs(u.Header.Payload)
+	ie, err := ies.ParseMultiIEs(u.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -210,50 +210,50 @@ func (u *UpdatePDPContextRequest) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length of Data.
-func (u *UpdatePDPContextRequest) Len() int {
-	l := u.Header.Len() - len(u.Header.Payload)
+// MarshalLen returns the serial length of Data.
+func (u *UpdatePDPContextRequest) MarshalLen() int {
+	l := u.Header.MarshalLen() - len(u.Header.Payload)
 
 	if ie := u.RAI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := u.QoSProfile; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := u.Recovery; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := u.FlowLabelDataI; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := u.FlowLabelSignalling; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := u.EndUserAddress; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := u.SGSNAddressForSignalling; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := u.SGSNAddressForUserTraffic; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := u.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range u.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (u *UpdatePDPContextRequest) SetLength() {
-	u.Header.Length = uint16(u.Len() - 20)
+	u.Header.Length = uint16(u.MarshalLen() - 20)
 }
 
 // MessageTypeName returns the name of protocol.

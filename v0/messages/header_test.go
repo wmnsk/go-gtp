@@ -27,7 +27,7 @@ func TestHeader(t *testing.T) {
 					0xde, 0xad, 0xbe, 0xef,
 				},
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Flags
 				0x1e,
 				// MessageType
@@ -46,8 +46,8 @@ func TestHeader(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeHeader(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseHeader(b)
 		if err != nil {
 			return nil, err
 		}

@@ -18,7 +18,7 @@ func TestDeletePDPContextRequest(t *testing.T) {
 			Structured: messages.NewDeletePDPContextRequest(
 				testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x1e, 0x14, 0x00, 0x00,
 				// SequenceNumber
@@ -31,8 +31,8 @@ func TestDeletePDPContextRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeDeletePDPContextRequest(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseDeletePDPContextRequest(b)
 		if err != nil {
 			return nil, err
 		}

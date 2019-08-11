@@ -33,51 +33,51 @@ func NewGeneric(msgType uint8, seq, label uint16, tid uint64, ie ...*ies.IE) *Ge
 	return g
 }
 
-// Serialize returns the byte sequence generated from a Generic.
-func (g *Generic) Serialize() ([]byte, error) {
-	b := make([]byte, g.Len())
-	if err := g.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a Generic.
+func (g *Generic) Marshal() ([]byte, error) {
+	b := make([]byte, g.MarshalLen())
+	if err := g.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (g *Generic) SerializeTo(b []byte) error {
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (g *Generic) MarshalTo(b []byte) error {
 	if g.Header.Payload != nil {
 		g.Header.Payload = nil
 	}
-	g.Header.Payload = make([]byte, g.Len()-g.Header.Len())
+	g.Header.Payload = make([]byte, g.MarshalLen()-g.Header.MarshalLen())
 
 	offset := 0
 	for _, ie := range g.IEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(g.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(g.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	g.Header.SetLength()
-	return g.Header.SerializeTo(b)
+	return g.Header.MarshalTo(b)
 }
 
-// DecodeGeneric decodes a given byte sequence as a Generic.
-func DecodeGeneric(b []byte) (*Generic, error) {
+// ParseGeneric Parses a given byte sequence as a Generic.
+func ParseGeneric(b []byte) (*Generic, error) {
 	g := &Generic{}
-	if err := g.DecodeFromBytes(b); err != nil {
+	if err := g.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return g, nil
 }
 
-// DecodeFromBytes decodes a given byte sequence as a Generic.
-func (g *Generic) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary Parses a given byte sequence as a Generic.
+func (g *Generic) UnmarshalBinary(b []byte) error {
 	var err error
-	g.Header, err = DecodeHeader(b)
+	g.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -85,21 +85,21 @@ func (g *Generic) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	g.IEs, err = ies.DecodeMultiIEs(g.Header.Payload)
+	g.IEs, err = ies.ParseMultiIEs(g.Header.Payload)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// Len returns the actual length of Data.
-func (g *Generic) Len() int {
-	l := g.Header.Len() - len(g.Header.Payload)
+// MarshalLen returns the serial length of Data.
+func (g *Generic) MarshalLen() int {
+	l := g.Header.MarshalLen() - len(g.Header.Payload)
 	for _, ie := range g.IEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	return l
@@ -107,7 +107,7 @@ func (g *Generic) Len() int {
 
 // SetLength sets the length in Length field.
 func (g *Generic) SetLength() {
-	g.Header.Length = uint16(g.Len() - 20)
+	g.Header.Length = uint16(g.MarshalLen() - 20)
 }
 
 // MessageTypeName returns the name of protocol.

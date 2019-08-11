@@ -73,9 +73,9 @@ const (
 
 // Message is an interface that defines Message messages.
 type Message interface {
-	SerializeTo([]byte) error
-	DecodeFromBytes(b []byte) error
-	Len() int
+	MarshalTo([]byte) error
+	UnmarshalBinary(b []byte) error
+	MarshalLen() int
 	String() string
 	Version() int
 	MessageType() uint8
@@ -83,19 +83,19 @@ type Message interface {
 	TID() string
 }
 
-// Serialize returns the byte sequence generated from a Message instance.
-// Better to use SerializeXxx instead if you know the name of message to be serialized.
-func Serialize(g Message) ([]byte, error) {
-	b := make([]byte, g.Len())
-	if err := g.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a Message instance.
+// Better to use MarshalXxx instead if you know the name of message to be Marshald.
+func Marshal(g Message) ([]byte, error) {
+	b := make([]byte, g.MarshalLen())
+	if err := g.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// Decode decodes the given bytes as Message.
-func Decode(b []byte) (Message, error) {
+// Parse Parses the given bytes as Message.
+func Parse(b []byte) (Message, error) {
 	var g Message
 
 	switch b[1] {
@@ -179,15 +179,15 @@ func Decode(b []byte) (Message, error) {
 		g = &Generic{}
 	}
 
-	if err := g.DecodeFromBytes(b); err != nil {
-		return nil, errors.Wrap(err, "failed to decode Message:")
+	if err := g.UnmarshalBinary(b); err != nil {
+		return nil, errors.Wrap(err, "failed to Parse Message:")
 	}
 	return g, nil
 }
 
 // Decapsulate decapsulates given bytes and returns Payload in []byte.
 func Decapsulate(b []byte) ([]byte, error) {
-	header, err := DecodeHeader(b)
+	header, err := ParseHeader(b)
 	if err != nil {
 		return nil, err
 	}

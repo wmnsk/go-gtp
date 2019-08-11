@@ -16,7 +16,7 @@ func TestIE(t *testing.T) {
 	cases := []struct {
 		description string
 		structured  *ies.IE
-		serialized  []byte
+		Marshald  []byte
 	}{
 		{
 			"Cause",
@@ -219,19 +219,19 @@ func TestIE(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		t.Run("serialize/"+c.description, func(t *testing.T) {
-			got, err := c.structured.Serialize()
+		t.Run("Marshal/"+c.description, func(t *testing.T) {
+			got, err := c.structured.Marshal()
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if diff := cmp.Diff(got, c.serialized); diff != "" {
+			if diff := cmp.Diff(got, c.Marshald); diff != "" {
 				t.Error(diff)
 			}
 		})
 
-		t.Run("decode/"+c.description, func(t *testing.T) {
-			got, err := ies.Decode(c.serialized)
+		t.Run("Parse/"+c.description, func(t *testing.T) {
+			got, err := ies.Parse(c.Marshald)
 			if err != nil {
 				t.Fatal(err)
 			}
