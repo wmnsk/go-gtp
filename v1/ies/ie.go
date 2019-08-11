@@ -362,11 +362,12 @@ func newUint8ValIE(t, v uint8) *IE {
 	return New(t, []byte{v})
 }
 
-func newUint16ValIE(t uint8, v uint16) *IE {
-	i := New(t, make([]byte, 2))
-	binary.BigEndian.PutUint16(i.Payload, v)
-	return i
-}
+// left for future use.
+//func newUint16ValIE(t uint8, v uint16) *IE {
+//	i := New(t, make([]byte, 2))
+//	binary.BigEndian.PutUint16(i.Payload, v)
+//	return i
+//}
 
 func newUint32ValIE(t uint8, v uint32) *IE {
 	i := New(t, make([]byte, 4))

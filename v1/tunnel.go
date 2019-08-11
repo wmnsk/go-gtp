@@ -35,10 +35,12 @@ func (u *UPlaneConn) AddTunnelOverride(peerIP, msIP net.IP, otei, itei uint32) e
 	}
 
 	if pdp, _ := netlink.GTPPDPByMSAddress(u.GTPLink, msIP); pdp != nil {
-		netlink.GTPPDPDel(u.GTPLink, pdp)
+		// do nothing even this fails
+		_ = netlink.GTPPDPDel(u.GTPLink, pdp)
 	}
 	if pdp, _ := netlink.GTPPDPByITEI(u.GTPLink, int(itei)); pdp != nil {
-		netlink.GTPPDPDel(u.GTPLink, pdp)
+		// do nothing even this fails
+		_ = netlink.GTPPDPDel(u.GTPLink, pdp)
 	}
 
 	return u.AddTunnel(peerIP, msIP, otei, itei)
