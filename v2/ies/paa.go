@@ -19,7 +19,6 @@ const (
 //
 // The PDN Type field is automatically judged by the format of given addr,
 // If it cannot be converted as neither IPv4 nor IPv6, PDN Type will be Non-IP.
-// XXX - IPv4v6 not currently supported.
 func NewPDNAddressAllocation(addr string) *IE {
 	ip := net.ParseIP(addr)
 	v4 := ip.To4()
@@ -44,4 +43,28 @@ func NewPDNAddressAllocation(addr string) *IE {
 
 	// Non-IP
 	return New(PDNAddressAllocation, 0x00, []byte{pdnTypeNonIP})
+}
+
+// NewPDNAddressAllocationDual creates a new PDNAddressAllocation IE with
+// IPv4 address and IPv6 address given.
+//
+// If they cannot be converted as IPv4/IPv6, PDN Type will be Non-IP.
+func NewPDNAddressAllocationDual(v4addr, v6addr string) *IE {
+	v4 := net.ParseIP(v4addr).To4()
+	if v4 == nil {
+		return New(PDNAddressAllocation, 0x00, []byte{pdnTypeNonIP})
+	}
+
+	v6 := net.ParseIP(v6addr).To16()
+	if v6 == nil {
+		return New(PDNAddressAllocation, 0x00, []byte{pdnTypeNonIP})
+	}
+
+	i := New(PDNAddressAllocation, 0x00, make([]byte, 23))
+	i.Payload[0] = pdnTypeIPv4v6
+	copy(i.Payload[1:5], v4)
+	i.Payload[5] = 0x00
+	copy(i.Payload[6:], v6)
+
+	return i
 }
