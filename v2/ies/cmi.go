@@ -11,10 +11,17 @@ func NewCSGMembershipIndication(cmi uint8) *IE {
 
 // CMI returns CMI in uint8 if the type of IE matches.
 func (i *IE) CMI() uint8 {
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	switch i.Type {
 	case CSGMembershipIndication:
 		return i.Payload[0] & 0x01
 	case UserCSGInformation:
+		if len(i.Payload) < 8 {
+			return 0
+		}
 		return i.Payload[7] & 0x01
 	default:
 		return 0

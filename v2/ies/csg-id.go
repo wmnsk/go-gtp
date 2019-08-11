@@ -13,10 +13,17 @@ func NewCSGID(id uint32) *IE {
 
 // CSGID returns CSGID in uint32 if the type of IE matches.
 func (i *IE) CSGID() uint32 {
+	if len(i.Payload) < 4 {
+		return 0
+	}
+
 	switch i.Type {
 	case CSGID:
 		return binary.BigEndian.Uint32(i.Payload[0:4]) & 0x7ffffff
 	case UserCSGInformation:
+		if len(i.Payload) < 7 {
+			return 0
+		}
 		return binary.BigEndian.Uint32(i.Payload[3:7]) & 0x7ffffff
 	default:
 		return 0

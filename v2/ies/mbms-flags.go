@@ -16,6 +16,9 @@ func (i *IE) MBMSFlags() uint8 {
 	if i.Type != MBMSFlags {
 		return 0
 	}
+	if len(i.Payload) == 0 {
+		return 0
+	}
 
 	return i.Payload[0]
 }
@@ -23,6 +26,9 @@ func (i *IE) MBMSFlags() uint8 {
 // LocalMBMSBearerContextRelease reports whether the MBMS Session Stop Request
 // message is used to release the MBMS Bearer Context locally in the MME/SGSN.
 func (i *IE) LocalMBMSBearerContextRelease() bool {
+	if len(i.Payload) == 0 {
+		return false
+	}
 	switch i.Type {
 	case MBMSFlags:
 		return i.Payload[0]&0x02 == 1
@@ -34,6 +40,9 @@ func (i *IE) LocalMBMSBearerContextRelease() bool {
 // MBMSSessionReEstablishment reports whether the MBMS Session Start Request
 // message is used to re-establish an MBMS session.
 func (i *IE) MBMSSessionReEstablishment() bool {
+	if len(i.Payload) == 0 {
+		return false
+	}
 	switch i.Type {
 	case MBMSFlags:
 		return i.Payload[0]&0x01 == 1

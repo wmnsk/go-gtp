@@ -27,6 +27,9 @@ func NewUserCSGInformation(mcc, mnc string, csgID uint32, mode, lcsg, cmi uint8)
 func (i *IE) AccessMode() uint8 {
 	switch i.Type {
 	case UserCSGInformation:
+		if len(i.Payload) < 8 {
+			return 0
+		}
 		return i.Payload[7] >> 6
 	default:
 		return 0

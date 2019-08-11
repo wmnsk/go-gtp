@@ -55,13 +55,22 @@ func (i *IE) EBIs() []uint8 {
 	if i.Type != S103PDNDataForwardingInfo {
 		return nil
 	}
+	if len(i.Payload) == 0 {
+		return nil
+	}
 
 	var n, offset int
 	switch i.Payload[0] {
 	case 4:
+		if len(i.Payload) < 9 {
+			return nil
+		}
 		n = int(i.Payload[9])
 		offset = 10
 	case 16:
+		if len(i.Payload) < 21 {
+			return nil
+		}
 		n = int(i.Payload[21])
 		offset = 22
 	default:
@@ -70,6 +79,9 @@ func (i *IE) EBIs() []uint8 {
 
 	var ebis []uint8
 	for x := 0; x < n; x++ {
+		if len(i.Payload) <= offset+x {
+			return nil
+		}
 		ebis = append(ebis, i.Payload[offset+x])
 	}
 	return ebis

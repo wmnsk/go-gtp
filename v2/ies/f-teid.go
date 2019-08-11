@@ -33,6 +33,9 @@ func (i *IE) HasIPv4() bool {
 	if i.Type != FullyQualifiedTEID {
 		return false
 	}
+	if len(i.Payload) == 0 {
+		return false
+	}
 
 	return i.Payload[0]&0x80>>7 == 1
 }
@@ -40,6 +43,9 @@ func (i *IE) HasIPv4() bool {
 // HasIPv6 reports whether the IE has IPv6 address in its payload or not.
 func (i *IE) HasIPv6() bool {
 	if i.Type != FullyQualifiedTEID {
+		return false
+	}
+	if len(i.Payload) == 0 {
 		return false
 	}
 
@@ -51,20 +57,32 @@ func (i *IE) InterfaceType() uint8 {
 	if i.Type != FullyQualifiedTEID {
 		return 0
 	}
+	if len(i.Payload) == 0 {
+		return 0
+	}
 
 	return i.Payload[0] & 0x3f
 }
 
 // GREKey returns GREKey in uint32 if the type of IE matches.
 func (i *IE) GREKey() uint32 {
+	if len(i.Payload) < 6 {
+		return 0
+	}
 	switch i.Type {
 	case FullyQualifiedTEID:
 		return binary.BigEndian.Uint32(i.Payload[1:5])
 	case S103PDNDataForwardingInfo:
 		switch i.Payload[0] {
 		case 4:
+			if len(i.Payload) < 9 {
+				return 0
+			}
 			return binary.BigEndian.Uint32(i.Payload[5:9])
 		case 16:
+			if len(i.Payload) < 21 {
+				return 0
+			}
 			return binary.BigEndian.Uint32(i.Payload[17:21])
 		default:
 			return 0
@@ -76,14 +94,23 @@ func (i *IE) GREKey() uint32 {
 
 // TEID returns TEID in uint32 if the type of IE matches.
 func (i *IE) TEID() uint32 {
+	if len(i.Payload) < 5 {
+		return 0
+	}
 	switch i.Type {
 	case FullyQualifiedTEID:
 		return binary.BigEndian.Uint32(i.Payload[1:5])
 	case S1UDataForwarding:
 		switch i.Payload[0] {
 		case 4:
+			if len(i.Payload) < 9 {
+				return 0
+			}
 			return binary.BigEndian.Uint32(i.Payload[5:9])
 		case 16:
+			if len(i.Payload) < 21 {
+				return 0
+			}
 			return binary.BigEndian.Uint32(i.Payload[17:21])
 		default:
 			return 0

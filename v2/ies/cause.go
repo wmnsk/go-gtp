@@ -22,6 +22,9 @@ func (i *IE) Cause() uint8 {
 	if i.Type != Cause {
 		return 0
 	}
+	if len(i.Payload) == 0 {
+		return 0
+	}
 
 	return i.Payload[0]
 }
@@ -29,6 +32,10 @@ func (i *IE) Cause() uint8 {
 // IsRemoteCause returns IsRemoteCause in bool if the type of IE matches.
 func (i *IE) IsRemoteCause() bool {
 	if i.Type != Cause {
+		return false
+	}
+
+	if len(i.Payload) < 2 {
 		return false
 	}
 
@@ -44,6 +51,10 @@ func (i *IE) IsBearerContextIEError() bool {
 		return false
 	}
 
+	if len(i.Payload) < 2 {
+		return false
+	}
+
 	if i.Payload[1]>>1&0x01 == 1 {
 		return true
 	}
@@ -53,6 +64,10 @@ func (i *IE) IsBearerContextIEError() bool {
 // IsPDNConnectionIEError returns IsPDNConnectionIEError in bool if the type of IE matches.
 func (i *IE) IsPDNConnectionIEError() bool {
 	if i.Type != Cause {
+		return false
+	}
+
+	if len(i.Payload) < 2 {
 		return false
 	}
 

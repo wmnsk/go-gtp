@@ -14,6 +14,9 @@ func (i *IE) FullyQualifiedDomainName() string {
 	if i.Type != FullyQualifiedDomainName {
 		return ""
 	}
+	if len(i.Payload) == 0 {
+		return ""
+	}
 
 	return string(i.Payload)
 }

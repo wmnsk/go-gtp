@@ -38,6 +38,9 @@ func (i *IE) AccessPointName() string {
 			break
 		}
 		l := int(i.Payload[offset])
+		if offset+l+1 > max {
+			break
+		}
 		apn = append(apn, string(i.Payload[offset+1:offset+l+1]))
 		offset += l + 1
 	}

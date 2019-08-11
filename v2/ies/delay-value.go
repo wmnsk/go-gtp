@@ -14,7 +14,10 @@ func NewDelayValue(delay time.Duration) *IE {
 // DelayValue returns DelayValue in time.Duration if the type of IE matches.
 func (i *IE) DelayValue() time.Duration {
 	if i.Type != DelayValue {
-		return time.Duration(0)
+		return 0
+	}
+	if len(i.Payload) == 0 {
+		return 0
 	}
 
 	return time.Duration(i.Payload[0]/50) * time.Millisecond

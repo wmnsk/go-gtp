@@ -13,6 +13,10 @@ func NewAllocationRetensionPriority(pci, pl, pvi uint8) *IE {
 
 // PreemptionCapability reports whether the preemption capability is set to enabled if the type of IE matches.
 func (i *IE) PreemptionCapability() bool {
+	if len(i.Payload) == 0 {
+		return false
+	}
+
 	switch i.Type {
 	case AllocationRetensionPriority, BearerQoS:
 		return (i.Payload[0] & 0x40) == 1
@@ -23,6 +27,10 @@ func (i *IE) PreemptionCapability() bool {
 
 // PriorityLevel returns PriorityLevel in uint8 if the type of IE matches.
 func (i *IE) PriorityLevel() uint8 {
+	if len(i.Payload) == 0 {
+		return 0
+	}
+
 	switch i.Type {
 	case AllocationRetensionPriority, BearerQoS:
 		return i.Payload[0] & 0x3c
@@ -33,6 +41,10 @@ func (i *IE) PriorityLevel() uint8 {
 
 // PreemptionVulnerability reports whether the preemption vulnerability is set to enabled if the type of IE matches.
 func (i *IE) PreemptionVulnerability() bool {
+	if len(i.Payload) == 0 {
+		return false
+	}
+
 	switch i.Type {
 	case AllocationRetensionPriority, BearerQoS:
 		return (i.Payload[0] & 0x01) == 1
