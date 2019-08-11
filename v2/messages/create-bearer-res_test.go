@@ -26,7 +26,7 @@ func TestCreateBearerResponse(t *testing.T) {
 					ies.NewBearerQoS(1, 2, 1, 0xff, 0x1111111111, 0x2222222222, 0x1111111111, 0x2222222222),
 				),
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x48, 0x60, 0x00, 0x31, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// Cause
@@ -43,7 +43,7 @@ func TestCreateBearerResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseCreateBearerResponse(b)
 		if err != nil {
 			return nil, err

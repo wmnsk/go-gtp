@@ -34,7 +34,7 @@ func TestCreateSessionResponse(t *testing.T) {
 				ies.NewFullyQualifiedCSID("1.1.1.3", 1).WithInstance(1),
 				ies.NewChargingID(1),
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x48, 0x21, 0x00, 0x7d, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// Cause
@@ -66,7 +66,7 @@ func TestCreateSessionResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseCreateSessionResponse(b)
 		if err != nil {
 			return nil, err

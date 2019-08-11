@@ -188,7 +188,7 @@ func (c *CreatePDPContextResponse) MarshalTo(b []byte) error {
 	return c.Header.MarshalTo(b)
 }
 
-// ParseCreatePDPContextResponse Parses a given byte sequence as a CreatePDPContextResponse.
+// ParseCreatePDPContextResponse parses a given byte sequence as a CreatePDPContextResponse.
 func ParseCreatePDPContextResponse(b []byte) (*CreatePDPContextResponse, error) {
 	c := &CreatePDPContextResponse{}
 	if err := c.UnmarshalBinary(b); err != nil {
@@ -197,7 +197,7 @@ func ParseCreatePDPContextResponse(b []byte) (*CreatePDPContextResponse, error) 
 	return c, nil
 }
 
-// UnmarshalBinary Parses a given byte sequence as a CreatePDPContextResponse.
+// UnmarshalBinary parses a given byte sequence as a CreatePDPContextResponse.
 func (c *CreatePDPContextResponse) UnmarshalBinary(b []byte) error {
 	var err error
 	c.Header, err = ParseHeader(b)

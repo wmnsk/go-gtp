@@ -88,7 +88,7 @@ type Message interface {
 }
 
 // Marshal returns the byte sequence generated from a Message instance.
-// Better to use MarshalXxx instead if you know the name of message to be Marshald.
+// Better to use MarshalXxx instead if you know the name of message to be Serialized.
 func Marshal(g Message) ([]byte, error) {
 	b := make([]byte, g.MarshalLen())
 	if err := g.MarshalTo(b); err != nil {

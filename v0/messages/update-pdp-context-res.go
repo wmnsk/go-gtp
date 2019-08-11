@@ -170,7 +170,7 @@ func (u *UpdatePDPContextResponse) MarshalTo(b []byte) error {
 	return u.Header.MarshalTo(b)
 }
 
-// ParseUpdatePDPContextResponse Parses a given byte sequence as a UpdatePDPContextResponse.
+// ParseUpdatePDPContextResponse parses a given byte sequence as a UpdatePDPContextResponse.
 func ParseUpdatePDPContextResponse(b []byte) (*UpdatePDPContextResponse, error) {
 	u := &UpdatePDPContextResponse{}
 	if err := u.UnmarshalBinary(b); err != nil {
@@ -179,7 +179,7 @@ func ParseUpdatePDPContextResponse(b []byte) (*UpdatePDPContextResponse, error) 
 	return u, nil
 }
 
-// UnmarshalBinary Parses a given byte sequence as a UpdatePDPContextResponse.
+// UnmarshalBinary parses a given byte sequence as a UpdatePDPContextResponse.
 func (u *UpdatePDPContextResponse) UnmarshalBinary(b []byte) error {
 	var err error
 	u.Header, err = ParseHeader(b)

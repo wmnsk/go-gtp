@@ -16,7 +16,7 @@ func TestIE(t *testing.T) {
 	cases := []struct {
 		description string
 		structured  *ies.IE
-		Marshald  []byte
+		Serialized  []byte
 	}{
 		{
 			"Cause",
@@ -225,13 +225,13 @@ func TestIE(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if diff := cmp.Diff(got, c.Marshald); diff != "" {
+			if diff := cmp.Diff(got, c.Serialized); diff != "" {
 				t.Error(diff)
 			}
 		})
 
 		t.Run("Parse/"+c.description, func(t *testing.T) {
-			got, err := ies.Parse(c.Marshald)
+			got, err := ies.Parse(c.Serialized)
 			if err != nil {
 				t.Fatal(err)
 			}

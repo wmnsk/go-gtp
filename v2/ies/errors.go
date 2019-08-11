@@ -9,7 +9,7 @@ import "errors"
 // Error definitions.
 var (
 	ErrTooShortToParse = errors.New("too short to decode as GTP")
-	ErrInvalidLength    = errors.New("length value is invalid")
+	ErrInvalidLength   = errors.New("length value is invalid")
 
 	ErrInvalidType = errors.New("invalid type")
 	ErrIENotFound  = errors.New("could not find the specified IE in a grouped IE")

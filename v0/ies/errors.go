@@ -8,7 +8,7 @@ import "github.com/pkg/errors"
 
 // Error definitions.
 var (
-	ErrInvalidLength       = errors.New("got invalid length")
+	ErrInvalidLength     = errors.New("got invalid length")
 	ErrTooShortToMarshal = errors.New("too short to Marshal")
-	ErrTooShortToParse    = errors.New("too short to Parse as GTPv0 IE")
+	ErrTooShortToParse   = errors.New("too short to Parse as GTPv0 IE")
 )

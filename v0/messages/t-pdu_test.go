@@ -19,7 +19,7 @@ func TestTPDU(t *testing.T) {
 				testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
 				[]byte{0xde, 0xad, 0xbe, 0xef},
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x1e, 0xff, 0x00, 0x04,
 				// SequenceNumber
@@ -34,7 +34,7 @@ func TestTPDU(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseTPDU(b)
 		if err != nil {
 			return nil, err

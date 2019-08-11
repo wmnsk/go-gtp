@@ -8,6 +8,6 @@ import "errors"
 
 // Error definitions.
 var (
-	ErrInvalidLength    = errors.New("length value is invalid")
+	ErrInvalidLength   = errors.New("length value is invalid")
 	ErrTooShortToParse = errors.New("too short to decode as GTP")
 )

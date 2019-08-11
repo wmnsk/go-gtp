@@ -21,7 +21,7 @@ func TestReleaseAccessBearersResponse(t *testing.T) {
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x48, 0xab, 0x00, 0x0e, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				0x02, 0x00, 0x02, 0x00, 0x10, 0x00,
@@ -29,7 +29,7 @@ func TestReleaseAccessBearersResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseReleaseAccessBearersResponse(b)
 		if err != nil {
 			return nil, err

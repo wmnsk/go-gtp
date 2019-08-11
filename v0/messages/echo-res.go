@@ -87,7 +87,7 @@ func (e *EchoResponse) MarshalTo(b []byte) error {
 	return e.Header.MarshalTo(b)
 }
 
-// ParseEchoResponse Parses a given byte sequence as a EchoResponse.
+// ParseEchoResponse parses a given byte sequence as a EchoResponse.
 func ParseEchoResponse(b []byte) (*EchoResponse, error) {
 	e := &EchoResponse{}
 	if err := e.UnmarshalBinary(b); err != nil {
@@ -96,7 +96,7 @@ func ParseEchoResponse(b []byte) (*EchoResponse, error) {
 	return e, nil
 }
 
-// UnmarshalBinary Parses a given byte sequence as a EchoResponse.
+// UnmarshalBinary parses a given byte sequence as a EchoResponse.
 func (e *EchoResponse) UnmarshalBinary(b []byte) error {
 	var err error
 	e.Header, err = ParseHeader(b)

@@ -23,7 +23,7 @@ func TestDeleteBearerRequest(t *testing.T) {
 				ies.NewEPSBearerID(5),
 				ies.NewCause(v2.CauseISRDeactivation, 0, 0, 0, nil),
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x48, 0x63, 0x00, 0x13, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// EBI
@@ -34,7 +34,7 @@ func TestDeleteBearerRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseDeleteBearerRequest(b)
 		if err != nil {
 			return nil, err

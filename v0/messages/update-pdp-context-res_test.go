@@ -28,7 +28,7 @@ func TestUpdatePDPContextResponse(t *testing.T) {
 				ies.NewGSNAddress("2.2.2.2"),
 				ies.NewGSNAddress("3.3.3.3"),
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x1e, 0x13, 0x00, 0x28,
 				// SequenceNumber
@@ -60,7 +60,7 @@ func TestUpdatePDPContextResponse(t *testing.T) {
 				testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
 				ies.NewCause(v0.CauseNoResourcesAvailable),
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x1e, 0x13, 0x00, 0x02,
 				// SequenceNumber
@@ -75,7 +75,7 @@ func TestUpdatePDPContextResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseUpdatePDPContextResponse(b)
 		if err != nil {
 			return nil, err

@@ -20,7 +20,7 @@ func TestEchoResponse(t *testing.T) {
 				testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
 				ies.NewRecovery(0x80),
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Hewader
 				0x1e, 0x02, 0x00, 0x02,
 				// SequenceNumber
@@ -35,7 +35,7 @@ func TestEchoResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseEchoResponse(b)
 		if err != nil {
 			return nil, err

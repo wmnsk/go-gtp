@@ -18,7 +18,7 @@ func TestVersionNotSupported(t *testing.T) {
 			Structured: messages.NewVersionNotSupported(
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x32, 0x03, 0x00, 0x04, 0x11, 0x22, 0x33, 0x44,
 				0x00, 0x01, 0x00, 0x00,
@@ -26,7 +26,7 @@ func TestVersionNotSupported(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseVersionNotSupported(b)
 		if err != nil {
 			return nil, err

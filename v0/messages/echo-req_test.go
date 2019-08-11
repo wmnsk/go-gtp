@@ -18,7 +18,7 @@ func TestEchoRequest(t *testing.T) {
 			Structured: messages.NewEchoRequest(
 				testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x1e, 0x01, 0x00, 0x00,
 				// SequenceNumber
@@ -31,7 +31,7 @@ func TestEchoRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseEchoRequest(b)
 		if err != nil {
 			return nil, err

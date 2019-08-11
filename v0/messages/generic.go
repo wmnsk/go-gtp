@@ -65,7 +65,7 @@ func (g *Generic) MarshalTo(b []byte) error {
 	return g.Header.MarshalTo(b)
 }
 
-// ParseGeneric Parses a given byte sequence as a Generic.
+// ParseGeneric parses a given byte sequence as a Generic.
 func ParseGeneric(b []byte) (*Generic, error) {
 	g := &Generic{}
 	if err := g.UnmarshalBinary(b); err != nil {
@@ -74,7 +74,7 @@ func ParseGeneric(b []byte) (*Generic, error) {
 	return g, nil
 }
 
-// UnmarshalBinary Parses a given byte sequence as a Generic.
+// UnmarshalBinary parses a given byte sequence as a Generic.
 func (g *Generic) UnmarshalBinary(b []byte) error {
 	var err error
 	g.Header, err = ParseHeader(b)

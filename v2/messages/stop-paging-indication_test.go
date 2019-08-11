@@ -20,7 +20,7 @@ func TestStopPagingIndication(t *testing.T) {
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ies.NewIMSI("123451234567890"),
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x48, 0x49, 0x00, 0x14, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// IMSI
@@ -29,7 +29,7 @@ func TestStopPagingIndication(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseStopPagingIndication(b)
 		if err != nil {
 			return nil, err

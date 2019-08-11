@@ -30,14 +30,14 @@ func TestHeader(t *testing.T) {
 					0xde, 0xad, 0xbe, 0xef,
 				},
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				0x32, 0x10, 0x00, 0x08, 0xde, 0xad, 0xbe, 0xef,
 				0xca, 0xfe, 0x00, 0x00, 0xde, 0xad, 0xbe, 0xef,
 			},
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseHeader(b)
 		if err != nil {
 			return nil, err

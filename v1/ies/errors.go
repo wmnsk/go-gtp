@@ -8,7 +8,7 @@ import "github.com/pkg/errors"
 
 // Error definitions.
 var (
-	ErrInvalidLength       = errors.New("got invalid length ")
+	ErrInvalidLength     = errors.New("got invalid length ")
 	ErrTooShortToMarshal = errors.New("too short to serialize")
-	ErrTooShortToParse    = errors.New("too short to decode as GTPv1 IE")
+	ErrTooShortToParse   = errors.New("too short to decode as GTPv1 IE")
 )

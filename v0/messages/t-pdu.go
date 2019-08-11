@@ -41,7 +41,7 @@ func (t *TPDU) MarshalTo(b []byte) error {
 	return t.Header.MarshalTo(b)
 }
 
-// ParseTPDU Parses a given byte sequence as a TPDU.
+// ParseTPDU parses a given byte sequence as a TPDU.
 func ParseTPDU(b []byte) (*TPDU, error) {
 	t := &TPDU{}
 	if err := t.UnmarshalBinary(b); err != nil {
@@ -50,7 +50,7 @@ func ParseTPDU(b []byte) (*TPDU, error) {
 	return t, nil
 }
 
-// UnmarshalBinary Parses a given byte sequence as a TPDU.
+// UnmarshalBinary parses a given byte sequence as a TPDU.
 func (t *TPDU) UnmarshalBinary(b []byte) error {
 	var err error
 	t.Header, err = ParseHeader(b)

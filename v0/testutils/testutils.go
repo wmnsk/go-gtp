@@ -12,8 +12,8 @@ import (
 	"github.com/wmnsk/go-gtp/v0/messages"
 )
 
-// Marshalable is just for testing v2.Messages. Don't use this.
-type Marshalable interface {
+// Serializable is just for testing v2.Messages. Don't use this.
+type Serializable interface {
 	Marshal() ([]byte, error)
 	MarshalLen() int
 }
@@ -21,12 +21,12 @@ type Marshalable interface {
 // TestCase is just for testing v2.Messages. Don't use this.
 type TestCase struct {
 	Description string
-	Structured  Marshalable
-	Marshald  []byte
+	Structured  Serializable
+	Serialized  []byte
 }
 
 // ParseFunc is just for testing v2.Messages. Don't use this.
-type ParseFunc func([]byte) (Marshalable, error)
+type ParseFunc func([]byte) (Serializable, error)
 
 // TestFlow is just for testing v2.Messages. Don't use this.
 var TestFlow = struct {
@@ -43,7 +43,7 @@ func Run(t *testing.T, cases []TestCase, Parse ParseFunc) {
 	for _, c := range cases {
 		t.Run(c.Description, func(t *testing.T) {
 			t.Run("Parse", func(t *testing.T) {
-				v, err := Parse(c.Marshald)
+				v, err := Parse(c.Serialized)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -59,13 +59,13 @@ func Run(t *testing.T, cases []TestCase, Parse ParseFunc) {
 					t.Fatal(err)
 				}
 
-				if got, want := b, c.Marshald; !verify.Values(t, "", got, want) {
+				if got, want := b, c.Serialized; !verify.Values(t, "", got, want) {
 					t.Fail()
 				}
 			})
 
 			t.Run("Len", func(t *testing.T) {
-				if got, want := c.Structured.MarshalLen(), len(c.Marshald); got != want {
+				if got, want := c.Structured.MarshalLen(), len(c.Serialized); got != want {
 					t.Fatalf("got %v want %v", got, want)
 				}
 			})
@@ -80,7 +80,7 @@ func Run(t *testing.T, cases []TestCase, Parse ParseFunc) {
 					return
 				}
 
-				Parsed, err := messages.Parse(c.Marshald)
+				Parsed, err := messages.Parse(c.Serialized)
 				if err != nil {
 					t.Fatal(err)
 				}

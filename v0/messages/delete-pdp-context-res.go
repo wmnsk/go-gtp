@@ -86,7 +86,7 @@ func (d *DeletePDPContextResponse) MarshalTo(b []byte) error {
 	return d.Header.MarshalTo(b)
 }
 
-// ParseDeletePDPContextResponse Parses a given byte sequence as a DeletePDPContextResponsd.
+// ParseDeletePDPContextResponse parses a given byte sequence as a DeletePDPContextResponsd.
 func ParseDeletePDPContextResponse(b []byte) (*DeletePDPContextResponse, error) {
 	d := &DeletePDPContextResponse{}
 	if err := d.UnmarshalBinary(b); err != nil {
@@ -95,7 +95,7 @@ func ParseDeletePDPContextResponse(b []byte) (*DeletePDPContextResponse, error) 
 	return d, nil
 }
 
-// UnmarshalBinary Parses a given byte sequence as a DeletePDPContextResponsd.
+// UnmarshalBinary parses a given byte sequence as a DeletePDPContextResponsd.
 func (d *DeletePDPContextResponse) UnmarshalBinary(b []byte) error {
 	var err error
 	d.Header, err = ParseHeader(b)

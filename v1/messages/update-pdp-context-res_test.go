@@ -26,7 +26,7 @@ func TestUpdatePDPContextResponse(t *testing.T) {
 				ies.NewGSNAddress("1.1.1.1"),
 				ies.NewGSNAddress("2.2.2.2"),
 			),
-			Marshald: []byte{
+			Serialized: []byte{
 				// Header
 				0x32, 0x13, 0x00, 0x20, 0x11, 0x22, 0x33, 0x44,
 				0x00, 0x01, 0x00, 0x00,
@@ -46,7 +46,7 @@ func TestUpdatePDPContextResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
 		v, err := messages.ParseUpdatePDPContextResponse(b)
 		if err != nil {
 			return nil, err
