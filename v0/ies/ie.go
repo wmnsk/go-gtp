@@ -106,12 +106,12 @@ func (i *IE) UnmarshalBinary(b []byte) error {
 
 	i.Type = b[0]
 	if i.IsTV() {
-		return ParseTVFromBytes(i, b)
+		return parseTVFromBytes(i, b)
 	}
-	return ParseTLVFromBytes(i, b)
+	return parseTLVFromBytes(i, b)
 }
 
-func ParseTVFromBytes(i *IE, b []byte) error {
+func parseTVFromBytes(i *IE, b []byte) error {
 	l := len(b)
 	if l < 2 {
 		return ErrTooShortToParse
@@ -125,7 +125,7 @@ func ParseTVFromBytes(i *IE, b []byte) error {
 	return nil
 }
 
-func ParseTLVFromBytes(i *IE, b []byte) error {
+func parseTLVFromBytes(i *IE, b []byte) error {
 	l := len(b)
 	if l < 3 {
 		return ErrTooShortToParse
@@ -233,6 +233,7 @@ func newUint32ValIE(t uint8, v uint32) *IE {
 	return i
 }
 
-func newStringIE(t uint8, str string) *IE {
-	return New(t, []byte(str))
-}
+// left for future use.
+//func newStringIE(t uint8, str string) *IE {
+//	return New(t, []byte(str))
+//}
