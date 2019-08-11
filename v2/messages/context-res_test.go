@@ -26,7 +26,7 @@ func TestContextResponse(t *testing.T) {
 				// ies.NewMMContext(),  XXX- implement!
 				ies.NewFullyQualifiedTEID(v2.IFTypeS10MMEGTPC, 0xffffffff, "1.1.1.1", ""),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0x83, 0x00, 0x27, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// Cause
@@ -39,8 +39,8 @@ func TestContextResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeContextResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseContextResponse(b)
 		if err != nil {
 			return nil, err
 		}

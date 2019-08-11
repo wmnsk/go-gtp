@@ -17,7 +17,7 @@ func TestModifyAccessBearersRequest(t *testing.T) {
 		{
 			Description: "Normal/NoIE",
 			Structured:  messages.NewModifyAccessBearersRequest(testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0xd3, 0x00, 0x08, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 			},
@@ -27,7 +27,7 @@ func TestModifyAccessBearersRequest(t *testing.T) {
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ies.NewIndicationFromOctets(0xa1, 0x08, 0x15, 0x10, 0x88, 0x81, 0x40),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0xd3, 0x00, 0x13, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// Indication
@@ -36,8 +36,8 @@ func TestModifyAccessBearersRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeModifyAccessBearersRequest(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseModifyAccessBearersRequest(b)
 		if err != nil {
 			return nil, err
 		}

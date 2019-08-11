@@ -16,15 +16,15 @@ func TestVersionNotSupportedIndication(t *testing.T) {
 		{
 			Description: "Normal/CauseOnly",
 			Structured:  messages.NewVersionNotSupportedIndication(testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0x03, 0x00, 0x08, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 			},
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeVersionNotSupportedIndication(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseVersionNotSupportedIndication(b)
 		if err != nil {
 			return nil, err
 		}

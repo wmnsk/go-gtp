@@ -50,81 +50,81 @@ func NewReleaseAccessBearersRequest(teid, seq uint32, ie ...*ies.IE) *ReleaseAcc
 	return r
 }
 
-// Serialize serializes ReleaseAccessBearersRequest into bytes.
-func (r *ReleaseAccessBearersRequest) Serialize() ([]byte, error) {
-	b := make([]byte, r.Len())
-	if err := r.SerializeTo(b); err != nil {
+// Marshal serializes ReleaseAccessBearersRequest into bytes.
+func (r *ReleaseAccessBearersRequest) Marshal() ([]byte, error) {
+	b := make([]byte, r.MarshalLen())
+	if err := r.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo serializes ReleaseAccessBearersRequest into bytes.
-func (r *ReleaseAccessBearersRequest) SerializeTo(b []byte) error {
+// MarshalTo serializes ReleaseAccessBearersRequest into bytes.
+func (r *ReleaseAccessBearersRequest) MarshalTo(b []byte) error {
 	if r.Header.Payload != nil {
 		r.Header.Payload = nil
 	}
-	r.Header.Payload = make([]byte, r.Len()-r.Header.Len())
+	r.Header.Payload = make([]byte, r.MarshalLen()-r.Header.MarshalLen())
 
 	offset := 0
 	if ie := r.ListOfRABs; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := r.OriginatingNode; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := r.IndicationFlags; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := r.SecondaryRATUsageDataReport; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := r.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(r.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range r.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(r.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(r.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	r.Header.SetLength()
-	return r.Header.SerializeTo(b)
+	return r.Header.MarshalTo(b)
 }
 
-// DecodeReleaseAccessBearersRequest decodes given bytes as ReleaseAccessBearersRequest.
-func DecodeReleaseAccessBearersRequest(b []byte) (*ReleaseAccessBearersRequest, error) {
+// ParseReleaseAccessBearersRequest decodes given bytes as ReleaseAccessBearersRequest.
+func ParseReleaseAccessBearersRequest(b []byte) (*ReleaseAccessBearersRequest, error) {
 	r := &ReleaseAccessBearersRequest{}
-	if err := r.DecodeFromBytes(b); err != nil {
+	if err := r.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return r, nil
 }
 
-// DecodeFromBytes decodes given bytes as ReleaseAccessBearersRequest.
-func (r *ReleaseAccessBearersRequest) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes as ReleaseAccessBearersRequest.
+func (r *ReleaseAccessBearersRequest) UnmarshalBinary(b []byte) error {
 	var err error
-	r.Header, err = DecodeHeader(b)
+	r.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (r *ReleaseAccessBearersRequest) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	decodedIEs, err := ies.DecodeMultiIEs(r.Header.Payload)
+	decodedIEs, err := ies.ParseMultiIEs(r.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -159,37 +159,37 @@ func (r *ReleaseAccessBearersRequest) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length in int.
-func (r *ReleaseAccessBearersRequest) Len() int {
-	l := r.Header.Len() - len(r.Header.Payload)
+// MarshalLen returns the serial length in int.
+func (r *ReleaseAccessBearersRequest) MarshalLen() int {
+	l := r.Header.MarshalLen() - len(r.Header.Payload)
 	if ie := r.ListOfRABs; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := r.OriginatingNode; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := r.IndicationFlags; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := r.SecondaryRATUsageDataReport; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := r.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range r.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (r *ReleaseAccessBearersRequest) SetLength() {
-	r.Header.Length = uint16(r.Len() - 4)
+	r.Header.Length = uint16(r.MarshalLen() - 4)
 }
 
 // MessageTypeName returns the name of protocol.

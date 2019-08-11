@@ -27,7 +27,7 @@ func TestDeleteSessionRequest(t *testing.T) {
 				ies.NewIndicationFromOctets(0xa1, 0x08, 0x15, 0x10, 0x88, 0x81, 0x40),
 				ies.NewULITimestamp(time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0x24, 0x00, 0x31, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// EBI
@@ -44,8 +44,8 @@ func TestDeleteSessionRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeDeleteSessionRequest(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseDeleteSessionRequest(b)
 		if err != nil {
 			return nil, err
 		}

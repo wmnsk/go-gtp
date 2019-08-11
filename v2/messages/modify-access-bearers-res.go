@@ -59,93 +59,93 @@ func NewModifyAccessBearersResponse(teid, seq uint32, ie ...*ies.IE) *ModifyAcce
 	return m
 }
 
-// Serialize serializes ModifyAccessBearersResponse into bytes.
-func (m *ModifyAccessBearersResponse) Serialize() ([]byte, error) {
-	b := make([]byte, m.Len())
-	if err := m.SerializeTo(b); err != nil {
+// Marshal serializes ModifyAccessBearersResponse into bytes.
+func (m *ModifyAccessBearersResponse) Marshal() ([]byte, error) {
+	b := make([]byte, m.MarshalLen())
+	if err := m.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo serializes ModifyAccessBearersResponse into bytes.
-func (m *ModifyAccessBearersResponse) SerializeTo(b []byte) error {
+// MarshalTo serializes ModifyAccessBearersResponse into bytes.
+func (m *ModifyAccessBearersResponse) MarshalTo(b []byte) error {
 	if m.Header.Payload != nil {
 		m.Header.Payload = nil
 	}
-	m.Header.Payload = make([]byte, m.Len()-m.Header.Len())
+	m.Header.Payload = make([]byte, m.MarshalLen()-m.Header.MarshalLen())
 
 	offset := 0
 	if ie := m.Cause; ie != nil {
-		if err := ie.SerializeTo(m.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := m.BearerContextsModified; ie != nil {
-		if err := ie.SerializeTo(m.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := m.BearerContextsMarkedForRemoval; ie != nil {
-		if err := ie.SerializeTo(m.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := m.Recovery; ie != nil {
-		if err := ie.SerializeTo(m.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := m.IndicationFlags; ie != nil {
-		if err := ie.SerializeTo(m.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := m.SGWNodeLoadControlInformation; ie != nil {
-		if err := ie.SerializeTo(m.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 	if ie := m.PrivateExtension; ie != nil {
-		if err := ie.SerializeTo(m.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	for _, ie := range m.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(m.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(m.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	m.Header.SetLength()
-	return m.Header.SerializeTo(b)
+	return m.Header.MarshalTo(b)
 }
 
-// DecodeModifyAccessBearersResponse decodes given bytes as ModifyAccessBearersResponse.
-func DecodeModifyAccessBearersResponse(b []byte) (*ModifyAccessBearersResponse, error) {
+// ParseModifyAccessBearersResponse decodes given bytes as ModifyAccessBearersResponse.
+func ParseModifyAccessBearersResponse(b []byte) (*ModifyAccessBearersResponse, error) {
 	m := &ModifyAccessBearersResponse{}
-	if err := m.DecodeFromBytes(b); err != nil {
+	if err := m.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-// DecodeFromBytes decodes given bytes as ModifyAccessBearersResponse.
-func (m *ModifyAccessBearersResponse) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes as ModifyAccessBearersResponse.
+func (m *ModifyAccessBearersResponse) UnmarshalBinary(b []byte) error {
 	var err error
-	m.Header, err = DecodeHeader(b)
+	m.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func (m *ModifyAccessBearersResponse) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	decodedIEs, err := ies.DecodeMultiIEs(m.Header.Payload)
+	decodedIEs, err := ies.ParseMultiIEs(m.Header.Payload)
 	if err != nil {
 		return err
 	}
@@ -187,43 +187,43 @@ func (m *ModifyAccessBearersResponse) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length in int.
-func (m *ModifyAccessBearersResponse) Len() int {
-	l := m.Header.Len() - len(m.Header.Payload)
+// MarshalLen returns the serial length in int.
+func (m *ModifyAccessBearersResponse) MarshalLen() int {
+	l := m.Header.MarshalLen() - len(m.Header.Payload)
 	if ie := m.Cause; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := m.BearerContextsModified; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := m.BearerContextsMarkedForRemoval; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := m.Recovery; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := m.IndicationFlags; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := m.SGWNodeLoadControlInformation; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	if ie := m.PrivateExtension; ie != nil {
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 
 	for _, ie := range m.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length field.
 func (m *ModifyAccessBearersResponse) SetLength() {
-	m.Header.Length = uint16(m.Len() - 4)
+	m.Header.Length = uint16(m.MarshalLen() - 4)
 }
 
 // MessageTypeName returns the name of protocol.

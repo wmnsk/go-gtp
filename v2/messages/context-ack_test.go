@@ -24,7 +24,7 @@ func TestContextAcknowledge(t *testing.T) {
 				ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
 				ies.NewFullyQualifiedTEID(v2.IFTypeS4SGSNGTPU, 0xffffffff, "1.1.1.1", ""),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0x84, 0x00, 0x1b, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// Cause
@@ -35,8 +35,8 @@ func TestContextAcknowledge(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeContextAcknowledge(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseContextAcknowledge(b)
 		if err != nil {
 			return nil, err
 		}

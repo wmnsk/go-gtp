@@ -42,7 +42,7 @@ func TestCreateSessionRequest(t *testing.T) {
 				ies.NewRATType(v2.RATTypeEUTRAN),
 				ies.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0x20, 0x00, 0xca, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// IMSI
@@ -89,8 +89,8 @@ func TestCreateSessionRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeCreateSessionRequest(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseCreateSessionRequest(b)
 		if err != nil {
 			return nil, err
 		}

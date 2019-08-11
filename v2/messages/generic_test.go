@@ -21,7 +21,7 @@ func TestGeneric(t *testing.T) {
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ies.NewRecovery(0x80),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				0x48, 0x01, 0x00, 0x0d, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00, 0x03, 0x00, 0x01, 0x00,
 				0x80,
 			},
@@ -32,15 +32,15 @@ func TestGeneric(t *testing.T) {
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ies.NewRecovery(0x80),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				0x48, 0x01, 0x00, 0x0d, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00, 0x03, 0x00, 0x01, 0x00,
 				0x80,
 			},
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeGeneric(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseGeneric(b)
 		if err != nil {
 			return nil, err
 		}

@@ -34,50 +34,50 @@ func NewVersionNotSupportedIndication(teid, seq uint32, ie ...*ies.IE) *VersionN
 	return v
 }
 
-// Serialize serializes VersionNotSupportedIndication into bytes.
-func (v *VersionNotSupportedIndication) Serialize() ([]byte, error) {
-	b := make([]byte, v.Len())
-	if err := v.SerializeTo(b); err != nil {
+// Marshal serializes VersionNotSupportedIndication into bytes.
+func (v *VersionNotSupportedIndication) Marshal() ([]byte, error) {
+	b := make([]byte, v.MarshalLen())
+	if err := v.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo serializes VersionNotSupportedIndication into bytes.
-func (v *VersionNotSupportedIndication) SerializeTo(b []byte) error {
+// MarshalTo serializes VersionNotSupportedIndication into bytes.
+func (v *VersionNotSupportedIndication) MarshalTo(b []byte) error {
 	if v.Header.Payload != nil {
 		v.Header.Payload = nil
 	}
-	v.Header.Payload = make([]byte, v.Len()-v.Header.Len())
+	v.Header.Payload = make([]byte, v.MarshalLen()-v.Header.MarshalLen())
 
 	offset := 0
 	for _, ie := range v.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		if err := ie.SerializeTo(v.Header.Payload[offset:]); err != nil {
+		if err := ie.MarshalTo(v.Header.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.Len()
+		offset += ie.MarshalLen()
 	}
 
 	v.Header.SetLength()
-	return v.Header.SerializeTo(b)
+	return v.Header.MarshalTo(b)
 }
 
-// DecodeVersionNotSupportedIndication decodes given bytes as VersionNotSupportedIndication.
-func DecodeVersionNotSupportedIndication(b []byte) (*VersionNotSupportedIndication, error) {
+// ParseVersionNotSupportedIndication decodes given bytes as VersionNotSupportedIndication.
+func ParseVersionNotSupportedIndication(b []byte) (*VersionNotSupportedIndication, error) {
 	v := &VersionNotSupportedIndication{}
-	if err := v.DecodeFromBytes(b); err != nil {
+	if err := v.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return v, nil
 }
 
-// DecodeFromBytes decodes given bytes as VersionNotSupportedIndication.
-func (v *VersionNotSupportedIndication) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary decodes given bytes as VersionNotSupportedIndication.
+func (v *VersionNotSupportedIndication) UnmarshalBinary(b []byte) error {
 	var err error
-	v.Header, err = DecodeHeader(b)
+	v.Header, err = ParseHeader(b)
 	if err != nil {
 		return err
 	}
@@ -85,9 +85,9 @@ func (v *VersionNotSupportedIndication) DecodeFromBytes(b []byte) error {
 		return nil
 	}
 
-	decodedIEs, err := ies.DecodeMultiIEs(v.Header.Payload)
+	decodedIEs, err := ies.ParseMultiIEs(v.Header.Payload)
 	if err != nil {
-		if err == ErrTooShortToDecode {
+		if err == ErrTooShortToParse {
 			return nil
 		}
 		return err
@@ -103,21 +103,21 @@ func (v *VersionNotSupportedIndication) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns the actual length in int.
-func (v *VersionNotSupportedIndication) Len() int {
-	l := v.Header.Len() - len(v.Header.Payload)
+// MarshalLen returns the serial length in int.
+func (v *VersionNotSupportedIndication) MarshalLen() int {
+	l := v.Header.MarshalLen() - len(v.Header.Payload)
 	for _, ie := range v.AdditionalIEs {
 		if ie == nil {
 			continue
 		}
-		l += ie.Len()
+		l += ie.MarshalLen()
 	}
 	return l
 }
 
 // SetLength sets the length in Length fielv.
 func (v *VersionNotSupportedIndication) SetLength() {
-	v.Header.Length = uint16(v.Len() - 4)
+	v.Header.Length = uint16(v.MarshalLen() - 4)
 }
 
 // MessageTypeName returns the name of protocol.

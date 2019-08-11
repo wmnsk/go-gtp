@@ -23,7 +23,7 @@ func TestContextRequest(t *testing.T) {
 				ies.NewPacketTMSI(0xdeadbeef),
 				ies.NewPTMSISignature(0xbeebee),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0x82, 0x00, 0x23, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// IMSI
@@ -36,8 +36,8 @@ func TestContextRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeContextRequest(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseContextRequest(b)
 		if err != nil {
 			return nil, err
 		}

@@ -273,9 +273,9 @@ const (
 
 // Message is an interface that defines GTPv2 messages.
 type Message interface {
-	SerializeTo([]byte) error
-	DecodeFromBytes(b []byte) error
-	Len() int
+	MarshalTo([]byte) error
+	UnmarshalBinary(b []byte) error
+	MarshalLen() int
 	Version() int
 	MessageType() uint8
 	MessageTypeName() string
@@ -285,19 +285,19 @@ type Message interface {
 	SetSequenceNumber(uint32)
 }
 
-// Serialize returns the byte sequence generated from a Message instance.
-// Better to use SerializeXxx instead if you know the name of message to be serialized.
-func Serialize(m Message) ([]byte, error) {
-	b := make([]byte, m.Len())
-	if err := m.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from a Message instance.
+// Better to use MarshalXxx instead if you know the name of message to be serialized.
+func Marshal(m Message) ([]byte, error) {
+	b := make([]byte, m.MarshalLen())
+	if err := m.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
 	return b, nil
 }
 
-// Decode decodes the given bytes as Message.
-func Decode(b []byte) (Message, error) {
+// Parse decodes the given bytes as Message.
+func Parse(b []byte) (Message, error) {
 	var m Message
 
 	switch b[1] {
@@ -347,7 +347,7 @@ func Decode(b []byte) (Message, error) {
 		m = &Generic{}
 	}
 
-	if err := m.DecodeFromBytes(b); err != nil {
+	if err := m.UnmarshalBinary(b); err != nil {
 		return nil, errors.Wrap(err, "failed to decode GTPv2 Message")
 	}
 	return m, nil

@@ -26,7 +26,7 @@ func TestModifyBearerResponse(t *testing.T) {
 					ies.NewFullyQualifiedTEID(v2.IFTypeS1USGWGTPU, 0xffffffff, "1.1.1.3", ""),
 				),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0x23, 0x00, 0x2a, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// Cause
@@ -43,8 +43,8 @@ func TestModifyBearerResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeModifyBearerResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseModifyBearerResponse(b)
 		if err != nil {
 			return nil, err
 		}

@@ -309,48 +309,48 @@ func (i *IE) Instance() uint8 {
 	return i.instance & 0x0f
 }
 
-// Serialize returns the byte sequence generated from an IE instance.
-func (i *IE) Serialize() ([]byte, error) {
-	b := make([]byte, i.Len())
-	if err := i.SerializeTo(b); err != nil {
+// Marshal returns the byte sequence generated from an IE instance.
+func (i *IE) Marshal() ([]byte, error) {
+	b := make([]byte, i.MarshalLen())
+	if err := i.MarshalTo(b); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-// SerializeTo puts the byte sequence in the byte array given as b.
-func (i *IE) SerializeTo(b []byte) error {
+// MarshalTo puts the byte sequence in the byte array given as b.
+func (i *IE) MarshalTo(b []byte) error {
 	b[0] = i.Type
 	binary.BigEndian.PutUint16(b[1:3], i.Length)
 	b[3] = i.instance
 	if i.IsGrouped() {
 		offset := 4
 		for _, ie := range i.ChildIEs {
-			if err := ie.SerializeTo(b[offset:]); err != nil {
+			if err := ie.MarshalTo(b[offset:]); err != nil {
 				return err
 			}
-			offset += ie.Len()
+			offset += ie.MarshalLen()
 		}
 		return nil
 	}
-	copy(b[4:i.Len()], i.Payload)
+	copy(b[4:i.MarshalLen()], i.Payload)
 	return nil
 }
 
-// Decode decodes given byte sequence as a GTPv2 Information Element.
-func Decode(b []byte) (*IE, error) {
+// Parse decodes given byte sequence as a GTPv2 Information Element.
+func Parse(b []byte) (*IE, error) {
 	ie := &IE{}
-	if err := ie.DecodeFromBytes(b); err != nil {
+	if err := ie.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return ie, nil
 }
 
-// DecodeFromBytes sets the values retrieved from byte sequence in GTPv2 IE.
-func (i *IE) DecodeFromBytes(b []byte) error {
+// UnmarshalBinary sets the values retrieved from byte sequence in GTPv2 IE.
+func (i *IE) UnmarshalBinary(b []byte) error {
 	l := len(b)
 	if l < 5 {
-		return ErrTooShortToDecode
+		return ErrTooShortToParse
 	}
 
 	i.Type = b[0]
@@ -364,7 +364,7 @@ func (i *IE) DecodeFromBytes(b []byte) error {
 
 	if i.IsGrouped() {
 		var err error
-		i.ChildIEs, err = DecodeMultiIEs(i.Payload)
+		i.ChildIEs, err = ParseMultiIEs(i.Payload)
 		if err != nil {
 			return err
 		}
@@ -373,12 +373,12 @@ func (i *IE) DecodeFromBytes(b []byte) error {
 	return nil
 }
 
-// Len returns field length in integer.
-func (i *IE) Len() int {
+// MarshalLen returns field length in integer.
+func (i *IE) MarshalLen() int {
 	if i.IsGrouped() {
 		l := 4
 		for _, ie := range i.ChildIEs {
-			l += ie.Len()
+			l += ie.MarshalLen()
 		}
 		return l
 	}
@@ -390,7 +390,7 @@ func (i *IE) SetLength() {
 	if i.IsGrouped() {
 		l := 0
 		for _, ie := range i.ChildIEs {
-			l += ie.Len()
+			l += ie.MarshalLen()
 		}
 		i.Length = uint16(l)
 	}
@@ -432,7 +432,7 @@ func (i *IE) Add(ies ...*IE) {
 	i.Payload = nil
 	i.ChildIEs = append(i.ChildIEs, ies...)
 	for _, ie := range i.ChildIEs {
-		serialized, err := ie.Serialize()
+		serialized, err := ie.Marshal()
 		if err != nil {
 			continue
 		}
@@ -455,7 +455,7 @@ func (i *IE) Remove(typ, instance uint8) {
 		}
 		newChildren = append(newChildren, ie)
 
-		serialized, err := ie.Serialize()
+		serialized, err := ie.Marshal()
 		if err != nil {
 			continue
 		}
@@ -482,23 +482,23 @@ func (i *IE) FindByType(typ, instance uint8) (*IE, error) {
 	return nil, ErrIENotFound
 }
 
-// DecodeMultiIEs decodes multiple IEs at a time.
+// ParseMultiIEs decodes multiple IEs at a time.
 // This is easy and useful but slower than decoding one by one.
 // When you don't know the number of IEs, this is the only way to decode them.
 // See benchmarks in diameter_test.go for the detail.
-func DecodeMultiIEs(b []byte) ([]*IE, error) {
+func ParseMultiIEs(b []byte) ([]*IE, error) {
 	var ies []*IE
 	for {
 		if len(b) == 0 {
 			break
 		}
 
-		i, err := Decode(b)
+		i, err := Parse(b)
 		if err != nil {
 			return nil, err
 		}
 		ies = append(ies, i)
-		b = b[i.Len():]
+		b = b[i.MarshalLen():]
 	}
 	return ies, nil
 }
@@ -533,7 +533,7 @@ func newGroupedIE(itype uint8, ies ...*IE) *IE {
 	i := New(itype, 0x00, make([]byte, 0))
 	i.ChildIEs = ies
 	for _, ie := range i.ChildIEs {
-		serialized, err := ie.Serialize()
+		serialized, err := ie.Marshal()
 		if err != nil {
 			return nil
 		}

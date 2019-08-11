@@ -22,7 +22,7 @@ func TestDeleteBearerResponse(t *testing.T) {
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0x64, 0x00, 0x0e, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// Cause
@@ -31,8 +31,8 @@ func TestDeleteBearerResponse(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeDeleteBearerResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseDeleteBearerResponse(b)
 		if err != nil {
 			return nil, err
 		}

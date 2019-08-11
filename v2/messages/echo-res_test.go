@@ -17,15 +17,15 @@ func TestEchoResponse(t *testing.T) {
 		{
 			Description: "Normal",
 			Structured:  messages.NewEchoResponse(0, ies.NewRecovery(0x80)),
-			Serialized: []byte{
+			Marshald: []byte{
 				0x40, 0x02, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00,
 				0x03, 0x00, 0x01, 0x00, 0x80,
 			},
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeEchoResponse(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseEchoResponse(b)
 		if err != nil {
 			return nil, err
 		}

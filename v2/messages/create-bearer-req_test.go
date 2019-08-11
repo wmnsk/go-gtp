@@ -26,7 +26,7 @@ func TestCreateBearerRequest(t *testing.T) {
 					ies.NewBearerQoS(1, 2, 1, 0xff, 0x1111111111, 0x2222222222, 0x1111111111, 0x2222222222),
 				),
 			),
-			Serialized: []byte{
+			Marshald: []byte{
 				// Header
 				0x48, 0x5f, 0x00, 0x30, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
 				// EBI
@@ -43,8 +43,8 @@ func TestCreateBearerRequest(t *testing.T) {
 		},
 	}
 
-	testutils.Run(t, cases, func(b []byte) (testutils.Serializeable, error) {
-		v, err := messages.DecodeCreateBearerRequest(b)
+	testutils.Run(t, cases, func(b []byte) (testutils.Marshalable, error) {
+		v, err := messages.ParseCreateBearerRequest(b)
 		if err != nil {
 			return nil, err
 		}
