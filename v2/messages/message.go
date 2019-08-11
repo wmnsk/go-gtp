@@ -283,6 +283,10 @@ type Message interface {
 	SetTEID(uint32)
 	Sequence() uint32
 	SetSequenceNumber(uint32)
+
+	// deprecated
+	SerializeTo([]byte) error
+	DecodeFromBytes(b []byte) error
 }
 
 // Marshal returns the byte sequence generated from a Message instance.

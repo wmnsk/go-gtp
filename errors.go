@@ -8,8 +8,8 @@ import "github.com/pkg/errors"
 
 // Common error definitions.
 var (
-	ErrInvalidVersion      = errors.New("got invalid version")
-	ErrInvalidLength       = errors.New("length value is invalid")
-	ErrTooShortToDecode    = errors.New("too short to decode as GTP")
-	ErrTooShortToSerialize = errors.New("too short to serialize")
+	ErrInvalidVersion    = errors.New("got invalid version")
+	ErrInvalidLength     = errors.New("length value is invalid")
+	ErrTooShortToParse   = errors.New("too short to decode as GTP")
+	ErrTooShortToMarshal = errors.New("too short to serialize")
 )
