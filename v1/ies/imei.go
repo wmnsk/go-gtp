@@ -20,5 +20,8 @@ func (i *IE) IMEISV() string {
 	if i.Type != IMEISV {
 		return ""
 	}
+	if len(i.Payload) == 0 {
+		return ""
+	}
 	return utils.SwappedBytesToStr(i.Payload, true)
 }

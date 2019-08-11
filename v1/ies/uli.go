@@ -101,8 +101,14 @@ func (i *IE) UserLocationInformation() []byte {
 func (i *IE) MCC() string {
 	switch i.Type {
 	case RouteingAreaIdentity:
+		if len(i.Payload) < 2 {
+			return ""
+		}
 		return utils.SwappedBytesToStr(i.Payload[0:2], false)
 	case UserLocationInformation:
+		if len(i.Payload) < 3 {
+			return ""
+		}
 		return utils.SwappedBytesToStr(i.Payload[1:3], false)
 	default:
 		return ""
@@ -113,8 +119,14 @@ func (i *IE) MCC() string {
 func (i *IE) MNC() string {
 	switch i.Type {
 	case RouteingAreaIdentity:
+		if len(i.Payload) < 2 {
+			return ""
+		}
 		return utils.SwappedBytesToStr(i.Payload[1:2], true)
 	case UserLocationInformation:
+		if len(i.Payload) < 3 {
+			return ""
+		}
 		return utils.SwappedBytesToStr(i.Payload[2:3], true)
 	default:
 		return ""
@@ -125,8 +137,14 @@ func (i *IE) MNC() string {
 func (i *IE) LAC() uint16 {
 	switch i.Type {
 	case RouteingAreaIdentity:
+		if len(i.Payload) < 5 {
+			return 0
+		}
 		return binary.BigEndian.Uint16(i.Payload[3:5])
 	case UserLocationInformation:
+		if len(i.Payload) < 6 {
+			return 0
+		}
 		return binary.BigEndian.Uint16(i.Payload[4:6])
 	default:
 		return 0
@@ -135,15 +153,37 @@ func (i *IE) LAC() uint16 {
 
 // CGI returns CGI value if type matches.
 func (i *IE) CGI() uint16 {
-	if i.Type == UserLocationInformation && i.Payload[0] == locTypeCGI {
-		return binary.BigEndian.Uint16(i.Payload[6:7])
+	if i.Type != UserLocationInformation {
+		return 0
+	}
+	if len(i.Payload) < 2 {
+		return 0
+	}
+
+	switch i.Payload[0] {
+	case locTypeCGI:
+		if len(i.Payload) < 8 {
+			return 0
+		}
+		return binary.BigEndian.Uint16(i.Payload[6:8])
 	}
 	return 0
 }
 
 // SAC returns SAC value if type matches.
 func (i *IE) SAC() uint16 {
-	if i.Type == UserLocationInformation && i.Payload[0] == locTypeSAI {
+	if i.Type != UserLocationInformation {
+		return 0
+	}
+	if len(i.Payload) < 2 {
+		return 0
+	}
+
+	switch i.Payload[0] {
+	case locTypeSAI:
+		if len(i.Payload) < 8 {
+			return 0
+		}
 		return binary.BigEndian.Uint16(i.Payload[6:8])
 	}
 	return 0
@@ -153,8 +193,14 @@ func (i *IE) SAC() uint16 {
 func (i *IE) RAC() uint8 {
 	switch i.Type {
 	case RouteingAreaIdentity:
+		if len(i.Payload) < 6 {
+			return 0
+		}
 		return i.Payload[5]
 	case UserLocationInformation:
+		if len(i.Payload) < 7 {
+			return 0
+		}
 		if i.Payload[0] == locTypeRAI {
 			return i.Payload[6]
 		}

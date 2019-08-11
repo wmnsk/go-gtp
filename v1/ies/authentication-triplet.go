@@ -26,6 +26,9 @@ func (i *IE) AuthenticationTriplet() []byte {
 func (i *IE) RAND() []byte {
 	switch i.Type {
 	case AuthenticationTriplet, AuthenticationQuintuplet:
+		if len(i.Payload) < 16 {
+			return nil
+		}
 		return i.Payload[0:16]
 	default:
 		return nil
@@ -36,6 +39,9 @@ func (i *IE) RAND() []byte {
 func (i *IE) SRES() []byte {
 	switch i.Type {
 	case AuthenticationTriplet:
+		if len(i.Payload) < 20 {
+			return nil
+		}
 		return i.Payload[16:20]
 	default:
 		return nil
@@ -46,6 +52,9 @@ func (i *IE) SRES() []byte {
 func (i *IE) Kc() []byte {
 	switch i.Type {
 	case AuthenticationTriplet:
+		if len(i.Payload) < 28 {
+			return nil
+		}
 		return i.Payload[20:28]
 	default:
 		return nil

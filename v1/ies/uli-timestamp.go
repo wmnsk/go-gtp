@@ -17,6 +17,10 @@ func NewULITimestamp(ts time.Time) *IE {
 
 // Timestamp returns Timestamp in time.Time if the type of IE matches.
 func (i *IE) Timestamp() time.Time {
+	if len(i.Payload) < 4 {
+		return time.Time{}
+	}
+
 	switch i.Type {
 	case ULITimestamp:
 		return time.Unix(int64(binary.BigEndian.Uint32(i.Payload)-2208988800), 0)

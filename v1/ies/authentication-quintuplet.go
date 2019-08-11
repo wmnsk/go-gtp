@@ -31,15 +31,30 @@ func (i *IE) AuthenticationQuintuplet() []byte {
 	if i.Type != AuthenticationQuintuplet {
 		return nil
 	}
+	if len(i.Payload) == 0 {
+		return nil
+	}
+
 	return i.Payload
 }
 
 // XRES returns XRES in []byte if type matches.
 func (i *IE) XRES() []byte {
+	if len(i.Payload) == 0 {
+		return nil
+	}
+
 	switch i.Type {
 	case AuthenticationQuintuplet:
+		if len(i.Payload) < 17 {
+			return nil
+		}
+
 		xresLen := i.Payload[16]
-		return i.Payload[17 : 17+xresLen]
+		if len(i.Payload) < 17+int(xresLen) {
+			return nil
+		}
+		return i.Payload[17 : 17+int(xresLen)]
 	default:
 		return nil
 	}
@@ -49,7 +64,14 @@ func (i *IE) XRES() []byte {
 func (i *IE) CK() []byte {
 	switch i.Type {
 	case AuthenticationQuintuplet:
-		offset := 17 + i.Payload[16]
+		if len(i.Payload) < 18 {
+			return nil
+		}
+
+		offset := 17 + int(i.Payload[16])
+		if len(i.Payload) < offset+16 {
+			return nil
+		}
 		return i.Payload[offset : offset+16]
 	default:
 		return nil
@@ -60,7 +82,14 @@ func (i *IE) CK() []byte {
 func (i *IE) IK() []byte {
 	switch i.Type {
 	case AuthenticationQuintuplet:
-		offset := 33 + i.Payload[16]
+		if len(i.Payload) < 34 {
+			return nil
+		}
+
+		offset := 33 + int(i.Payload[16])
+		if len(i.Payload) < offset+16 {
+			return nil
+		}
 		return i.Payload[offset : offset+16]
 	default:
 		return nil
@@ -71,9 +100,15 @@ func (i *IE) IK() []byte {
 func (i *IE) AUTN() []byte {
 	switch i.Type {
 	case AuthenticationQuintuplet:
-		offset := 49 + i.Payload[16]
+		if len(i.Payload) < 50 {
+			return nil
+		}
+		offset := 49 + int(i.Payload[16])
 		autnLen := i.Payload[50]
-		return i.Payload[offset : offset+autnLen]
+		if len(i.Payload) < offset+int(autnLen) {
+			return nil
+		}
+		return i.Payload[offset : offset+int(autnLen)]
 	default:
 		return nil
 	}
