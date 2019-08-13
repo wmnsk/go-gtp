@@ -325,6 +325,8 @@ func Parse(b []byte) (Message, error) {
 		m = &ModifyBearerFailureIndication{}
 	case MsgTypeDeleteBearerCommand:
 		m = &DeleteBearerCommand{}
+	case MsgTypeDeleteBearerFailureIndication:
+		m = &DeleteBearerFailureIndication{}
 	case MsgTypeDeleteBearerRequest:
 		m = &DeleteBearerRequest{}
 	case MsgTypeCreateBearerRequest:
