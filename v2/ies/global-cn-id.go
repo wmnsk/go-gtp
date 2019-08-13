@@ -6,6 +6,7 @@ package ies
 
 import (
 	"encoding/binary"
+	"io"
 
 	"github.com/wmnsk/go-gtp/utils"
 )
@@ -25,14 +26,21 @@ func NewGlobalCNID(mcc, mnc string, cnid uint16) *IE {
 }
 
 // CNID returns CNID in uinte16 if the type of IE matches.
-func (i *IE) CNID() uint16 {
+func (i *IE) CNID() (uint16, error) {
 	if len(i.Payload) < 5 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 	switch i.Type {
 	case GlobalCNID:
-		return binary.BigEndian.Uint16(i.Payload[3:5])
+		return binary.BigEndian.Uint16(i.Payload[3:5]), nil
 	default:
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
+}
+
+// MustCNID returns CNID in uint16, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustCNID() uint16 {
+	v, _ := i.CNID()
+	return v
 }

@@ -169,14 +169,17 @@ func NewProtocolConfigurationOptions(configProto uint8, options ...*Configuratio
 
 // ProtocolConfigurationOptions returns ProtocolConfigurationOptions in
 // PCOPayload type if the type of IE matches.
-func (i *IE) ProtocolConfigurationOptions() *PCOPayload {
+func (i *IE) ProtocolConfigurationOptions() (*PCOPayload, error) {
 	if i.Type != ProtocolConfigurationOptions {
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
 
-	pco, err := ParsePCOPayload(i.Payload)
-	if err != nil {
-		return nil
-	}
-	return pco
+	return ParsePCOPayload(i.Payload)
+}
+
+// MustProtocolConfigurationOptions returns ProtocolConfigurationOptions in *PCOPayload, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustProtocolConfigurationOptions() *PCOPayload {
+	v, _ := i.ProtocolConfigurationOptions()
+	return v
 }

@@ -4,6 +4,8 @@
 
 package ies
 
+import "io"
+
 // NewBearerContext creates a new BearerContext IE.
 func NewBearerContext(ies ...*IE) *IE {
 	var omitted []*IE
@@ -100,15 +102,18 @@ func NewBearerContextWithinContextAcknowledge(ebi, fwdFTEID *IE) *IE {
 }
 
 // BearerContext returns the []*IE inside BearerContext IE.
-func (i *IE) BearerContext() []*IE {
+func (i *IE) BearerContext() ([]*IE, error) {
+	if i.Type != BearerContext {
+		return nil, &InvalidTypeError{Type: i.Type}
+	}
 	if len(i.Payload) == 0 {
-		return nil
+		return nil, io.ErrUnexpectedEOF
 	}
 
 	ies, err := ParseMultiIEs(i.Payload)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	return ies
+	return ies, nil
 }

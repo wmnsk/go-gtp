@@ -4,7 +4,11 @@
 
 package ies
 
-import "github.com/wmnsk/go-gtp/utils"
+import (
+	"io"
+
+	"github.com/wmnsk/go-gtp/utils"
+)
 
 // NewMobileEquipmentIdentity creates a new MobileEquipmentIdentity IE.
 func NewMobileEquipmentIdentity(mei string) *IE {
@@ -17,12 +21,19 @@ func NewMobileEquipmentIdentity(mei string) *IE {
 
 // MobileEquipmentIdentity returns MobileEquipmentIdentity in string if the
 // type of IE matches.
-func (i *IE) MobileEquipmentIdentity() string {
+func (i *IE) MobileEquipmentIdentity() (string, error) {
 	if i.Type != MobileEquipmentIdentity {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return ""
+		return "", io.ErrUnexpectedEOF
 	}
-	return utils.SwappedBytesToStr(i.Payload, true)
+	return utils.SwappedBytesToStr(i.Payload, true), nil
+}
+
+// MustMobileEquipmentIdentity returns MobileEquipmentIdentity in string, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustMobileEquipmentIdentity() string {
+	v, _ := i.MobileEquipmentIdentity()
+	return v
 }

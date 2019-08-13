@@ -157,4 +157,4 @@ func uliPayloadLen(flags uint8) int {
 	return l
 }
 
-// XXX - add getters.
+// TODO: add getters.

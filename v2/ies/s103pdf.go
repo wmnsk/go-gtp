@@ -6,6 +6,7 @@ package ies
 
 import (
 	"encoding/binary"
+	"io"
 	"net"
 )
 
@@ -42,47 +43,61 @@ func NewS103PDNDataForwardingInfo(hsgwAddr string, greKey uint32, ebis ...uint8)
 }
 
 // HSGWAddress returns IP address of HSGW in string if the type of IE matches.
-func (i *IE) HSGWAddress() string {
+func (i *IE) HSGWAddress() (string, error) {
 	if i.Type != S103PDNDataForwardingInfo {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 
 	return i.IPAddress()
 }
 
+// MustHSGWAddress returns HSGWAddress in string, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustHSGWAddress() string {
+	v, _ := i.HSGWAddress()
+	return v
+}
+
 // EBIs returns the EBIs in []uint8 if the type of IE matches.
-func (i *IE) EBIs() []uint8 {
+func (i *IE) EBIs() ([]uint8, error) {
 	if i.Type != S103PDNDataForwardingInfo {
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return nil
+		return nil, io.ErrUnexpectedEOF
 	}
 
 	var n, offset int
 	switch i.Payload[0] {
 	case 4:
 		if len(i.Payload) < 9 {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
 		n = int(i.Payload[9])
 		offset = 10
 	case 16:
 		if len(i.Payload) < 21 {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
 		n = int(i.Payload[21])
 		offset = 22
 	default:
-		return nil
+		return nil, ErrMalformed
 	}
 
 	var ebis []uint8
 	for x := 0; x < n; x++ {
 		if len(i.Payload) <= offset+x {
-			return nil
+			break
 		}
 		ebis = append(ebis, i.Payload[offset+x])
 	}
-	return ebis
+	return ebis, nil
+}
+
+// MustEBIs returns EBIs in []uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustEBIs() []uint8 {
+	v, _ := i.EBIs()
+	return v
 }

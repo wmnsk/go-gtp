@@ -29,13 +29,26 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 
 	var pgwAddrString string
 	if ie := csReqFromMME.PGWS5S8FTEIDC; ie != nil {
-		pgwAddrString = ie.IPAddress() + ":2123"
-		s11Session.AddTEID(v2.IFTypeS5S8PGWGTPC, ie.TEID())
+		ip, err := ie.IPAddress()
+		if err != nil {
+			return err
+		}
+		pgwAddrString = ip + ":2123"
+
+		teid, err := ie.TEID()
+		if err != nil {
+			return err
+		}
+		s11Session.AddTEID(v2.IFTypeS5S8PGWGTPC, teid)
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
 	}
 	if ie := csReqFromMME.SenderFTEIDC; ie != nil {
-		s11Session.AddTEID(v2.IFTypeS11MMEGTPC, ie.TEID())
+		teid, err := ie.TEID()
+		if err != nil {
+			return err
+		}
+		s11Session.AddTEID(v2.IFTypeS11MMEGTPC, teid)
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
 	}
@@ -52,7 +65,11 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	// keep session information retrieved from the message.
 	// XXX - should return error if required IE is missing.
 	if ie := csReqFromMME.IMSI; ie != nil {
-		imsi := ie.IMSI()
+		imsi, err := ie.IMSI()
+		if err != nil {
+			return err
+		}
+
 		// remove previous session for the same subscriber if exists.
 		sess, err := s11Conn.GetSessionByIMSI(imsi)
 		if err != nil {
@@ -71,28 +88,46 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return &v2.ErrRequiredIEMissing{Type: ies.IMSI}
 	}
 	if ie := csReqFromMME.MSISDN; ie != nil {
-		s11Session.MSISDN = ie.MSISDN()
+		s11Session.MSISDN, err = ie.MSISDN()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.MSISDN}
 	}
 	if ie := csReqFromMME.MEI; ie != nil {
-		s11Session.IMEI = ie.MobileEquipmentIdentity()
+		s11Session.IMEI, err = ie.MobileEquipmentIdentity()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.MobileEquipmentIdentity}
 	}
 	if ie := csReqFromMME.APN; ie != nil {
-		s11Bearer.APN = ie.AccessPointName()
+		s11Bearer.APN, err = ie.AccessPointName()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.AccessPointName}
 	}
 	if ie := csReqFromMME.ServingNetwork; ie != nil {
-		s11Session.MCC = ie.MCC()
-		s11Session.MNC = ie.MNC()
+		s11Session.MCC, err = ie.MCC()
+		if err != nil {
+			return err
+		}
+		s11Session.MNC, err = ie.MNC()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.ServingNetwork}
 	}
 	if ie := csReqFromMME.RATType; ie != nil {
-		s11Session.RATType = ie.RATType()
+		s11Session.RATType, err = ie.RATType()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.RATType}
 	}
@@ -123,7 +158,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	if err != nil {
 		return err
 	}
-	s5Session.AddTEID(s5uFTEID.InterfaceType(), s5uFTEID.TEID())
+	s5Session.AddTEID(s5uFTEID.MustInterfaceType(), s5uFTEID.MustTEID())
 	sgw.s5cConn.AddSession(s5Session)
 
 	sgw.loggerCh <- fmt.Sprintf("Sent Create Session Request to %s for %s", pgwAddrString, s5Session.IMSI)
@@ -186,8 +221,8 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		s11Conn.RemoveSession(s11Session)
 		return err
 	}
-	s11Session.AddTEID(senderFTEID.InterfaceType(), senderFTEID.TEID())
-	s11Session.AddTEID(s1usgwFTEID.InterfaceType(), s1usgwFTEID.TEID())
+	s11Session.AddTEID(senderFTEID.MustInterfaceType(), senderFTEID.MustTEID())
+	s11Session.AddTEID(s1usgwFTEID.MustInterfaceType(), s1usgwFTEID.MustTEID())
 
 	s11sgwTEID, err := s11Session.GetTEID(v2.IFTypeS11S4SGWGTPC)
 	if err != nil {
@@ -393,13 +428,26 @@ func handleFTEIDU(ie *ies.IE, session *v2.Session, bearer *v2.Bearer) error {
 		return &v2.ErrUnexpectedIE{IEType: ie.Type}
 	}
 
-	addr, err := net.ResolveUDPAddr("udp", ie.IPAddress()+":2152")
+	ip, err := ie.IPAddress()
+	if err != nil {
+		return err
+	}
+	addr, err := net.ResolveUDPAddr("udp", ip+":2152")
 	if err != nil {
 		return err
 	}
 	bearer.SetRemoteAddress(addr)
-	bearer.SetOutgoingTEID(ie.TEID())
 
-	session.AddTEID(ie.InterfaceType(), ie.TEID())
+	teid, err := ie.TEID()
+	if err != nil {
+		return err
+	}
+	bearer.SetOutgoingTEID(teid)
+
+	it, err := ie.InterfaceType()
+	if err != nil {
+		return err
+	}
+	session.AddTEID(it, teid)
 	return nil
 }

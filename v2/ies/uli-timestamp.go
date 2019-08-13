@@ -6,6 +6,7 @@ package ies
 
 import (
 	"encoding/binary"
+	"io"
 	"time"
 )
 
@@ -16,15 +17,22 @@ func NewULITimestamp(ts time.Time) *IE {
 }
 
 // Timestamp returns Timestamp in time.Time if the type of IE matches.
-func (i *IE) Timestamp() time.Time {
+func (i *IE) Timestamp() (time.Time, error) {
 	if len(i.Payload) < 4 {
-		return time.Time{}
+		return time.Time{}, io.ErrUnexpectedEOF
 	}
 
 	switch i.Type {
 	case ULITimestamp, TWANIdentifierTimestamp:
-		return time.Unix(int64(binary.BigEndian.Uint32(i.Payload)-2208988800), 0)
+		return time.Unix(int64(binary.BigEndian.Uint32(i.Payload)-2208988800), 0), nil
 	default:
-		return time.Time{}
+		return time.Time{}, &InvalidTypeError{Type: i.Type}
 	}
+}
+
+// MustTimestamp returns Timestamp in time.Time, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustTimestamp() time.Time {
+	v, _ := i.Timestamp()
+	return v
 }

@@ -7,6 +7,7 @@ package ies
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"io"
 	"net"
 )
 
@@ -51,23 +52,30 @@ func NewFullyQualifiedCSID(nodeID string, csIDs ...uint16) *IE {
 }
 
 // NodeIDType returns NodeIDType in uint8 if the type of IE matches.
-func (i *IE) NodeIDType() uint8 {
+func (i *IE) NodeIDType() (uint8, error) {
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
 	switch i.Type {
 	case FullyQualifiedCSID:
-		return (i.Payload[0] >> 4) & 0x0f
+		return (i.Payload[0] >> 4) & 0x0f, nil
 	default:
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 }
 
+// MustNodeIDType returns NodeIDType in uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustNodeIDType() uint8 {
+	v, _ := i.NodeIDType()
+	return v
+}
+
 // NodeID returns NodeID in []byte if the type of IE matches.
-func (i *IE) NodeID() []byte {
+func (i *IE) NodeID() ([]byte, error) {
 	if len(i.Payload) == 0 {
-		return nil
+		return nil, io.ErrUnexpectedEOF
 	}
 
 	switch i.Type {
@@ -75,26 +83,33 @@ func (i *IE) NodeID() []byte {
 		switch (i.Payload[0] >> 4) & 0x0f {
 		case nodeIDIPv4, nodeIDOther:
 			if len(i.Payload) < 6 {
-				return nil
+				return nil, io.ErrUnexpectedEOF
 			}
-			return i.Payload[1:5]
+			return i.Payload[1:5], nil
 		case nodeIDIPv6:
 			if len(i.Payload) < 18 {
-				return nil
+				return nil, io.ErrUnexpectedEOF
 			}
-			return i.Payload[1:17]
+			return i.Payload[1:17], nil
 		default:
-			return nil
+			return nil, ErrMalformed
 		}
 	default:
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
 }
 
+// MustNodeID returns NodeID in []byte, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustNodeID() []byte {
+	v, _ := i.NodeID()
+	return v
+}
+
 // CSIDs returns CSIDs in []uint16 if the type of IE matches.
-func (i *IE) CSIDs() []uint16 {
+func (i *IE) CSIDs() ([]uint16, error) {
 	if len(i.Payload) == 0 {
-		return nil
+		return nil, io.ErrUnexpectedEOF
 	}
 
 	switch i.Type {
@@ -106,7 +121,7 @@ func (i *IE) CSIDs() []uint16 {
 		case nodeIDIPv6:
 			offset += 17
 		default:
-			return nil
+			return nil, ErrMalformed
 		}
 
 		var csids []uint16
@@ -117,8 +132,15 @@ func (i *IE) CSIDs() []uint16 {
 			csids = append(csids, binary.BigEndian.Uint16(i.Payload[offset:offset+2]))
 			offset += 2
 		}
-		return csids
+		return csids, nil
 	default:
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
+}
+
+// MustCSIDs returns CSIDs in []uint16, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustCSIDs() []uint16 {
+	v, _ := i.CSIDs()
+	return v
 }

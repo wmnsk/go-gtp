@@ -4,6 +4,8 @@
 
 package ies
 
+import "io"
+
 // NewBearerFlags creates a new BearerFlags IE.
 func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
 	i := New(BearerFlags, 0x00, make([]byte, 1))
@@ -12,15 +14,22 @@ func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
 }
 
 // BearerFlags returns BearerFlags in uint8(=as it is) if the type of IE matches.
-func (i *IE) BearerFlags() uint8 {
+func (i *IE) BearerFlags() (uint8, error) {
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 	if i.Type != BearerFlags {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 
-	return i.Payload[0]
+	return i.Payload[0], nil
+}
+
+// MustBearerFlags returns BearerFlags in uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustBearerFlags() uint8 {
+	v, _ := i.BearerFlags()
+	return v
 }
 
 // ActivityStatusIndicator reports whether the bearer context is preserved in

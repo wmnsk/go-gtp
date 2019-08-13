@@ -55,8 +55,12 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 	// keep session information retrieved from the message.
 	session := v2.NewSession(sgwAddr, &v2.Subscriber{Location: &v2.Location{}})
 	bearer := session.GetDefaultBearer()
+	var err error
 	if ie := csReqFromSGW.IMSI; ie != nil {
-		imsi := ie.IMSI()
+		imsi, err := ie.IMSI()
+		if err != nil {
+			return err
+		}
 		session.IMSI = imsi
 
 		// remove previous session for the same subscriber if exists.
@@ -75,33 +79,55 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 		return &v2.ErrRequiredIEMissing{Type: ies.IMSI}
 	}
 	if ie := csReqFromSGW.MSISDN; ie != nil {
-		session.MSISDN = ie.MSISDN()
+		session.MSISDN, err = ie.MSISDN()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.MSISDN}
 	}
 	if ie := csReqFromSGW.MEI; ie != nil {
-		session.IMEI = ie.MobileEquipmentIdentity()
+		session.IMEI, err = ie.MobileEquipmentIdentity()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.MobileEquipmentIdentity}
 	}
 	if ie := csReqFromSGW.APN; ie != nil {
-		bearer.APN = ie.AccessPointName()
+		bearer.APN, err = ie.AccessPointName()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.AccessPointName}
 	}
 	if ie := csReqFromSGW.ServingNetwork; ie != nil {
-		session.MCC = ie.MCC()
-		session.MNC = ie.MNC()
+		session.MCC, err = ie.MCC()
+		if err != nil {
+			return err
+		}
+		session.MNC, err = ie.MNC()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.ServingNetwork}
 	}
 	if ie := csReqFromSGW.RATType; ie != nil {
-		session.RATType = ie.RATType()
+		session.RATType, err = ie.RATType()
+		if err != nil {
+			return err
+		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.RATType}
 	}
 	if ie := csReqFromSGW.SenderFTEIDC; ie != nil {
-		session.AddTEID(v2.IFTypeS5S8SGWGTPC, ie.TEID())
+		teid, err := ie.TEID()
+		if err != nil {
+			return err
+		}
+		session.AddTEID(v2.IFTypeS5S8SGWGTPC, teid)
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
 	}
@@ -111,17 +137,26 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 		for _, ie := range brCtxIE.ChildIEs {
 			switch ie.Type {
 			case ies.EPSBearerID:
-				bearer.EBI = ie.EPSBearerID()
+				bearer.EBI, err = ie.EPSBearerID()
+				if err != nil {
+					return err
+				}
 			case ies.FullyQualifiedTEID:
-				session.AddTEID(ie.InterfaceType(), ie.TEID())
-				teidOut = ie.TEID()
+				it, err := ie.InterfaceType()
+				if err != nil {
+					return err
+				}
+				teidOut, err := ie.TEID()
+				if err != nil {
+					return err
+				}
+				session.AddTEID(it, teidOut)
 			}
 		}
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.BearerContext}
 	}
 
-	var err error
 	bearer.SubscriberIP, err = getSubscriberIP(session.Subscriber)
 	if err != nil {
 		return err
@@ -151,8 +186,8 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 	if csReqFromSGW.SGWFQCSID != nil {
 		csRspFromPGW.PGWFQCSID = ies.NewFullyQualifiedCSID(cIP, 1)
 	}
-	session.AddTEID(v2.IFTypeS5S8PGWGTPC, s5cFTEID.TEID())
-	session.AddTEID(v2.IFTypeS5S8PGWGTPU, s5uFTEID.TEID())
+	session.AddTEID(v2.IFTypeS5S8PGWGTPC, s5cFTEID.MustTEID())
+	session.AddTEID(v2.IFTypeS5S8PGWGTPU, s5uFTEID.MustTEID())
 
 	if err := c.RespondTo(sgwAddr, csReqFromSGW, csRspFromPGW); err != nil {
 		return err

@@ -6,6 +6,7 @@ package ies
 
 import (
 	"encoding/binary"
+	"io"
 	"net"
 )
 
@@ -53,70 +54,91 @@ func (i *IE) HasIPv6() bool {
 }
 
 // InterfaceType returns InterfaceType in uint8 if the type of IE matches.
-func (i *IE) InterfaceType() uint8 {
+func (i *IE) InterfaceType() (uint8, error) {
 	if i.Type != FullyQualifiedTEID {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
-	return i.Payload[0] & 0x3f
+	return i.Payload[0] & 0x3f, nil
+}
+
+// MustInterfaceType returns InterfaceType in uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustInterfaceType() uint8 {
+	v, _ := i.InterfaceType()
+	return v
 }
 
 // GREKey returns GREKey in uint32 if the type of IE matches.
-func (i *IE) GREKey() uint32 {
+func (i *IE) GREKey() (uint32, error) {
 	if len(i.Payload) < 6 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 	switch i.Type {
 	case FullyQualifiedTEID:
-		return binary.BigEndian.Uint32(i.Payload[1:5])
+		return binary.BigEndian.Uint32(i.Payload[1:5]), nil
 	case S103PDNDataForwardingInfo:
 		switch i.Payload[0] {
 		case 4:
 			if len(i.Payload) < 9 {
-				return 0
+				return 0, io.ErrUnexpectedEOF
 			}
-			return binary.BigEndian.Uint32(i.Payload[5:9])
+			return binary.BigEndian.Uint32(i.Payload[5:9]), nil
 		case 16:
 			if len(i.Payload) < 21 {
-				return 0
+				return 0, io.ErrUnexpectedEOF
 			}
-			return binary.BigEndian.Uint32(i.Payload[17:21])
+			return binary.BigEndian.Uint32(i.Payload[17:21]), nil
 		default:
-			return 0
+			return 0, ErrMalformed
 		}
 	default:
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 }
 
+// MustGREKey returns GREKey in uint32, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustGREKey() uint32 {
+	v, _ := i.GREKey()
+	return v
+}
+
 // TEID returns TEID in uint32 if the type of IE matches.
-func (i *IE) TEID() uint32 {
+func (i *IE) TEID() (uint32, error) {
 	if len(i.Payload) < 5 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 	switch i.Type {
 	case FullyQualifiedTEID:
-		return binary.BigEndian.Uint32(i.Payload[1:5])
+		return binary.BigEndian.Uint32(i.Payload[1:5]), nil
 	case S1UDataForwarding:
 		switch i.Payload[0] {
 		case 4:
 			if len(i.Payload) < 9 {
-				return 0
+				return 0, io.ErrUnexpectedEOF
 			}
-			return binary.BigEndian.Uint32(i.Payload[5:9])
+			return binary.BigEndian.Uint32(i.Payload[5:9]), nil
 		case 16:
 			if len(i.Payload) < 21 {
-				return 0
+				return 0, io.ErrUnexpectedEOF
 			}
-			return binary.BigEndian.Uint32(i.Payload[17:21])
+			return binary.BigEndian.Uint32(i.Payload[17:21]), nil
 		default:
-			return 0
+			return 0, ErrMalformed
 		}
 	default:
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 
+}
+
+// MustTEID returns TEID in uint32, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustTEID() uint32 {
+	v, _ := i.TEID()
+	return v
 }
