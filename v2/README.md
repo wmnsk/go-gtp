@@ -193,10 +193,10 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 40      | Remote UE Report Notification                   |           |
 | 41      | Remote UE Report Acknowledge                    |           |
 | 42-63   | (Spare/Reserved)                                | -         |
-| 64      | Modify Bearer Command                           |           |
-| 65      | Modify Bearer Failure Indication                |           |
-| 66      | Delete Bearer Command                           |           |
-| 67      | Delete Bearer Failure Indication                |           |
+| 64      | Modify Bearer Command                           | Yes       |
+| 65      | Modify Bearer Failure Indication                | Yes       |
+| 66      | Delete Bearer Command                           | Yes       |
+| 67      | Delete Bearer Failure Indication                | Yes       |
 | 68      | Bearer Resource Command                         |           |
 | 69      | Bearer Resource Failure Indication              |           |
 | 70      | Downlink Data Notification Failure Indication   |           |
