@@ -319,6 +319,8 @@ func Parse(b []byte) (Message, error) {
 		m = &DeleteSessionRequest{}
 	case MsgTypeDeleteSessionResponse:
 		m = &DeleteSessionResponse{}
+	case MsgTypeModifyBearerCommand:
+		m = &ModifyBearerCommand{}
 	case MsgTypeDeleteBearerRequest:
 		m = &DeleteBearerRequest{}
 	case MsgTypeCreateBearerRequest:
