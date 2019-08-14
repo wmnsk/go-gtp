@@ -4,7 +4,10 @@
 
 package ies
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"io"
+)
 
 // NewTEIDDataI creates a new TEIDDataI IE.
 func NewTEIDDataI(teid uint32) *IE {
@@ -22,14 +25,21 @@ func NewTEIDDataII(teid uint32) *IE {
 }
 
 // TEID returns TEID value if type matches.
-func (i *IE) TEID() uint32 {
+func (i *IE) TEID() (uint32, error) {
 	if len(i.Payload) < 4 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 	switch i.Type {
 	case TEIDCPlane, TEIDDataI, TEIDDataII:
-		return binary.BigEndian.Uint32(i.Payload)
+		return binary.BigEndian.Uint32(i.Payload), nil
 	default:
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
+}
+
+// MustTEID returns TEID in uint32 if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustTEID() uint32 {
+	v, _ := i.TEID()
+	return v
 }

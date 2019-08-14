@@ -4,7 +4,10 @@
 
 package ies
 
-import "net"
+import (
+	"io"
+	"net"
+)
 
 const (
 	pdpTypeETSI uint8 = iota | 0xf0
@@ -85,51 +88,79 @@ func NewEndUserAddressPPP() *IE {
 }
 
 // EndUserAddress returns EndUserAddress value if type matches.
-func (i *IE) EndUserAddress() []byte {
+func (i *IE) EndUserAddress() ([]byte, error) {
 	if i.Type != EndUserAddress {
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
-	return i.Payload
+	return i.Payload, nil
+}
+
+// MustEndUserAddress returns EndUserAddress in []byte if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustEndUserAddress() []byte {
+	v, _ := i.EndUserAddress()
+	return v
 }
 
 // PDPTypeOrganization returns PDPTypeOrganization if type matches.
-func (i *IE) PDPTypeOrganization() uint8 {
+func (i *IE) PDPTypeOrganization() (uint8, error) {
 	if i.Type != EndUserAddress {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
-	return i.Payload[0]
+	return i.Payload[0], nil
+}
+
+// MustPDPTypeOrganization returns PDPTypeOrganization in uint8 if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustPDPTypeOrganization() uint8 {
+	v, _ := i.PDPTypeOrganization()
+	return v
 }
 
 // PDPTypeNumber returns PDPTypeNumber if type matches.
-func (i *IE) PDPTypeNumber() uint8 {
+func (i *IE) PDPTypeNumber() (uint8, error) {
 	if i.Type != EndUserAddress {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) < 2 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
-	return i.Payload[1]
+	return i.Payload[1], nil
+}
+
+// MustPDPTypeNumber returns PDPTypeNumber in uint8 if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustPDPTypeNumber() uint8 {
+	v, _ := i.PDPTypeNumber()
+	return v
 }
 
 // IPAddress returns IPAddress if type matches.
-func (i *IE) IPAddress() string {
+func (i *IE) IPAddress() (string, error) {
 	if len(i.Payload) < 4 {
-		return ""
+		return "", io.ErrUnexpectedEOF
 	}
 	switch i.Type {
 	case EndUserAddress:
-		if i.PDPTypeOrganization() != pdpTypeIETF {
-			return ""
+		if i.MustPDPTypeOrganization() != pdpTypeIETF {
+			return "", ErrMalformed
 		}
-		return net.IP(i.Payload[2:]).String()
+		return net.IP(i.Payload[2:]).String(), nil
 	case GSNAddress:
-		return net.IP(i.Payload).String()
+		return net.IP(i.Payload).String(), nil
 	default:
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
+}
+
+// MustIPAddress returns IPAddress in string if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustIPAddress() string {
+	v, _ := i.IPAddress()
+	return v
 }

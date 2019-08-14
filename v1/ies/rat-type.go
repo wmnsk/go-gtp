@@ -4,6 +4,8 @@
 
 package ies
 
+import "io"
+
 // NewRATType creates a new RATType IE.
 func NewRATType(ratType uint8) *IE {
 	return New(
@@ -13,13 +15,20 @@ func NewRATType(ratType uint8) *IE {
 }
 
 // RATType returns RATType value if type matches.
-func (i *IE) RATType() uint8 {
+func (i *IE) RATType() (uint8, error) {
 	if i.Type != RATType {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
-	return i.Payload[0]
+	return i.Payload[0], nil
+}
+
+// MustRATType returns RATType in uint8 if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustRATType() uint8 {
+	v, _ := i.RATType()
+	return v
 }

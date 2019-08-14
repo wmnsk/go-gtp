@@ -118,7 +118,7 @@ func handleErrorIndication(c Conn, senderAddr net.Addr, msg messages.Message) er
 
 	// let's just return err anyway.
 	return &ErrErrorIndicated{
-		TEID: ind.TEIDDataI.TEID(),
-		Peer: ind.GTPUPeerAddress.IPAddress(),
+		TEID: ind.TEIDDataI.MustTEID(),
+		Peer: ind.GTPUPeerAddress.MustIPAddress(),
 	}
 }
