@@ -4,19 +4,28 @@
 
 package ies
 
+import "io"
+
 // NewServiceIndicator creates a new ServiceIndicator IE.
 func NewServiceIndicator(ind uint8) *IE {
 	return newUint8ValIE(ServiceIndicator, ind)
 }
 
 // ServiceIndicator returns ServiceIndicator in uint8 if the type of IE matches.
-func (i *IE) ServiceIndicator() uint8 {
+func (i *IE) ServiceIndicator() (uint8, error) {
 	if i.Type != ServiceIndicator {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
-	return i.Payload[0]
+	return i.Payload[0], nil
+}
+
+// MustServiceIndicator returns ServiceIndicator in uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustServiceIndicator() uint8 {
+	v, _ := i.ServiceIndicator()
+	return v
 }

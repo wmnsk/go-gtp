@@ -4,7 +4,11 @@
 
 package ies
 
-import "github.com/wmnsk/go-gtp/utils"
+import (
+	"io"
+
+	"github.com/wmnsk/go-gtp/utils"
+)
 
 // NewIMEISV creates a new IMEISV IE.
 func NewIMEISV(imei string) *IE {
@@ -16,12 +20,19 @@ func NewIMEISV(imei string) *IE {
 }
 
 // IMEISV returns IMEISV value if type matches.
-func (i *IE) IMEISV() string {
+func (i *IE) IMEISV() (string, error) {
 	if i.Type != IMEISV {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return ""
+		return "", io.ErrUnexpectedEOF
 	}
-	return utils.SwappedBytesToStr(i.Payload, true)
+	return utils.SwappedBytesToStr(i.Payload, true), nil
+}
+
+// MustIMEISV returns IMEISV in string if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustIMEISV() string {
+	v, _ := i.IMEISV()
+	return v
 }

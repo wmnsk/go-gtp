@@ -4,6 +4,8 @@
 
 package ies
 
+import "io"
+
 // NewMBMSFlags creates a new MBMSFlags IE.
 func NewMBMSFlags(lmri, msri uint8) *IE {
 	i := New(MBMSFlags, 0x00, make([]byte, 1))
@@ -12,15 +14,22 @@ func NewMBMSFlags(lmri, msri uint8) *IE {
 }
 
 // MBMSFlags returns MBMSFlags in uint8 if the type of IE matches.
-func (i *IE) MBMSFlags() uint8 {
+func (i *IE) MBMSFlags() (uint8, error) {
 	if i.Type != MBMSFlags {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
-	return i.Payload[0]
+	return i.Payload[0], nil
+}
+
+// MustMBMSFlags returns MBMSFlags in uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustMBMSFlags() uint8 {
+	v, _ := i.MBMSFlags()
+	return v
 }
 
 // LocalMBMSBearerContextRelease reports whether the MBMS Session Stop Request

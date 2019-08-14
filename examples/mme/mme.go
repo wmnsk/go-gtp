@@ -31,7 +31,11 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Mess
 
 	// check Cause value first.
 	if ie := csRspFromSGW.Cause; ie != nil {
-		if cause := ie.Cause(); cause != v2.CauseRequestAccepted {
+		cause, err := ie.Cause()
+		if err != nil {
+			return err
+		}
+		if cause != v2.CauseRequestAccepted {
 			c.RemoveSession(session)
 			return &v2.ErrCauseNotOK{
 				MsgType: csRspFromSGW.MessageTypeName(),
@@ -44,10 +48,17 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Mess
 	}
 
 	if ie := csRspFromSGW.PAA; ie != nil {
-		bearer.SubscriberIP = ie.IPAddress()
+		bearer.SubscriberIP, err = ie.IPAddress()
+		if err != nil {
+			return err
+		}
 	}
 	if ie := csRspFromSGW.SenderFTEIDC; ie != nil {
-		session.AddTEID(v2.IFTypeS11S4SGWGTPC, ie.TEID())
+		teid, err := ie.TEID()
+		if err != nil {
+			return err
+		}
+		session.AddTEID(v2.IFTypeS11S4SGWGTPC, teid)
 	} else {
 		return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
 	}
@@ -67,13 +78,23 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Mess
 		for _, ie := range brCtxIE.ChildIEs {
 			switch ie.Type {
 			case ies.EPSBearerID:
-				bearer.EBI = ie.EPSBearerID()
+				bearer.EBI, err = ie.EPSBearerID()
+				if err != nil {
+					return err
+				}
 			case ies.FullyQualifiedTEID:
 				if ie.Instance() != 0 {
 					continue
 				}
-
-				session.AddTEID(ie.InterfaceType(), ie.TEID())
+				it, err := ie.InterfaceType()
+				if err != nil {
+					return err
+				}
+				teid, err := ie.TEID()
+				if err != nil {
+					return err
+				}
+				session.AddTEID(it, teid)
 			}
 		}
 	} else {
@@ -103,7 +124,11 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 
 	mbRspFromSGW := msg.(*messages.ModifyBearerResponse)
 	if ie := mbRspFromSGW.Cause; ie != nil {
-		if cause := ie.Cause(); cause != v2.CauseRequestAccepted {
+		cause, err := ie.Cause()
+		if err != nil {
+			return err
+		}
+		if cause != v2.CauseRequestAccepted {
 			return &v2.ErrCauseNotOK{
 				MsgType: msg.MessageTypeName(),
 				Cause:   cause,
@@ -125,13 +150,26 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 				if ie.Instance() != 0 {
 					continue
 				}
-				session.AddTEID(ie.InterfaceType(), ie.TEID())
-				sgwUAddr, err := net.ResolveUDPAddr("udp", ie.IPAddress()+":2152")
+				it, err := ie.InterfaceType()
+				if err != nil {
+					return err
+				}
+				teid, err := ie.TEID()
+				if err != nil {
+					return err
+				}
+				session.AddTEID(it, teid)
+
+				ip, err := ie.IPAddress()
+				if err != nil {
+					return err
+				}
+				sgwUAddr, err := net.ResolveUDPAddr("udp", ip+":2152")
 				if err != nil {
 					return err
 				}
 				mock.raddr = sgwUAddr
-				mock.teidOut = ie.TEID()
+				mock.teidOut = teid
 			}
 		}
 	} else {

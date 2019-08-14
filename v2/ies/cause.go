@@ -4,6 +4,8 @@
 
 package ies
 
+import "io"
+
 // NewCause creates a new Cause IE.
 func NewCause(cause uint8, pce, bce, cs uint8, offendingIE *IE) *IE {
 	i := New(Cause, 0x00, make([]byte, 2))
@@ -18,15 +20,22 @@ func NewCause(cause uint8, pce, bce, cs uint8, offendingIE *IE) *IE {
 }
 
 // Cause returns Cause in uint8 if the type of IE matches.
-func (i *IE) Cause() uint8 {
+func (i *IE) Cause() (uint8, error) {
 	if i.Type != Cause {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
-	return i.Payload[0]
+	return i.Payload[0], nil
+}
+
+// MustCause returns Cause in uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustCause() uint8 {
+	v, _ := i.Cause()
+	return v
 }
 
 // IsRemoteCause returns IsRemoteCause in bool if the type of IE matches.

@@ -5,6 +5,7 @@
 package ies
 
 import (
+	"io"
 	"math"
 	"strconv"
 	"time"
@@ -36,12 +37,12 @@ func NewMSTimeZone(tz time.Duration, daylightSaving uint8) *IE {
 }
 
 // TimeZone returns TimeZone in time.Duration if the type of IE matches.
-func (i *IE) TimeZone() time.Duration {
+func (i *IE) TimeZone() (time.Duration, error) {
 	if i.Type != MSTimeZone {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
 	unsigned := i.Payload[0] & 0xf7
@@ -50,17 +51,31 @@ func (i *IE) TimeZone() time.Duration {
 		dec *= -1
 	}
 
-	return time.Duration(dec*15) * time.Minute
+	return time.Duration(dec*15) * time.Minute, nil
+}
+
+// MustTimeZone returns TimeZone in time.Duration if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustTimeZone() time.Duration {
+	v, _ := i.TimeZone()
+	return v
 }
 
 // DaylightSaving returns DaylightSaving in uint8 if the type of IE matches.
-func (i *IE) DaylightSaving() uint8 {
+func (i *IE) DaylightSaving() (uint8, error) {
 	if i.Type != MSTimeZone {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) < 2 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
-	return i.Payload[1]
+	return i.Payload[1], nil
+}
+
+// MustDaylightSaving returns DaylightSaving in uint8 if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustDaylightSaving() uint8 {
+	v, _ := i.DaylightSaving()
+	return v
 }

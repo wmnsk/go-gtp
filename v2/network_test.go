@@ -41,7 +41,10 @@ func setup(doneCh chan struct{}, errCh chan error) (cliConn, srvConn *v2.Conn, e
 				session := v2.NewSession(cliAddr, &v2.Subscriber{Location: &v2.Location{}})
 
 				if ie := csReq.IMSI; ie != nil {
-					imsi := ie.IMSI()
+					imsi, err := ie.IMSI()
+					if err != nil {
+						return err
+					}
 					if imsi != "123451234567890" {
 						return errors.Errorf("unexpected IMSI: %s", imsi)
 					}
@@ -111,7 +114,11 @@ func TestCreateSession(t *testing.T) {
 
 			csRsp := msg.(*messages.CreateSessionResponse)
 			if causeIE := csRsp.Cause; causeIE != nil {
-				if cause := causeIE.Cause(); cause != v2.CauseRequestAccepted {
+				cause, err := causeIE.Cause()
+				if err != nil {
+					return err
+				}
+				if cause != v2.CauseRequestAccepted {
 					return &v2.ErrCauseNotOK{
 						MsgType: csRsp.MessageTypeName(),
 						Cause:   cause,

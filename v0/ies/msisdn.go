@@ -4,7 +4,11 @@
 
 package ies
 
-import "github.com/wmnsk/go-gtp/utils"
+import (
+	"io"
+
+	"github.com/wmnsk/go-gtp/utils"
+)
 
 // NewMSISDN creates a new MSISDN IE.
 func NewMSISDN(msisdn string) *IE {
@@ -16,13 +20,20 @@ func NewMSISDN(msisdn string) *IE {
 }
 
 // MSISDN returns MSISDN value if type matches.
-func (i *IE) MSISDN() string {
+func (i *IE) MSISDN() (string, error) {
 	if i.Type != MSISDN {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) < 2 {
-		return ""
+		return "", io.ErrUnexpectedEOF
 	}
 
-	return utils.SwappedBytesToStr(i.Payload[1:], false)
+	return utils.SwappedBytesToStr(i.Payload[1:], false), nil
+}
+
+// MustMSISDN returns MSISDN in string if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustMSISDN() string {
+	v, _ := i.MSISDN()
+	return v
 }

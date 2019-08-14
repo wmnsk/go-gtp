@@ -4,7 +4,10 @@
 
 package ies
 
-import "strings"
+import (
+	"io"
+	"strings"
+)
 
 // NewAccessPointName creates a new AccessPointName IE.
 func NewAccessPointName(apn string) *IE {
@@ -21,12 +24,12 @@ func NewAccessPointName(apn string) *IE {
 }
 
 // AccessPointName returns AccessPointName in string if type of IE matches.
-func (i *IE) AccessPointName() string {
+func (i *IE) AccessPointName() (string, error) {
 	if i.Type != AccessPointName {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return ""
+		return "", io.ErrUnexpectedEOF
 	}
 
 	var (
@@ -41,11 +44,18 @@ func (i *IE) AccessPointName() string {
 		}
 		l := int(i.Payload[offset])
 		if offset+l+1 >= max {
-			break
+			return "", io.ErrUnexpectedEOF
 		}
 		apn = append(apn, string(i.Payload[offset+1:offset+l+1]))
 		offset += l + 1
 	}
 
-	return strings.Join(apn, ".")
+	return strings.Join(apn, "."), nil
+}
+
+// MustAccessPointName returns AccessPointName in string if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustAccessPointName() string {
+	v, _ := i.AccessPointName()
+	return v
 }

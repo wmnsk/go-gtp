@@ -4,6 +4,8 @@
 
 package ies
 
+import "io"
+
 // NewAllocationRetensionPriority creates a new AllocationRetensionPriority IE.
 func NewAllocationRetensionPriority(pci, pl, pvi uint8) *IE {
 	i := New(AllocationRetensionPriority, 0x00, make([]byte, 1))
@@ -26,16 +28,16 @@ func (i *IE) PreemptionCapability() bool {
 }
 
 // PriorityLevel returns PriorityLevel in uint8 if the type of IE matches.
-func (i *IE) PriorityLevel() uint8 {
+func (i *IE) PriorityLevel() (uint8, error) {
 	if len(i.Payload) == 0 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
 	switch i.Type {
 	case AllocationRetensionPriority, BearerQoS:
-		return i.Payload[0] & 0x3c
+		return i.Payload[0] & 0x3c, nil
 	default:
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 }
 

@@ -34,10 +34,17 @@ func NewS1UDataForwarding(sgwAddr string, sgwTEID uint32) *IE {
 }
 
 // SGWAddress returns IP address of SGW in string if the type of IE matches.
-func (i *IE) SGWAddress() string {
+func (i *IE) SGWAddress() (string, error) {
 	if i.Type != S1UDataForwarding {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 
 	return i.IPAddress()
+}
+
+// MustSGWAddress returns SGWAddress in string, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustSGWAddress() string {
+	v, _ := i.SGWAddress()
+	return v
 }

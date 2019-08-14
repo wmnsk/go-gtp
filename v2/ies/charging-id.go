@@ -4,7 +4,10 @@
 
 package ies
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"io"
+)
 
 // NewChargingID creates a new ChargingID IE.
 func NewChargingID(id uint32) *IE {
@@ -12,13 +15,20 @@ func NewChargingID(id uint32) *IE {
 }
 
 // ChargingID returns the ChargingID value in uint32 if the type of IE matches.
-func (i *IE) ChargingID() uint32 {
+func (i *IE) ChargingID() (uint32, error) {
 	if i.Type != ChargingID {
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) < 4 {
-		return 0
+		return 0, io.ErrUnexpectedEOF
 	}
 
-	return binary.BigEndian.Uint32(i.Payload)
+	return binary.BigEndian.Uint32(i.Payload), nil
+}
+
+// MustChargingID returns ChargingID in uint32, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustChargingID() uint32 {
+	v, _ := i.ChargingID()
+	return v
 }

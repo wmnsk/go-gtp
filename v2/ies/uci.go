@@ -6,6 +6,7 @@ package ies
 
 import (
 	"encoding/binary"
+	"io"
 
 	"github.com/wmnsk/go-gtp/utils"
 )
@@ -24,14 +25,21 @@ func NewUserCSGInformation(mcc, mnc string, csgID uint32, mode, lcsg, cmi uint8)
 }
 
 // AccessMode returns AccessMode in uint8 if the type of IE matches.
-func (i *IE) AccessMode() uint8 {
+func (i *IE) AccessMode() (uint8, error) {
 	switch i.Type {
 	case UserCSGInformation:
 		if len(i.Payload) < 8 {
-			return 0
+			return 0, io.ErrUnexpectedEOF
 		}
-		return i.Payload[7] >> 6
+		return i.Payload[7] >> 6, nil
 	default:
-		return 0
+		return 0, &InvalidTypeError{Type: i.Type}
 	}
+}
+
+// MustAccessMode returns AccessMode in uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustAccessMode() uint8 {
+	v, _ := i.AccessMode()
+	return v
 }

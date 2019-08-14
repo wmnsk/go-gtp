@@ -4,7 +4,10 @@
 
 package ies
 
-import "net"
+import (
+	"io"
+	"net"
+)
 
 // NewChargingGatewayAddress creates a new ChargingGatewayAddress IE from string.
 func NewChargingGatewayAddress(addr string) *IE {
@@ -20,13 +23,20 @@ func NewChargingGatewayAddress(addr string) *IE {
 }
 
 // ChargingGatewayAddress returns ChargingGatewayAddress value if type matches.
-func (i *IE) ChargingGatewayAddress() string {
+func (i *IE) ChargingGatewayAddress() (string, error) {
 	if i.Type != ChargingGatewayAddress {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) < 4 {
-		return ""
+		return "", io.ErrUnexpectedEOF
 	}
 
-	return net.IP(i.Payload).String()
+	return net.IP(i.Payload).String(), nil
+}
+
+// MustChargingGatewayAddress returns ChargingGatewayAddress in string if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustChargingGatewayAddress() string {
+	v, _ := i.ChargingGatewayAddress()
+	return v
 }

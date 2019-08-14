@@ -34,9 +34,16 @@ func NewRouteingAreaIdentity(mcc, mnc string, lac uint16, rac uint8) *IE {
 }
 
 // RouteingAreaIdentity returns RouteingAreaIdentity value if type matches.
-func (i *IE) RouteingAreaIdentity() []byte {
+func (i *IE) RouteingAreaIdentity() ([]byte, error) {
 	if i.Type != RouteingAreaIdentity {
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
-	return i.Payload
+	return i.Payload, nil
+}
+
+// MustRouteingAreaIdentity returns RouteingAreaIdentity in []byte if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustRouteingAreaIdentity() []byte {
+	v, _ := i.RouteingAreaIdentity()
+	return v
 }

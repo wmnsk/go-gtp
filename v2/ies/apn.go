@@ -23,9 +23,9 @@ func NewAccessPointName(apn string) *IE {
 }
 
 // AccessPointName returns AccessPointName in string if the type of IE matches.
-func (i *IE) AccessPointName() string {
+func (i *IE) AccessPointName() (string, error) {
 	if i.Type != AccessPointName {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 
 	var (
@@ -45,5 +45,12 @@ func (i *IE) AccessPointName() string {
 		offset += l + 1
 	}
 
-	return strings.Join(apn, ".")
+	return strings.Join(apn, "."), nil
+}
+
+// MustAccessPointName returns AccessPointName in string, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustAccessPointName() string {
+	v, _ := i.AccessPointName()
+	return v
 }

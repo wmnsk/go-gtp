@@ -5,6 +5,8 @@
 package ies
 
 import (
+	"io"
+
 	"github.com/wmnsk/go-gtp/utils"
 )
 
@@ -19,18 +21,25 @@ func NewPLMNID(mcc, mnc string) *IE {
 }
 
 // PLMNID returns PLMNID(MCC and MNC) in string if the type of IE matches.
-func (i *IE) PLMNID() string {
+func (i *IE) PLMNID() (string, error) {
 	if i.Type != PLMNID {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) < 3 {
-		return ""
+		return "", io.ErrUnexpectedEOF
 	}
 
 	mcc, mnc, err := utils.DecodePLMN(i.Payload)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return mcc + mnc
+	return mcc + mnc, nil
+}
+
+// MustPLMNID returns PLMNID in string, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustPLMNID() string {
+	v, _ := i.PLMNID()
+	return v
 }

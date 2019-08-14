@@ -157,7 +157,17 @@ func main() {
 					errCh <- err
 					return
 				}
-				sess.AddTEID(enbFTEID.InterfaceType(), enbFTEID.TEID())
+				it, err := enbFTEID.InterfaceType()
+				if err != nil {
+					errCh <- err
+					return
+				}
+				enbTEID, err := enbFTEID.TEID()
+				if err != nil {
+					errCh <- err
+					return
+				}
+				sess.AddTEID(it, enbTEID)
 
 				loggerCh <- fmt.Sprintf("Sent Modify Bearer Request for %s", imsi)
 				return

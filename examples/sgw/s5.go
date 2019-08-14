@@ -26,7 +26,11 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 
 	// check Cause value first.
 	if ie := csRspFromPGW.Cause; ie != nil {
-		if cause := ie.Cause(); cause != v2.CauseRequestAccepted {
+		cause, err := ie.Cause()
+		if err != nil {
+			return err
+		}
+		if cause != v2.CauseRequestAccepted {
 			s5cConn.RemoveSession(s5Session)
 			// this is not such a fatal error worth stopping the whole program.
 			// in the real case it is better to take some action based on the Cause, though.
@@ -46,13 +50,25 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 	bearer := s5Session.GetDefaultBearer()
 	// retrieve values that P-GW gave.
 	if ie := csRspFromPGW.PAA; ie != nil {
-		bearer.SubscriberIP = ie.IPAddress()
+		ip, err := ie.IPAddress()
+		if err != nil {
+			return err
+		}
+		bearer.SubscriberIP = ip
 	} else {
 		s5cConn.RemoveSession(s5Session)
 		return &v2.ErrRequiredIEMissing{Type: ies.PDNAddressAllocation}
 	}
 	if ie := csRspFromPGW.PGWS5S8FTEIDC; ie != nil {
-		s5Session.AddTEID(ie.InterfaceType(), ie.TEID())
+		it, err := ie.InterfaceType()
+		if err != nil {
+			return err
+		}
+		teid, err := ie.TEID()
+		if err != nil {
+			return err
+		}
+		s5Session.AddTEID(it, teid)
 	} else {
 		s5cConn.RemoveSession(s5Session)
 		return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
@@ -62,7 +78,11 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 		for _, ie := range brCtxIE.ChildIEs {
 			switch ie.Type {
 			case ies.Cause:
-				if cause := ie.Cause(); cause != v2.CauseRequestAccepted {
+				cause, err := ie.Cause()
+				if err != nil {
+					return err
+				}
+				if cause != v2.CauseRequestAccepted {
 					s5cConn.RemoveSession(s5Session)
 					return &v2.ErrCauseNotOK{
 						MsgType: csRspFromPGW.MessageTypeName(),
@@ -71,13 +91,21 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 					}
 				}
 			case ies.EPSBearerID:
-				bearer.EBI = ie.EPSBearerID()
+				ebi, err := ie.EPSBearerID()
+				if err != nil {
+					return err
+				}
+				bearer.EBI = ebi
 			case ies.FullyQualifiedTEID:
 				if err := handleFTEIDU(ie, s5Session, bearer); err != nil {
 					return err
 				}
 			case ies.ChargingID:
-				bearer.ChargingID = ie.ChargingID()
+				cid, err := ie.ChargingID()
+				if err != nil {
+					return err
+				}
+				bearer.ChargingID = cid
 			}
 		}
 	} else {
@@ -189,7 +217,7 @@ func handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.
 	}
 
 	// check if bearer associated with EBI exists or not.
-	_, err = s5Session.LookupBearerByEBI(ebi.EPSBearerID())
+	_, err = s5Session.LookupBearerByEBI(ebi.MustEPSBearerID())
 	if err != nil {
 		dbRspFromSGW = messages.NewDeleteBearerResponse(
 			s5cpgwTEID, 0,
@@ -219,8 +247,8 @@ func handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.
 			return err
 		}
 		// remove anyway, as P-GW no longer keeps bearer locally
-		s5Session.RemoveBearerByEBI(ebi.EPSBearerID())
-		s11Session.RemoveBearerByEBI(ebi.EPSBearerID())
+		s5Session.RemoveBearerByEBI(ebi.MustEPSBearerID())
+		s11Session.RemoveBearerByEBI(ebi.MustEPSBearerID())
 		return err
 	}
 
@@ -237,8 +265,8 @@ func handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.
 		return err
 	}
 
-	s5Session.RemoveBearerByEBI(ebi.EPSBearerID())
-	s11Session.RemoveBearerByEBI(ebi.EPSBearerID())
+	s5Session.RemoveBearerByEBI(ebi.MustEPSBearerID())
+	s11Session.RemoveBearerByEBI(ebi.MustEPSBearerID())
 
 	return nil
 }

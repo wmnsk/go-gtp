@@ -4,6 +4,8 @@
 
 package ies
 
+import "io"
+
 // NewAuthenticationQuintuplet creates a new AuthenticationQuintuplet IE.
 func NewAuthenticationQuintuplet(rand, xres, ck, ik, autn []byte) *IE {
 	xresLen := len(xres)
@@ -27,89 +29,124 @@ func NewAuthenticationQuintuplet(rand, xres, ck, ik, autn []byte) *IE {
 }
 
 // AuthenticationQuintuplet returns AuthenticationQuintuplet in []byte if type matches.
-func (i *IE) AuthenticationQuintuplet() []byte {
+func (i *IE) AuthenticationQuintuplet() ([]byte, error) {
 	if i.Type != AuthenticationQuintuplet {
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
-		return nil
+		return nil, io.ErrUnexpectedEOF
 	}
 
-	return i.Payload
+	return i.Payload, nil
+}
+
+// MustAuthenticationQuintuplet returns AuthenticationQuintuplet in []byte if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustAuthenticationQuintuplet() []byte {
+	v, _ := i.AuthenticationQuintuplet()
+	return v
 }
 
 // XRES returns XRES in []byte if type matches.
-func (i *IE) XRES() []byte {
+func (i *IE) XRES() ([]byte, error) {
 	if len(i.Payload) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	switch i.Type {
 	case AuthenticationQuintuplet:
 		if len(i.Payload) < 17 {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
 
 		xresLen := i.Payload[16]
 		if len(i.Payload) < 17+int(xresLen) {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
-		return i.Payload[17 : 17+int(xresLen)]
+		return i.Payload[17 : 17+int(xresLen)], nil
 	default:
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
 }
 
+// MustXRES returns XRES in []byte if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustXRES() []byte {
+	v, _ := i.XRES()
+	return v
+}
+
 // CK returns CK in []byte if type matches.
-func (i *IE) CK() []byte {
+func (i *IE) CK() ([]byte, error) {
 	switch i.Type {
 	case AuthenticationQuintuplet:
 		if len(i.Payload) < 18 {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
 
 		offset := 17 + int(i.Payload[16])
 		if len(i.Payload) < offset+16 {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
-		return i.Payload[offset : offset+16]
+		return i.Payload[offset : offset+16], nil
 	default:
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
 }
 
+// MustCK returns CK in []byte if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustCK() []byte {
+	v, _ := i.CK()
+	return v
+}
+
 // IK returns IK in []byte if type matches.
-func (i *IE) IK() []byte {
+func (i *IE) IK() ([]byte, error) {
 	switch i.Type {
 	case AuthenticationQuintuplet:
 		if len(i.Payload) < 34 {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
 
 		offset := 33 + int(i.Payload[16])
 		if len(i.Payload) < offset+16 {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
-		return i.Payload[offset : offset+16]
+		return i.Payload[offset : offset+16], nil
 	default:
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
 }
 
+// MustIK returns IK in []byte if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustIK() []byte {
+	v, _ := i.IK()
+	return v
+}
+
 // AUTN returns AUTN in []byte if type matches.
-func (i *IE) AUTN() []byte {
+func (i *IE) AUTN() ([]byte, error) {
 	switch i.Type {
 	case AuthenticationQuintuplet:
 		if len(i.Payload) < 50 {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
 		offset := 49 + int(i.Payload[16])
 		autnLen := i.Payload[50]
 		if len(i.Payload) < offset+int(autnLen) {
-			return nil
+			return nil, io.ErrUnexpectedEOF
 		}
-		return i.Payload[offset : offset+int(autnLen)]
+		return i.Payload[offset : offset+int(autnLen)], nil
 	default:
-		return nil
+		return nil, &InvalidTypeError{Type: i.Type}
 	}
+}
+
+// MustAUTN returns AUTN in []byte if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustAUTN() []byte {
+	v, _ := i.AUTN()
+	return v
 }
