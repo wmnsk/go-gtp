@@ -4,7 +4,10 @@
 
 package ies
 
-import "net"
+import (
+	"io"
+	"net"
+)
 
 // NewGSNAddress creates a new GSNAddress IE from string.
 func NewGSNAddress(addr string) *IE {
@@ -20,13 +23,20 @@ func NewGSNAddress(addr string) *IE {
 }
 
 // GSNAddress returns GSNAddress value if type matches.
-func (i *IE) GSNAddress() string {
+func (i *IE) GSNAddress() (string, error) {
 	if i.Type != GSNAddress {
-		return ""
+		return "", &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) < 4 {
-		return ""
+		return "", io.ErrUnexpectedEOF
 	}
 
-	return net.IP(i.Payload).String()
+	return net.IP(i.Payload).String(), nil
+}
+
+// MustGSNAddress returns GSNAddress in string if type matches.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustGSNAddress() string {
+	v, _ := i.GSNAddress()
+	return v
 }
