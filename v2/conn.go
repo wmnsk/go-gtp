@@ -556,11 +556,11 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 							return nil, 0, err
 						}
 					case ies.FullyQualifiedTEID:
-						it, err := i.InterfaceType()
+						it, err := child.InterfaceType()
 						if err != nil {
 							return nil, 0, err
 						}
-						teid, err := i.TEID()
+						teid, err := child.TEID()
 						if err != nil {
 							return nil, 0, err
 						}
