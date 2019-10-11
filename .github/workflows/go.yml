@@ -28,9 +28,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v1
     - name: Setup loopback interface for tests
-      run: sudo ifconfig lo0 alias 127.0.0.2
-      run: sudo ifconfig lo0 alias 127.0.0.11
-      run: sudo ifconfig lo0 alias 127.0.0.12
+      run: |
+        sudo ifconfig lo0 alias 127.0.0.2
+        sudo ifconfig lo0 alias 127.0.0.11
+        sudo ifconfig lo0 alias 127.0.0.12
     - name: Test
       run: go test ./...
   test-windows:
