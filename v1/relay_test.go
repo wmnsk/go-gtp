@@ -26,20 +26,19 @@ func TestRelay(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer leftConn.Close()
 	rightConn, err := v1.ListenAndServeUPlane(rightAddr, 0, errCh)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer rightConn.Close()
 
-	// XXX - should be updated
-	relay := v1.NewRelay(leftConn, rightConn)
-	leftTEID, rightTEID := uint32(0x22222222), uint32(0x11111111)
-	relay.AddPeer(leftTEID, rightTEID, rightAddr)
-	relay.AddPeer(rightTEID, leftTEID, leftAddr)
-	go relay.Run()
-	defer relay.Close()
-
-	if _, err := leftConn.WriteToGTP(rightTEID, []byte{0xde, 0xad, 0xbe, 0xef}, rightAddr); err != nil {
+	if err := leftConn.RelayTo(rightConn, 0x22222222, 0x11111111, rightAddr); err != nil {
 		t.Fatal(err)
 	}
+	if err := rightConn.RelayTo(leftConn, 0x11111111, 0x22222222, leftAddr); err != nil {
+		t.Fatal(err)
+	}
+
+	// TODO: add tests to check if the traffic goes through conns.
 }
