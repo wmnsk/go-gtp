@@ -12,7 +12,7 @@ Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol
 
 * No platform-specific codes inside, so it **works almost everywhere Golang works**.
 * Flexible enough to **control everything in GTP protocol**.;
-  * For developing mobile core network nodes (see [examples](./gtp/examples)).
+  * For developing mobile core network nodes (see [examples](./examples)).
   * For developing testing tools like traffic simulators or fuzzers.
 * Many **helpers kind to developers** provided, like session, bearer, and TEID associations.
 * Easy handling of **multiple connections with fixed IP and Port** with UDP (or other `net.PacketConn`).
