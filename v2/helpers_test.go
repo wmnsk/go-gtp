@@ -9,14 +9,15 @@ import (
 )
 
 var testConn *v2.Conn
+var dummyAddr net.Addr = &net.UDPAddr{IP: net.IP{0x00, 0x00, 0x00, 0x00}, Port: 2123}
 
 func init() {
 	testConn = &v2.Conn{
 		Sessions: []*v2.Session{
-			v2.NewSession(&net.UDPAddr{}, &v2.Subscriber{IMSI: "001011234567891"}),
-			v2.NewSession(&net.UDPAddr{}, &v2.Subscriber{IMSI: "001011234567892"}),
-			v2.NewSession(&net.UDPAddr{}, &v2.Subscriber{IMSI: "001011234567893"}),
-			v2.NewSession(&net.UDPAddr{}, &v2.Subscriber{IMSI: "001011234567894"}),
+			v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}),
+			v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567892"}),
+			v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567893"}),
+			v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567894"}),
 		},
 	}
 
@@ -47,7 +48,7 @@ func TestGetSessionByIMSI_GetTEID(t *testing.T) {
 
 func TestGetSessionByTEID(t *testing.T) {
 	for i := 1; i <= len(testConn.Sessions); i++ {
-		sess, err := testConn.GetSessionByTEID(uint32(i))
+		sess, err := testConn.GetSessionByTEID(uint32(i), dummyAddr)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -61,7 +62,7 @@ func TestGetSessionByTEID(t *testing.T) {
 
 func TestGetIMSIByTEID(t *testing.T) {
 	for i := 1; i <= len(testConn.Sessions); i++ {
-		imsi, err := testConn.GetIMSIByTEID(uint32(i))
+		imsi, err := testConn.GetIMSIByTEID(uint32(i), dummyAddr)
 		if err != nil {
 			t.Fatal(err)
 		}

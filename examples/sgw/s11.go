@@ -256,7 +256,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
-	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID())
+	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID(), mmeAddr)
 	if err != nil {
 		return err
 	}
@@ -335,7 +335,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	// specified correctly in AddHandler().
 	dsReqFromMME := msg.(*messages.DeleteSessionRequest)
 
-	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID())
+	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID(), mmeAddr)
 	if err != nil {
 		return err
 	}
@@ -352,6 +352,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 
 	seq, err := sgw.s5cConn.DeleteSession(
 		s5cpgwTEID,
+		s5Session.PeerAddr,
 		ies.NewEPSBearerID(s5Session.GetDefaultBearer().EBI),
 	)
 	if err != nil {
@@ -404,7 +405,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 func handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
-	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID())
+	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID(), mmeAddr)
 	if err != nil {
 		return err
 	}

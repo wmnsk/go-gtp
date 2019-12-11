@@ -17,7 +17,7 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Mess
 	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 
 	// find the session associated with TEID
-	session, err := c.GetSessionByTEID(msg.TEID())
+	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)
 	if err != nil {
 		c.RemoveSession(session)
 		return err
@@ -117,7 +117,7 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Mess
 func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
 	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 
-	session, err := c.GetSessionByTEID(msg.TEID())
+	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 func handleDeleteSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
 	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 
-	session, err := c.GetSessionByTEID(msg.TEID())
+	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)
 	if err != nil {
 		return err
 	}

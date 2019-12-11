@@ -33,7 +33,8 @@ type Session struct {
 	*teidMap
 	*bearerMap
 
-	seqChMap map[uint32]chan messages.Message
+	// channel to store messages passed by other Sessions
+	msgQueue chan messages.Message
 
 	// PeerAddr is a net.Addr of the peer of the Session.
 	PeerAddr net.Addr
@@ -53,7 +54,7 @@ func NewSession(peerAddr net.Addr, sub *Subscriber) *Session {
 		teidMap:    newTeidMap(),
 		bearerMap:  newBearerMap("default", &Bearer{QoSProfile: &QoSProfile{}}),
 		Subscriber: sub,
-		seqChMap:   map[uint32]chan messages.Message{},
+		msgQueue:   make(chan messages.Message, 1000),
 	}
 
 	return s
@@ -105,34 +106,33 @@ func (s *Session) GetTEID(ifType uint8) (uint32, error) {
 // PassMessageTo passes the message (typically "triggerred message") to the session
 // expecting to receive it.
 //
-// Note that it should be ensured that WaitMessage is called before calling this.
-// Otherwise it may fail with ErrInvalidSequence.
+// If the message queue of s is full, it waits for certain period of time specified
+// by timeout. It discards the msg and returns error if expired.
+// The default queue size of a Session is 1000 and it cannot be configured in the
+// current implementation.
 func PassMessageTo(s *Session, msg messages.Message, timeout time.Duration) error {
-	s.mu.Lock()
-	msgCh, ok := s.seqChMap[msg.Sequence()]
-	s.mu.Unlock()
-	if !ok {
-		return &ErrInvalidSequence{Seq: msg.Sequence()}
-	}
-
 	select {
-	case msgCh <- msg:
+	case s.msgQueue <- msg:
 		return nil
 	case <-time.After(timeout):
 		return ErrTimeout
 	}
 }
 
-// WaitMessage waits for a message to come.
-// Unless the user does not use PassMessage() func, this always fails with timeout.
+// WaitMessage waits for a message to come from other Session.
+//
+// It waits for certain period of time specified by timeout, and returns the message
+// if seq matches the SequenceNumber of message. Otherwise it returns error immediately.
 func (s *Session) WaitMessage(seq uint32, timeout time.Duration) (messages.Message, error) {
-	msgCh := make(chan messages.Message)
-	s.mu.Lock()
-	s.seqChMap[seq] = msgCh
-	s.mu.Unlock()
-
 	select {
-	case msg := <-msgCh:
+	case msg, ok := <-s.msgQueue:
+		if !ok {
+			return nil, &ErrInvalidSession{s.IMSI}
+		}
+
+		if seqGot := msg.Sequence(); seqGot != seq {
+			return nil, &ErrInvalidSequence{seqGot}
+		}
 		return msg, nil
 	case <-time.After(timeout):
 		return nil, ErrTimeout

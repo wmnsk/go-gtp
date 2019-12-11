@@ -251,7 +251,7 @@ func handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
 	// specified correctly in AddHandler().
-	session, err := c.GetSessionByTEID(msg.TEID())
+	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)
 	if err != nil {
 		dsr := messages.NewDeleteSessionResponse(
 			0, 0,

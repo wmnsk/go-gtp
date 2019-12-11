@@ -14,7 +14,7 @@ import (
 func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
 
-	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID())
+	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID(), pgwAddr)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 func handleDeleteSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
 
-	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID())
+	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID(), pgwAddr)
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func handleDeleteSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 func handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
 
-	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID())
+	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID(), pgwAddr)
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.
 	}
 
 	// forward to MME
-	seq, err := sgw.s11Conn.DeleteBearer(s11mmeTEID, ebi)
+	seq, err := sgw.s11Conn.DeleteBearer(s11mmeTEID, s11Session.PeerAddr, ebi)
 	if err != nil {
 		return err
 	}

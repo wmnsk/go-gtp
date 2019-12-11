@@ -124,11 +124,22 @@ func (e *ErrUnknownAPN) Error() string {
 	return fmt.Sprintf("got unknown APN: %s", e.APN)
 }
 
+// ErrInvalidSession indicates that something went wrong with Session.
+type ErrInvalidSession struct {
+	IMSI string
+}
+
+// Error returns message with IMSI associated with Session if available.
+func (e ErrInvalidSession) Error() string {
+	return fmt.Sprintf("invalid session, IMSI: %s", e.IMSI)
+}
+
 // ErrNoBearerFound indicates that no Bearer found by lookup methods.
 type ErrNoBearerFound struct {
 	IMSI string
 }
 
+// Error returns message with IMSI associated with Bearer if available.
 func (e ErrNoBearerFound) Error() string {
 	return fmt.Sprintf("no Bearer found: %s", e.IMSI)
 }
