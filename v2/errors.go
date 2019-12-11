@@ -20,139 +20,139 @@ var (
 	ErrTimeout = errors.New("timed out")
 )
 
-// ErrCauseNotOK indicates that the value in Cause IE is not OK.
-type ErrCauseNotOK struct {
+// CauseNotOKError indicates that the value in Cause IE is not OK.
+type CauseNotOKError struct {
 	MsgType string
 	Cause   uint8
 	Msg     string
 }
 
-// Error returns error cause with message.
-func (e *ErrCauseNotOK) Error() string {
+//x Error returns error cause with message.
+func (e *CauseNotOKError) Error() string {
 	return fmt.Sprintf("got non-OK Cause: %d in %s; %s", e.Cause, e.MsgType, e.Msg)
 }
 
-// ErrRequiredIEMissing indicates that the IE required is missing.
-type ErrRequiredIEMissing struct {
+// RequiredIEMissingError indicates that the IE required is missing.
+type RequiredIEMissingError struct {
 	Type uint8
 }
 
-// Error returns error with missing IE type.
-func (e *ErrRequiredIEMissing) Error() string {
+//x Error returns error with missing IE type.
+func (e *RequiredIEMissingError) Error() string {
 	return fmt.Sprintf("required IE missing: %d", e.Type)
 }
 
-// ErrRequiredParameterMissing indicates that no Bearer found by lookup methods.
-type ErrRequiredParameterMissing struct {
+// RequiredParameterMissingError indicates that no Bearer found by lookup methods.
+type RequiredParameterMissingError struct {
 	Name, Msg string
 }
 
-// Error returns missing parameter with message.
-func (e *ErrRequiredParameterMissing) Error() string {
+//x Error returns missing parameter with message.
+func (e *RequiredParameterMissingError) Error() string {
 	return fmt.Sprintf("required parameter: %s is missing. %s", e.Name, e.Msg)
 }
 
-// ErrUnexpectedType indicates that the type of incoming message is not expected.
-type ErrUnexpectedType struct {
+// UnexpectedTypeError indicates that the type of incoming message is not expected.
+type UnexpectedTypeError struct {
 	Msg messages.Message
 }
 
-// Error returns violating message type.
-func (e *ErrUnexpectedType) Error() string {
+//x Error returns violating message type.
+func (e *UnexpectedTypeError) Error() string {
 	return fmt.Sprintf("got unexpected type of message: %T", e.Msg)
 }
 
-// ErrUnexpectedIE indicates that the type of incoming message is not expected.
-type ErrUnexpectedIE struct {
+// UnexpectedIEError indicates that the type of incoming message is not expected.
+type UnexpectedIEError struct {
 	IEType uint8
 }
 
-// Error returns violating message type.
-func (e *ErrUnexpectedIE) Error() string {
+//x Error returns violating message type.
+func (e *UnexpectedIEError) Error() string {
 	return fmt.Sprintf("got unexpected type of message: %T", e.IEType)
 }
 
-// ErrInvalidVersion indicates that the version of the message specified by the user
+// InvalidVersionError indicates that the version of the message specified by the user
 // is not acceptable for the receiver.
-type ErrInvalidVersion struct {
+type InvalidVersionError struct {
 	Version int
 }
 
-// Error returns violationg version.
-func (e *ErrInvalidVersion) Error() string {
+//x Error returns violationg version.
+func (e *InvalidVersionError) Error() string {
 	return fmt.Sprintf("version: %d is not acceptable for the receiver", e.Version)
 }
 
-// ErrInvalidSequence indicates that the Sequence Number is invalid.
-type ErrInvalidSequence struct {
+// InvalidSequenceError indicates that the Sequence Number is invalid.
+type InvalidSequenceError struct {
 	Seq uint32
 }
 
-// Error returns violating Sequence Number.
-func (e *ErrInvalidSequence) Error() string {
+//x Error returns violating Sequence Number.
+func (e *InvalidSequenceError) Error() string {
 	return fmt.Sprintf("got invalid Sequence Number: %d", e.Seq)
 }
 
-// ErrInvalidTEID indicates that the TEID value is different from expected one or
+// InvalidTEIDError indicates that the TEID value is different from expected one or
 // not registered in TEIDMap.
-type ErrInvalidTEID struct {
+type InvalidTEIDError struct {
 	TEID uint32
 }
 
-// Error returns violating TEID.
-func (e *ErrInvalidTEID) Error() string {
+//x Error returns violating TEID.
+func (e *InvalidTEIDError) Error() string {
 	return fmt.Sprintf("got invalid TEID: %#08x", e.TEID)
 }
 
-// ErrUnknownIMSI indicates that the IMSI is different from expected one.
-type ErrUnknownIMSI struct {
+// UnknownIMSIError indicates that the IMSI is different from expected one.
+type UnknownIMSIError struct {
 	IMSI string
 }
 
-// Error returns violating IMSI.
-func (e *ErrUnknownIMSI) Error() string {
+//x Error returns violating IMSI.
+func (e *UnknownIMSIError) Error() string {
 	return fmt.Sprintf("got unknown IMSI: %s", e.IMSI)
 }
 
-// ErrUnknownAPN indicates that the APN is different from expected one.
-type ErrUnknownAPN struct {
+// UnknownAPNError indicates that the APN is different from expected one.
+type UnknownAPNError struct {
 	APN string
 }
 
-// Error returns violating APN.
-func (e *ErrUnknownAPN) Error() string {
+//x Error returns violating APN.
+func (e *UnknownAPNError) Error() string {
 	return fmt.Sprintf("got unknown APN: %s", e.APN)
 }
 
-// ErrInvalidSession indicates that something went wrong with Session.
-type ErrInvalidSession struct {
+// InvalidSessionError indicates that something went wrong with Session.
+type InvalidSessionError struct {
 	IMSI string
 }
 
-// Error returns message with IMSI associated with Session if available.
-func (e ErrInvalidSession) Error() string {
+//x Error returns message with IMSI associated with Session if available.
+func (e *InvalidSessionError) Error() string {
 	return fmt.Sprintf("invalid session, IMSI: %s", e.IMSI)
 }
 
-// ErrNoBearerFound indicates that no Bearer found by lookup methods.
-type ErrNoBearerFound struct {
+// BearerNotFoundError indicates that no Bearer found by lookup methods.
+type BearerNotFoundError struct {
 	IMSI string
 }
 
-// Error returns message with IMSI associated with Bearer if available.
-func (e ErrNoBearerFound) Error() string {
+//x Error returns message with IMSI associated with Bearer if available.
+func (e *BearerNotFoundError) Error() string {
 	return fmt.Sprintf("no Bearer found: %s", e.IMSI)
 }
 
-// ErrNoHandlersFound indicates that the handler func is not registered in *Conn
+// HandlerNotFoundError indicates that the handler func is not registered in *Conn
 // for the incoming GTPv2 message. In usual cases this error should not be taken
 // as fatal, as the other endpoint can make your program stop working just by
 // sending unregistered messages.
-type ErrNoHandlersFound struct {
+type HandlerNotFoundError struct {
 	MsgType string
 }
 
-// Error returns violating message type to handle.
-func (e *ErrNoHandlersFound) Error() string {
+//x Error returns violating message type to handle.
+func (e *HandlerNotFoundError) Error() string {
 	return fmt.Sprintf("no handlers found for incoming message: %s, ignoring", e.MsgType)
 }

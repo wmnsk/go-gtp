@@ -53,7 +53,6 @@ type sGateway struct {
 
 	loggerCh chan string
 	errCh    chan error
-	msgChCh  chan chan messages.Message
 }
 
 func newSGW(s11, s5c, s1u, s5u net.Addr) (*sGateway, error) {

@@ -37,14 +37,14 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Mess
 		}
 		if cause != v2.CauseRequestAccepted {
 			c.RemoveSession(session)
-			return &v2.ErrCauseNotOK{
+			return &v2.CauseNotOKError{
 				MsgType: csRspFromSGW.MessageTypeName(),
 				Cause:   cause,
 				Msg:     fmt.Sprintf("subscriber: %s", session.IMSI),
 			}
 		}
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: msg.MessageType()}
+		return &v2.RequiredIEMissingError{Type: msg.MessageType()}
 	}
 
 	if ie := csRspFromSGW.PAA; ie != nil {
@@ -60,7 +60,7 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Mess
 		}
 		session.AddTEID(v2.IFTypeS11S4SGWGTPC, teid)
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
+		return &v2.RequiredIEMissingError{Type: ies.FullyQualifiedTEID}
 	}
 
 	s11sgwTEID, err := session.GetTEID(v2.IFTypeS11S4SGWGTPC)
@@ -98,7 +98,7 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Mess
 			}
 		}
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.BearerContext}
+		return &v2.RequiredIEMissingError{Type: ies.BearerContext}
 	}
 
 	if err := session.Activate(); err != nil {
@@ -129,14 +129,14 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 			return err
 		}
 		if cause != v2.CauseRequestAccepted {
-			return &v2.ErrCauseNotOK{
+			return &v2.CauseNotOKError{
 				MsgType: msg.MessageTypeName(),
 				Cause:   cause,
 				Msg:     fmt.Sprintf("subscriber: %s", session.IMSI),
 			}
 		}
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.Cause}
+		return &v2.RequiredIEMissingError{Type: ies.Cause}
 	}
 
 	mock := &mockUEeNB{
@@ -173,7 +173,7 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 			}
 		}
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.BearerContext}
+		return &v2.RequiredIEMissingError{Type: ies.BearerContext}
 	}
 
 	go mock.run(errCh)

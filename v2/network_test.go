@@ -119,7 +119,7 @@ func TestCreateSession(t *testing.T) {
 					return err
 				}
 				if cause != v2.CauseRequestAccepted {
-					return &v2.ErrCauseNotOK{
+					return &v2.CauseNotOKError{
 						MsgType: csRsp.MessageTypeName(),
 						Cause:   cause,
 						Msg:     "something went wrong",
@@ -131,7 +131,7 @@ func TestCreateSession(t *testing.T) {
 				}
 				rspOK <- struct{}{}
 			} else {
-				return &v2.ErrRequiredIEMissing{Type: ies.Cause}
+				return &v2.RequiredIEMissingError{Type: ies.Cause}
 			}
 
 			return nil

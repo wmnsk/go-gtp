@@ -34,7 +34,7 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 			s5cConn.RemoveSession(s5Session)
 			// this is not such a fatal error worth stopping the whole program.
 			// in the real case it is better to take some action based on the Cause, though.
-			return &v2.ErrCauseNotOK{
+			return &v2.CauseNotOKError{
 				MsgType: csRspFromPGW.MessageTypeName(),
 				Cause:   cause,
 				Msg:     fmt.Sprintf("subscriber: %s", s5Session.IMSI),
@@ -42,7 +42,7 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 		}
 	} else {
 		s5cConn.RemoveSession(s5Session)
-		return &v2.ErrRequiredIEMissing{
+		return &v2.RequiredIEMissingError{
 			Type: ies.Cause,
 		}
 	}
@@ -57,7 +57,7 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 		bearer.SubscriberIP = ip
 	} else {
 		s5cConn.RemoveSession(s5Session)
-		return &v2.ErrRequiredIEMissing{Type: ies.PDNAddressAllocation}
+		return &v2.RequiredIEMissingError{Type: ies.PDNAddressAllocation}
 	}
 	if ie := csRspFromPGW.PGWS5S8FTEIDC; ie != nil {
 		it, err := ie.InterfaceType()
@@ -71,7 +71,7 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 		s5Session.AddTEID(it, teid)
 	} else {
 		s5cConn.RemoveSession(s5Session)
-		return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
+		return &v2.RequiredIEMissingError{Type: ies.FullyQualifiedTEID}
 	}
 
 	if brCtxIE := csRspFromPGW.BearerContextsCreated; brCtxIE != nil {
@@ -84,7 +84,7 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 				}
 				if cause != v2.CauseRequestAccepted {
 					s5cConn.RemoveSession(s5Session)
-					return &v2.ErrCauseNotOK{
+					return &v2.CauseNotOKError{
 						MsgType: csRspFromPGW.MessageTypeName(),
 						Cause:   cause,
 						Msg:     fmt.Sprintf("subscriber: %s", s5Session.IMSI),
@@ -110,7 +110,7 @@ func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message
 		}
 	} else {
 		s5cConn.RemoveSession(s5Session)
-		return &v2.ErrRequiredIEMissing{Type: ies.BearerContext}
+		return &v2.RequiredIEMissingError{Type: ies.BearerContext}
 	}
 
 	if err := s5Session.Activate(); err != nil {
@@ -257,7 +257,7 @@ func handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.
 		// move forward
 		dbRspFromSGW = m
 	default:
-		return &v2.ErrUnexpectedType{Msg: message}
+		return &v2.UnexpectedTypeError{Msg: message}
 	}
 
 	dbRspFromSGW.SetTEID(s5cpgwTEID)

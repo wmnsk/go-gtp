@@ -41,7 +41,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		}
 		s11Session.AddTEID(v2.IFTypeS5S8PGWGTPC, teid)
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
+		return &v2.RequiredIEMissingError{Type: ies.FullyQualifiedTEID}
 	}
 	if ie := csReqFromMME.SenderFTEIDC; ie != nil {
 		teid, err := ie.TEID()
@@ -50,7 +50,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		}
 		s11Session.AddTEID(v2.IFTypeS11MMEGTPC, teid)
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
+		return &v2.RequiredIEMissingError{Type: ies.FullyQualifiedTEID}
 	}
 
 	laddr, err := net.ResolveUDPAddr("udp", *s5c)
@@ -74,7 +74,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		sess, err := s11Conn.GetSessionByIMSI(imsi)
 		if err != nil {
 			switch err.(type) {
-			case *v2.ErrUnknownIMSI:
+			case *v2.UnknownIMSIError:
 				// whole new session. just ignore.
 			default:
 				return errors.Wrap(err, "got something unexpected")
@@ -85,7 +85,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 
 		s11Session.IMSI = imsi
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.IMSI}
+		return &v2.RequiredIEMissingError{Type: ies.IMSI}
 	}
 	if ie := csReqFromMME.MSISDN; ie != nil {
 		s11Session.MSISDN, err = ie.MSISDN()
@@ -93,7 +93,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			return err
 		}
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.MSISDN}
+		return &v2.RequiredIEMissingError{Type: ies.MSISDN}
 	}
 	if ie := csReqFromMME.MEI; ie != nil {
 		s11Session.IMEI, err = ie.MobileEquipmentIdentity()
@@ -101,7 +101,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			return err
 		}
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.MobileEquipmentIdentity}
+		return &v2.RequiredIEMissingError{Type: ies.MobileEquipmentIdentity}
 	}
 	if ie := csReqFromMME.APN; ie != nil {
 		s11Bearer.APN, err = ie.AccessPointName()
@@ -109,7 +109,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			return err
 		}
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.AccessPointName}
+		return &v2.RequiredIEMissingError{Type: ies.AccessPointName}
 	}
 	if ie := csReqFromMME.ServingNetwork; ie != nil {
 		s11Session.MCC, err = ie.MCC()
@@ -121,7 +121,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			return err
 		}
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.ServingNetwork}
+		return &v2.RequiredIEMissingError{Type: ies.ServingNetwork}
 	}
 	if ie := csReqFromMME.RATType; ie != nil {
 		s11Session.RATType, err = ie.RATType()
@@ -129,7 +129,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 			return err
 		}
 	} else {
-		return &v2.ErrRequiredIEMissing{Type: ies.RATType}
+		return &v2.RequiredIEMissingError{Type: ies.RATType}
 	}
 	s11Conn.AddSession(s11Session)
 
@@ -195,7 +195,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		csRspFromPGW = m
 	default:
 		s11Conn.RemoveSession(s11Session)
-		return &v2.ErrUnexpectedType{Msg: message}
+		return &v2.UnexpectedTypeError{Msg: message}
 	}
 	// if everything in CreateSessionResponse seems OK, relay it to MME.
 	s11IP, _, err := net.SplitHostPort(*s11)
@@ -299,8 +299,16 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 	if err != nil {
 		return err
 	}
-	sgw.s1uConn.RelayTo(sgw.s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
-	sgw.s5uConn.RelayTo(sgw.s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
+	if err := sgw.s1uConn.RelayTo(
+		sgw.s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress(),
+	); err != nil {
+		return err
+	}
+	if err := sgw.s5uConn.RelayTo(
+		sgw.s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress(),
+	); err != nil {
+		return err
+	}
 
 	s1uIP, _, err := net.SplitHostPort(*s1u)
 	if err != nil {
@@ -388,7 +396,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		// move forward
 		dsRspFromSGW = m
 	default:
-		return &v2.ErrUnexpectedType{Msg: message}
+		return &v2.UnexpectedTypeError{Msg: message}
 	}
 
 	dsRspFromSGW.SetTEID(s11mmeTEID)
@@ -426,7 +434,7 @@ func handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 
 func handleFTEIDU(ie *ies.IE, session *v2.Session, bearer *v2.Bearer) error {
 	if ie.Type != ies.FullyQualifiedTEID {
-		return &v2.ErrUnexpectedIE{IEType: ie.Type}
+		return &v2.UnexpectedIEError{IEType: ie.Type}
 	}
 
 	ip, err := ie.IPAddress()
