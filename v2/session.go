@@ -66,7 +66,7 @@ func (s *Session) Activate() error {
 	defer s.mu.Unlock()
 
 	if s.IMSI == "" {
-		return &ErrRequiredParameterMissing{"IMSI", "Session must have IMSI set"}
+		return &RequiredParameterMissingError{"IMSI", "Session must have IMSI set"}
 	}
 
 	s.isActive = true
@@ -127,11 +127,11 @@ func (s *Session) WaitMessage(seq uint32, timeout time.Duration) (messages.Messa
 	select {
 	case msg, ok := <-s.msgQueue:
 		if !ok {
-			return nil, &ErrInvalidSession{s.IMSI}
+			return nil, &InvalidSessionError{s.IMSI}
 		}
 
 		if seqGot := msg.Sequence(); seqGot != seq {
-			return nil, &ErrInvalidSequence{seqGot}
+			return nil, &InvalidSequenceError{seqGot}
 		}
 		return msg, nil
 	case <-time.After(timeout):
@@ -184,7 +184,7 @@ func (s *Session) LookupBearerByName(name string) (*Bearer, error) {
 		return br, nil
 	}
 
-	return nil, &ErrNoBearerFound{IMSI: s.IMSI}
+	return nil, &BearerNotFoundError{IMSI: s.IMSI}
 }
 
 // LookupBearerByEBI looks up Bearer registered in Session by EBI.
@@ -200,7 +200,7 @@ func (s *Session) LookupBearerByEBI(ebi uint8) (*Bearer, error) {
 	})
 
 	if bearer == nil {
-		return nil, &ErrNoBearerFound{IMSI: s.IMSI}
+		return nil, &BearerNotFoundError{IMSI: s.IMSI}
 
 	}
 	return bearer, nil
@@ -219,7 +219,7 @@ func (s *Session) LookupBearerNameByEBI(ebi uint8) (string, error) {
 	})
 
 	if name == "" {
-		return "", &ErrNoBearerFound{IMSI: s.IMSI}
+		return "", &BearerNotFoundError{IMSI: s.IMSI}
 
 	}
 	return name, nil

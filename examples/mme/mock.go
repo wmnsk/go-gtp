@@ -56,7 +56,7 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 	sess, err := c.GetSessionByIMSI(sub.IMSI)
 	if err != nil {
 		switch err.(type) {
-		case *v2.ErrUnknownIMSI:
+		case *v2.UnknownIMSIError:
 			// whole new session. just ignore.
 		default:
 			return errors.Wrap(err, "got something unexpected")
