@@ -67,7 +67,7 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 			return v2.ErrTEIDNotFound
 		}
 		// send Delete Session Request to cleanup sessions in S/P-GW.
-		if _, err := c.DeleteSession(teid); err != nil {
+		if _, err := c.DeleteSession(teid, sess.PeerAddr); err != nil {
 			return errors.Wrap(err, "got something unexpected")
 		}
 		c.RemoveSession(sess)
