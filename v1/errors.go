@@ -28,12 +28,12 @@ var (
 	ErrConnNotOpened = errors.New("connection is not opened")
 )
 
-// ErrErrorIndicated indicates that Error Indication message is received on U-Plane Connection.
-type ErrErrorIndicated struct {
+// ErrorIndicatedError indicates that Error Indication message is received on U-Plane Connection.
+type ErrorIndicatedError struct {
 	TEID uint32
 	Peer string
 }
 
-func (e *ErrErrorIndicated) Error() string {
+func (e *ErrorIndicatedError) Error() string {
 	return fmt.Sprintf("error received from %s, TEIDDataI: %#x", e.Peer, e.TEID)
 }
