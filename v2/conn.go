@@ -365,7 +365,7 @@ func (c *Conn) validate(senderAddr net.Addr, msg messages.Message) error {
 
 	// check if TEID is known or not
 	if teid := msg.TEID(); teid != 0 {
-		if _, err := c.GetSessionByTEID(teid); err != nil {
+		if _, err := c.GetSessionByTEID(teid, senderAddr); err != nil {
 			return &ErrInvalidTEID{TEID: teid}
 		}
 	}
@@ -586,8 +586,8 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 }
 
 // DeleteSession sends a DeleteSessionRequest with TEID and IEs given..
-func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) (uint32, error) {
-	sess, err := c.GetSessionByTEID(teid)
+func (c *Conn) DeleteSession(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
+	sess, err := c.GetSessionByTEID(teid, raddr)
 	if err != nil {
 		return 0, err
 	}
@@ -602,8 +602,8 @@ func (c *Conn) DeleteSession(teid uint32, ie ...*ies.IE) (uint32, error) {
 }
 
 // ModifyBearer sends a ModifyBearerRequest with TEID and IEs given..
-func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
-	sess, err := c.GetSessionByTEID(teid)
+func (c *Conn) ModifyBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
+	sess, err := c.GetSessionByTEID(teid, raddr)
 	if err != nil {
 		return 0, err
 	}
@@ -618,8 +618,8 @@ func (c *Conn) ModifyBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
 }
 
 // DeleteBearer sends a DeleteBearerRequest TEID and with IEs given.
-func (c *Conn) DeleteBearer(teid uint32, ie ...*ies.IE) (uint32, error) {
-	sess, err := c.GetSessionByTEID(teid)
+func (c *Conn) DeleteBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
+	sess, err := c.GetSessionByTEID(teid, raddr)
 	if err != nil {
 		return 0, err
 	}
@@ -652,12 +652,16 @@ func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) er
 }
 
 // GetSessionByTEID returns the current session looked up by InterfaceType and TEID of the message.
-func (c *Conn) GetSessionByTEID(teid uint32) (*Session, error) {
+func (c *Conn) GetSessionByTEID(teid uint32, peer net.Addr) (*Session, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	var session *Session
 	for _, sess := range c.Sessions {
+		if peer.String() != sess.PeerAddr.String() {
+			continue
+		}
+
 		sess.teidMap.rangeWithFunc(func(i, t interface{}) bool {
 			if teid == t {
 				session = sess
@@ -688,8 +692,8 @@ func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
 }
 
 // GetIMSIByTEID returns IMSI associated with TEID.
-func (c *Conn) GetIMSIByTEID(teid uint32) (string, error) {
-	sess, err := c.GetSessionByTEID(teid)
+func (c *Conn) GetIMSIByTEID(teid uint32, peer net.Addr) (string, error) {
+	sess, err := c.GetSessionByTEID(teid, peer)
 	if err != nil {
 		return "", err
 	}
