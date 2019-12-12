@@ -360,7 +360,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 
 	seq, err := sgw.s5cConn.DeleteSession(
 		s5cpgwTEID,
-		s5Session.PeerAddr,
+		s5Session.PeerAddr(),
 		ies.NewEPSBearerID(s5Session.GetDefaultBearer().EBI),
 	)
 	if err != nil {

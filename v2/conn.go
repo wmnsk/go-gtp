@@ -594,7 +594,7 @@ func (c *Conn) DeleteSession(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32
 
 	msg := messages.NewDeleteSessionRequest(teid, 0, ie...)
 
-	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
+	seq, err := c.SendMessageTo(msg, sess.peerAddr)
 	if err != nil {
 		return 0, err
 	}
@@ -610,7 +610,7 @@ func (c *Conn) ModifyBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32,
 
 	msg := messages.NewModifyBearerRequest(teid, 0, ie...)
 
-	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
+	seq, err := c.SendMessageTo(msg, sess.peerAddr)
 	if err != nil {
 		return 0, err
 	}
@@ -626,7 +626,7 @@ func (c *Conn) DeleteBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32,
 
 	msg := messages.NewDeleteBearerRequest(teid, 0, ie...)
 
-	seq, err := c.SendMessageTo(msg, sess.PeerAddr)
+	seq, err := c.SendMessageTo(msg, sess.peerAddr)
 	if err != nil {
 		return 0, err
 	}
@@ -658,7 +658,7 @@ func (c *Conn) GetSessionByTEID(teid uint32, peer net.Addr) (*Session, error) {
 
 	var session *Session
 	for _, sess := range c.Sessions {
-		if peer.String() != sess.PeerAddr.String() {
+		if peer.String() != sess.peerAddrString {
 			continue
 		}
 

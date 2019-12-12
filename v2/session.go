@@ -36,10 +36,13 @@ type Session struct {
 	// channel to store messages passed by other Sessions
 	msgQueue chan messages.Message
 
-	// PeerAddr is a net.Addr of the peer of the Session.
-	PeerAddr net.Addr
+	// peerAddr is a net.Addr of the peer associated with Session.
+	// To avoid calling String() many times, peerAddrString is set when NewSession
+	// and UpdatePeerAddr is called.
+	peerAddr       net.Addr
+	peerAddrString string
 
-	// Subscriber is a Subscriber associated with the Session.
+	// Subscriber is a Subscriber associated with Session.
 	*Subscriber
 }
 
@@ -49,12 +52,13 @@ type Session struct {
 // which sends Create Session Request and returns a new Session.
 func NewSession(peerAddr net.Addr, sub *Subscriber) *Session {
 	s := &Session{
-		mu:         sync.Mutex{},
-		PeerAddr:   peerAddr,
-		teidMap:    newTeidMap(),
-		bearerMap:  newBearerMap("default", &Bearer{QoSProfile: &QoSProfile{}}),
-		Subscriber: sub,
-		msgQueue:   make(chan messages.Message, 1000),
+		mu:             sync.Mutex{},
+		peerAddr:       peerAddr,
+		peerAddrString: peerAddr.String(),
+		teidMap:        newTeidMap(),
+		bearerMap:      newBearerMap("default", &Bearer{QoSProfile: &QoSProfile{}}),
+		Subscriber:     sub,
+		msgQueue:       make(chan messages.Message, 1000),
 	}
 
 	return s
@@ -88,6 +92,17 @@ func (s *Session) IsActive() bool {
 	defer s.mu.Unlock()
 
 	return s.isActive
+}
+
+// PeerAddr returns the address of the peer node associated with Session.
+func (s *Session) PeerAddr() net.Addr {
+	return s.peerAddr
+}
+
+// UpdatePeerAddr updates the address of the peer node associated with Session.
+func (s *Session) UpdatePeerAddr(peer net.Addr) {
+	s.peerAddr = peer
+	s.peerAddrString = peer.String()
 }
 
 // AddTEID adds TEID to session with InterfaceType.
