@@ -22,6 +22,7 @@ func init() {
 	}
 
 	for i, sess := range testConn.Sessions {
+		_ = sess.Activate()
 		sess.AddTEID(v2.IFTypeS11MMEGTPC, uint32(i+1))
 		testConn.AddSession(sess)
 	}
@@ -71,5 +72,53 @@ func TestGetIMSIByTEID(t *testing.T) {
 		if string(imsi[14]) != lastDigit {
 			t.Errorf("Got wrong IMSI at %d, %s", i, imsi)
 		}
+	}
+}
+
+func TestRemoveSession(t *testing.T) {
+	conn := *testConn // copy testConn
+	conn.RemoveSession(testConn.Sessions[0])
+
+	if conn.SessionCount() != len(testConn.Sessions)-1 {
+		t.Errorf("Session not removed expectedly: %d, %v", conn.SessionCount(), conn.Sessions)
+	}
+
+	for i := 1; i <= len(testConn.Sessions); i++ {
+		sess, err := testConn.GetSessionByTEID(uint32(i), dummyAddr)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		lastDigit := strconv.Itoa(i)
+		if string(sess.IMSI[14]) != lastDigit {
+			t.Errorf("Got wrong session at %d, %s", i, sess.IMSI)
+		}
+	}
+}
+
+func TestRemoveSessionByIMSI(t *testing.T) {
+	conn := *testConn // copy testConn
+	conn.RemoveSessionByIMSI("001011234567891")
+
+	if conn.SessionCount() != len(testConn.Sessions)-1 {
+		t.Errorf("Session not removed expectedly: %d, %v", conn.SessionCount(), conn.Sessions)
+	}
+
+	for i := 1; i <= len(testConn.Sessions); i++ {
+		sess, err := testConn.GetSessionByTEID(uint32(i), dummyAddr)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		lastDigit := strconv.Itoa(i)
+		if string(sess.IMSI[14]) != lastDigit {
+			t.Errorf("Got wrong session at %d, %s", i, sess.IMSI)
+		}
+	}
+}
+
+func TestSessionCount(t *testing.T) {
+	if want, got := testConn.SessionCount(), len(testConn.Sessions); want != got {
+		t.Errorf("SessionCount is invalid. want: %d, got: %d", want, got)
 	}
 }

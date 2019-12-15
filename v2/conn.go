@@ -753,6 +753,22 @@ func (c *Conn) RemoveSession(session *Session) {
 	c.Sessions = newSessions
 }
 
+// RemoveSessionByIMSI removes a session looked up by IMSI.
+func (c *Conn) RemoveSessionByIMSI(imsi string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	var newSessions []*Session
+	for _, sess := range c.Sessions {
+		if imsi == sess.IMSI {
+			continue
+		}
+		newSessions = append(newSessions, sess)
+	}
+
+	c.Sessions = newSessions
+}
+
 // NewFTEID creates a new F-TEID with random TEID value that is unique within Conn.
 // If there's a lot of Session on the Conn, it may take a long time to find unique one.
 func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
