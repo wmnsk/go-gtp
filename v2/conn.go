@@ -17,7 +17,7 @@ import (
 	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
-// Conn is a GTPv2-C connection.
+// Conn represents a GTPv2-C connection.
 type Conn struct {
 	mu      sync.Mutex
 	pktConn net.PacketConn
@@ -91,17 +91,18 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 	return c, nil
 }
 
-// Dial just exchanges the GTPv2 Echo and returns *Conn.
+// Dial exchanges the GTPv2 Echo with raddr and returns *Conn.
 //
-// Dial does not actually Dial() remote address so that the *Conn can be used with
-// multiple source/destination address.
-// The difference between Dial() and ListenAndServe() is just a presence of Echo
+// The purpose of exchanging Echo is to check if the remote node is up and running.
+// It is not required behavior by the spec but important because Dial does not actually
+// dials remote address like net.Dial. This enables a Conn to be used with multiple
+// source/destination addresses.
+// The only difference between Dial and ListenAndServe is just a presence of Echo
 // exchange before returning *Conn.
 //
-// The hbInfo is *HeartBeatinfo. If nil is given, heartbeat will be disabled.
-//
-// The errCh given should be monitored continuously after retrieving *Conn.
-// Otherwise the background process may get stuck.
+// The errCh should be monitored continuously by caller after retrieving *Conn.
+// Otherwise the background process may get stuck. This error handling manner might
+// be changed in the future.
 func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
@@ -114,8 +115,8 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 	}
 
 	// setup underlying connection first.
-	// don't use Dial(), as it binds src/dst IP:Port and it makes it harder to
-	// handle multiple connections.
+	// not using net.Dial, as it binds src/dst IP:Port, which makes it harder to
+	// handle multiple connections with a Conn.
 	var err error
 	c.pktConn, err = net.ListenPacket(raddr.Network(), laddr.String())
 	if err != nil {
@@ -154,10 +155,11 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 	return c, nil
 }
 
-// ListenAndServe creates a new GTPv2-C *Conn and start serving.
+// ListenAndServe creates a new GTPv2-C Conn and start serving background.
 //
-// The errCh given should be monitored continuously after retrieving *Conn.
-// Otherwise the background process may get stuck.
+// The errCh should be monitored continuously by caller after retrieving *Conn.
+// Otherwise the background process may get stuck. This error handling manner might
+// be changed in the future.
 func ListenAndServe(laddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
@@ -372,9 +374,9 @@ func (c *Conn) validate(senderAddr net.Addr, msg messages.Message) error {
 	return nil
 }
 
-// SendMessageTo sends a message to specified addr.
-// By using this function instead of WriteTo, package sets the Sequence Number
-// properly and returns the one used to send the message.
+// SendMessageTo sends a message to addr.
+// Unlike WriteTo, it sets the Sequence Number properly and returns the one
+// used in the message.
 func (c *Conn) SendMessageTo(msg messages.Message, addr net.Addr) (uint32, error) {
 	seq := c.IncSequence()
 	msg.SetSequenceNumber(seq)
@@ -434,7 +436,7 @@ func (c *Conn) EchoRequest(raddr net.Addr) (uint32, error) {
 	return seq, nil
 }
 
-// EchoResponse sends a EchoResponse to the EchoRequest.
+// EchoResponse sends a EchoResponse in response to the EchoRequest.
 func (c *Conn) EchoResponse(raddr net.Addr, req messages.Message) error {
 	res := messages.NewEchoResponse(0, ies.NewRecovery(c.RestartCounter))
 
@@ -444,7 +446,8 @@ func (c *Conn) EchoResponse(raddr net.Addr, req messages.Message) error {
 	return nil
 }
 
-// VersionNotSupportedIndication just sends VersionNotSupportedIndication message.
+// VersionNotSupportedIndication sends VersionNotSupportedIndication message
+// in response to any kind of message.Message.
 func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Message) error {
 	res := messages.NewVersionNotSupportedIndication(0, req.Sequence())
 
@@ -462,7 +465,7 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Messag
 // (*Session) GetDefaultBearer() or (*Session) LookupBearerByName("default").
 //
 // Note that this method doesn't care IEs given are sufficient or not, as the required IE
-// varies much depending on the context Create Session Request is used.
+// varies much depending on the context in which the Create Session Request is used.
 func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, error) {
 	// retrieve values from IEs given.
 	sess := NewSession(raddr, &Subscriber{Location: &Location{}})
@@ -585,7 +588,7 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 	return sess, seq, nil
 }
 
-// DeleteSession sends a DeleteSessionRequest with TEID and IEs given..
+// DeleteSession sends a DeleteSessionRequest with TEID and IEs given.
 func (c *Conn) DeleteSession(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
 	sess, err := c.GetSessionByTEID(teid, raddr)
 	if err != nil {
@@ -636,7 +639,7 @@ func (c *Conn) DeleteBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32,
 // RespondTo sends a message(specified with "toBeSent" param) in response to
 // a message(specified with "received" param).
 //
-// This is to make it easier to handle SequenceNumber.
+// This exists to make it easier to handle SequenceNumber.
 func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) error {
 	toBeSent.SetSequenceNumber(received.Sequence())
 	b := make([]byte, toBeSent.MarshalLen())
@@ -651,7 +654,7 @@ func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) er
 	return nil
 }
 
-// GetSessionByTEID returns the current session looked up by InterfaceType and TEID of the message.
+// GetSessionByTEID returns Session looked up by TEID and sender of the message.
 func (c *Conn) GetSessionByTEID(teid uint32, peer net.Addr) (*Session, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -677,7 +680,7 @@ func (c *Conn) GetSessionByTEID(teid uint32, peer net.Addr) (*Session, error) {
 	return nil, &InvalidTEIDError{TEID: teid}
 }
 
-// GetSessionByIMSI returns the current session looked up by IMSI.
+// GetSessionByIMSI returns Session looked up by IMSI.
 func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -691,7 +694,7 @@ func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
 	return nil, &UnknownIMSIError{IMSI: imsi}
 }
 
-// GetIMSIByTEID returns IMSI associated with TEID.
+// GetIMSIByTEID returns IMSI associated with TEID and the peer node.
 func (c *Conn) GetIMSIByTEID(teid uint32, peer net.Addr) (string, error) {
 	sess, err := c.GetSessionByTEID(teid, peer)
 	if err != nil {
@@ -702,7 +705,8 @@ func (c *Conn) GetIMSIByTEID(teid uint32, peer net.Addr) (string, error) {
 }
 
 // AddSession adds a session to c.Sessions.
-// If the session given already exists, this removes the old one.
+// If Session with the same IMSI already exists, it removes the old one and
+// stores the given one.
 func (c *Conn) AddSession(session *Session) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -733,6 +737,7 @@ func (c *Conn) AddSession(session *Session) {
 }
 
 // RemoveSession removes a session from c.Session.
+// The Session is identified by IMSI.
 func (c *Conn) RemoveSession(session *Session) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -748,7 +753,7 @@ func (c *Conn) RemoveSession(session *Session) {
 	c.Sessions = newSessions
 }
 
-// NewFTEID creates a new F-TEID with random TEID value that is different from existing one.
+// NewFTEID creates a new F-TEID with random TEID value that is unique within Conn.
 // If there's a lot of Session on the Conn, it may take a long time to find unique one.
 func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
 	c.mu.Lock()

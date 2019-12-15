@@ -176,7 +176,7 @@ func (s *Session) RemoveBearerByEBI(ebi uint8) {
 	s.bearerMap.delete(name)
 }
 
-// GetDefaultBearer returns the pointer to default bearer.
+// GetDefaultBearer returns the default bearer.
 func (s *Session) GetDefaultBearer() *Bearer {
 	// it is not expected that the default bearer cannot be found.
 	bearer, ok := s.bearerMap.load("default")
@@ -221,7 +221,8 @@ func (s *Session) LookupBearerByEBI(ebi uint8) (*Bearer, error) {
 	return bearer, nil
 }
 
-// LookupBearerNameByEBI looks up name of Bearer by EBI.
+// LookupBearerNameByEBI looks up name of Bearer by EBI and returns
+// its name.
 func (s *Session) LookupBearerNameByEBI(ebi uint8) (string, error) {
 	var name string
 	s.bearerMap.rangeWithFunc(func(n, br interface{}) bool {
@@ -240,9 +241,9 @@ func (s *Session) LookupBearerNameByEBI(ebi uint8) (string, error) {
 	return name, nil
 }
 
-// LookupEBIByName returns EBI associated with Name given.
+// LookupEBIByName returns EBI associated with name.
 //
-// If no EBI found, it returns 0(invalid value for EBI).
+// If no EBI found, it returns 0(=invalid value for EBI).
 func (s *Session) LookupEBIByName(name string) uint8 {
 	if br, ok := s.bearerMap.load(name); ok {
 		return br.EBI
@@ -251,7 +252,7 @@ func (s *Session) LookupEBIByName(name string) uint8 {
 	return 0
 }
 
-// LookupEBIByTEID returns EBI associated with TEID given.
+// LookupEBIByTEID returns EBI associated with TEID.
 //
 // If no EBI found, it returns 0(=invalid value for EBI).
 func (s *Session) LookupEBIByTEID(teid uint32) uint8 {
