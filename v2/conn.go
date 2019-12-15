@@ -197,6 +197,7 @@ func (c *Conn) serve() {
 
 		n, raddr, err := c.pktConn.ReadFrom(buf)
 		if err != nil {
+			logf("error reading from conn: %s: %v", c.LocalAddr(), err)
 			continue
 		}
 
@@ -205,6 +206,7 @@ func (c *Conn) serve() {
 		go func() {
 			msg, err := messages.Parse(raw)
 			if err != nil {
+				logf("error parsing the message: %v, %x", err, raw)
 				return
 			}
 
