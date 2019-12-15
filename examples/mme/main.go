@@ -154,7 +154,7 @@ func main() {
 
 				if _, err := s11Conn.ModifyBearer(
 					teid,
-					sess.PeerAddr,
+					sess.PeerAddr(),
 					ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 					ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), enbFTEID),
 				); err != nil {
@@ -183,7 +183,7 @@ func main() {
 					errCh <- v2.ErrTEIDNotFound
 					return
 				}
-				if _, err := s11Conn.DeleteSession(teid, sess.PeerAddr); err != nil {
+				if _, err := s11Conn.DeleteSession(teid, sess.PeerAddr()); err != nil {
 					log.Printf("Warning: %s", err)
 				}
 				delWG.Add(1)

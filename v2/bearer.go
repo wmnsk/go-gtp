@@ -8,7 +8,7 @@ import (
 	"net"
 )
 
-// QoSProfile is a QoS-related information that belongs to a Bearer.
+// QoSProfile represents a QoS-related information that belongs to a Bearer.
 type QoSProfile struct {
 	PCI, PVI bool
 	PL, QCI  uint8
@@ -18,7 +18,7 @@ type QoSProfile struct {
 	GBRUL, GBRDL uint64
 }
 
-// Bearer is a GTPv2 bearer.
+// Bearer represents a GTPv2 bearer.
 type Bearer struct {
 	raddr           net.Addr
 	teidIn, teidOut uint32

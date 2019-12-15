@@ -36,10 +36,13 @@ type Session struct {
 	// channel to store messages passed by other Sessions
 	msgQueue chan messages.Message
 
-	// PeerAddr is a net.Addr of the peer of the Session.
-	PeerAddr net.Addr
+	// peerAddr is a net.Addr of the peer associated with Session.
+	// To avoid calling String() many times, peerAddrString is set when NewSession
+	// and UpdatePeerAddr is called.
+	peerAddr       net.Addr
+	peerAddrString string
 
-	// Subscriber is a Subscriber associated with the Session.
+	// Subscriber is a Subscriber associated with Session.
 	*Subscriber
 }
 
@@ -49,12 +52,13 @@ type Session struct {
 // which sends Create Session Request and returns a new Session.
 func NewSession(peerAddr net.Addr, sub *Subscriber) *Session {
 	s := &Session{
-		mu:         sync.Mutex{},
-		PeerAddr:   peerAddr,
-		teidMap:    newTeidMap(),
-		bearerMap:  newBearerMap("default", &Bearer{QoSProfile: &QoSProfile{}}),
-		Subscriber: sub,
-		msgQueue:   make(chan messages.Message, 1000),
+		mu:             sync.Mutex{},
+		peerAddr:       peerAddr,
+		peerAddrString: peerAddr.String(),
+		teidMap:        newTeidMap(),
+		bearerMap:      newBearerMap("default", &Bearer{QoSProfile: &QoSProfile{}}),
+		Subscriber:     sub,
+		msgQueue:       make(chan messages.Message, 1000),
 	}
 
 	return s
@@ -88,6 +92,17 @@ func (s *Session) IsActive() bool {
 	defer s.mu.Unlock()
 
 	return s.isActive
+}
+
+// PeerAddr returns the address of the peer node associated with Session.
+func (s *Session) PeerAddr() net.Addr {
+	return s.peerAddr
+}
+
+// UpdatePeerAddr updates the address of the peer node associated with Session.
+func (s *Session) UpdatePeerAddr(peer net.Addr) {
+	s.peerAddr = peer
+	s.peerAddrString = peer.String()
 }
 
 // AddTEID adds TEID to session with InterfaceType.
@@ -161,7 +176,7 @@ func (s *Session) RemoveBearerByEBI(ebi uint8) {
 	s.bearerMap.delete(name)
 }
 
-// GetDefaultBearer returns the pointer to default bearer.
+// GetDefaultBearer returns the default bearer.
 func (s *Session) GetDefaultBearer() *Bearer {
 	// it is not expected that the default bearer cannot be found.
 	bearer, ok := s.bearerMap.load("default")
@@ -206,7 +221,8 @@ func (s *Session) LookupBearerByEBI(ebi uint8) (*Bearer, error) {
 	return bearer, nil
 }
 
-// LookupBearerNameByEBI looks up name of Bearer by EBI.
+// LookupBearerNameByEBI looks up name of Bearer by EBI and returns
+// its name.
 func (s *Session) LookupBearerNameByEBI(ebi uint8) (string, error) {
 	var name string
 	s.bearerMap.rangeWithFunc(func(n, br interface{}) bool {
@@ -225,9 +241,9 @@ func (s *Session) LookupBearerNameByEBI(ebi uint8) (string, error) {
 	return name, nil
 }
 
-// LookupEBIByName returns EBI associated with Name given.
+// LookupEBIByName returns EBI associated with name.
 //
-// If no EBI found, it returns 0(invalid value for EBI).
+// If no EBI found, it returns 0(=invalid value for EBI).
 func (s *Session) LookupEBIByName(name string) uint8 {
 	if br, ok := s.bearerMap.load(name); ok {
 		return br.EBI
@@ -236,7 +252,7 @@ func (s *Session) LookupEBIByName(name string) uint8 {
 	return 0
 }
 
-// LookupEBIByTEID returns EBI associated with TEID given.
+// LookupEBIByTEID returns EBI associated with TEID.
 //
 // If no EBI found, it returns 0(=invalid value for EBI).
 func (s *Session) LookupEBIByTEID(teid uint32) uint8 {
