@@ -6,6 +6,7 @@
 package utils
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 )
 
@@ -120,5 +121,14 @@ func DecodePLMN(b []byte) (mcc, mnc string, err error) {
 		mnc += string(raw[2])
 	}
 
+	return
+}
+
+// DecodeECI decodes ECI uint32 into e-NodeB ID and Cell ID.
+func DecodeECI(eci uint32) (enbID uint32, cellID uint8, err error) {
+	buf := make([]byte, 4)
+	binary.BigEndian.PutUint32(buf, eci)
+	cellID = uint8(buf[3])
+	enbID = binary.BigEndian.Uint32([]byte{0, buf[0], buf[1], buf[2]})
 	return
 }
