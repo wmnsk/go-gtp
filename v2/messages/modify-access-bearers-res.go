@@ -4,7 +4,7 @@
 
 package messages
 
-import "github.com/wmnsk/go-gtp/v2/ies"
+import "github.com/ErvinsK/go-gtp/v2/ies"
 
 // ModifyAccessBearersResponse is a ModifyAccessBearersResponse Header and its IEs above.
 type ModifyAccessBearersResponse struct {

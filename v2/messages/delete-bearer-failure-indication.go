@@ -4,7 +4,7 @@
 
 package messages
 
-import "github.com/wmnsk/go-gtp/v2/ies"
+import "github.com/ErvinsK/go-gtp/v2/ies"
 
 // DeleteBearerFailureIndication is a DeleteBearerFailureIndication Header and its IEs above.
 type DeleteBearerFailureIndication struct {

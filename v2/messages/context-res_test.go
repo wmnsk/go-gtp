@@ -7,12 +7,12 @@ package messages_test
 import (
 	"testing"
 
-	v2 "github.com/wmnsk/go-gtp/v2"
+	v2 "github.com/ErvinsK/go-gtp/v2"
 
-	"github.com/wmnsk/go-gtp/v2/messages"
-	"github.com/wmnsk/go-gtp/v2/testutils"
+	"github.com/ErvinsK/go-gtp/v2/messages"
+	"github.com/ErvinsK/go-gtp/v2/testutils"
 
-	"github.com/wmnsk/go-gtp/v2/ies"
+	"github.com/ErvinsK/go-gtp/v2/ies"
 )
 
 func TestContextResponse(t *testing.T) {

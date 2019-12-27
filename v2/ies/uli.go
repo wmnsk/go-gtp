@@ -8,7 +8,7 @@ import (
 	"encoding/binary"
 	"io"
 
-	"github.com/wmnsk/go-gtp/utils"
+	"github.com/ErvinsK/go-gtp/utils"
 )
 
 const (
@@ -22,73 +22,73 @@ const (
 	emenbilen int = 6
 )
 
-//ULI decoded info block
+// ULI IE's info fields
 type ULI struct {
-	Cgi    CGI
-	Sai    SAI
-	Rai    RAI
-	Tai    TAI
-	Ecgi   ECGI
-	Lai    LAI
-	Menbi  MENBI
-	Emenbi EMENBI
+	*CGI
+	*SAI
+	*RAI
+	*TAI
+	*ECGI
+	*LAI
+	*MENBI
+	*EMENBI
 }
 
-//PLMN decoded info fields
+// PLMN info field of ULI IE
 type PLMN struct {
-	Mcc string
-	Mnc string
+	MCC string
+	MNC string
 }
 
-//CGI field
+// CGI field of ULI IE
 type CGI struct {
-	Plmn PLMN
-	Lac  uint16
-	Ci   uint16
+	*PLMN
+	LAC uint16
+	CI  uint16
 }
 
-//SAI field
+// SAI field of ULI IE
 type SAI struct {
-	Plmn PLMN
-	Lac  uint16
-	Sac  uint16
+	*PLMN
+	LAC uint16
+	SAC uint16
 }
 
-//RAI field
+// RAI field of ULI IE
 type RAI struct {
-	Plmn PLMN
-	Lac  uint16
-	Rac  uint16
+	*PLMN
+	LAC uint16
+	RAC uint16
 }
 
-//TAI field
+// TAI field of ULI IE
 type TAI struct {
-	Plmn PLMN
-	Tac  uint16
+	*PLMN
+	TAC uint16
 }
 
-//ECGI field
+// ECGI field of ULI IE
 type ECGI struct {
-	Plmn PLMN
-	Eci  uint32
+	*PLMN
+	ECI uint32
 }
 
-//LAI field
+// LAI field of ULI IE
 type LAI struct {
-	Plmn PLMN
-	Lac  uint16
+	*PLMN
+	LAC uint16
 }
 
-//MENBI field
+// MENBI field of ULI IE
 type MENBI struct {
-	Plmn  PLMN
-	Menbi uint32
+	*PLMN
+	MENBI uint32
 }
 
-//EMENBI field
+// EMENBI field of ULI IE
 type EMENBI struct {
-	Plmn   PLMN
-	Emenbi uint32
+	*PLMN
+	EMENBI uint32
 }
 
 // NewUserLocationInformationLazy creates a new UserLocationInformation IE.
@@ -228,53 +228,105 @@ func uliPayloadLen(flags uint8) int {
 }
 
 // UserLocationInfo is a getter function to parse ULI
-func (i *IE) UserLocationInfo() (ULI, error) {
+func (i *IE) UserLocationInfo() (*ULI, error) {
 	var uli ULI
-	if len(i.Payload) == 0 {
-		return uli, io.ErrUnexpectedEOF
+	var plmn PLMN
+	l := len(i.Payload)
+	if l == 0 {
+		return &uli, io.ErrUnexpectedEOF
 	}
 	offset := 1
 	if i.Payload[0]&0x01 == 1 {
-		uli.Cgi.Plmn.Mcc, uli.Cgi.Plmn.Mnc, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
-		uli.Cgi.Lac = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
-		uli.Cgi.Ci = binary.BigEndian.Uint16(i.Payload[offset+5 : offset+7])
+		if l < (offset + cgilen) {
+			return &uli, io.ErrUnexpectedEOF
+		}
+		var cgi CGI
+		uli.CGI = &cgi
+		uli.CGI.PLMN = &plmn
+		uli.CGI.PLMN.MCC, uli.CGI.PLMN.MNC, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
+		uli.CGI.LAC = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
+		uli.CGI.CI = binary.BigEndian.Uint16(i.Payload[offset+5 : offset+7])
 		offset += cgilen
 	}
 	if i.Payload[0]>>1&0x01 == 1 {
-		uli.Sai.Plmn.Mcc, uli.Sai.Plmn.Mnc, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
-		uli.Sai.Lac = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
-		uli.Sai.Sac = binary.BigEndian.Uint16(i.Payload[offset+5 : offset+7])
+		if l < (offset + sailen) {
+			return &uli, io.ErrUnexpectedEOF
+		}
+		var sai SAI
+		uli.SAI = &sai
+		uli.SAI.PLMN = &plmn
+		uli.SAI.PLMN.MCC, uli.SAI.PLMN.MNC, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
+		uli.SAI.LAC = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
+		uli.SAI.SAC = binary.BigEndian.Uint16(i.Payload[offset+5 : offset+7])
 		offset += sailen
 	}
 	if i.Payload[0]>>2&0x01 == 1 {
-		uli.Rai.Plmn.Mcc, uli.Rai.Plmn.Mnc, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
-		uli.Rai.Lac = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
-		uli.Rai.Rac = binary.BigEndian.Uint16(i.Payload[offset+5 : offset+7])
+		if l < (offset + railen) {
+			return &uli, io.ErrUnexpectedEOF
+		}
+		var rai RAI
+		uli.RAI = &rai
+		uli.RAI.PLMN = &plmn
+		uli.RAI.PLMN.MCC, uli.RAI.PLMN.MNC, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
+		uli.RAI.LAC = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
+		uli.RAI.RAC = binary.BigEndian.Uint16(i.Payload[offset+5 : offset+7])
 		offset += railen
 	}
 	if i.Payload[0]>>3&0x01 == 1 {
-		uli.Tai.Plmn.Mcc, uli.Tai.Plmn.Mnc, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
-		uli.Tai.Tac = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
+		if l < (offset + tailen) {
+			return &uli, io.ErrUnexpectedEOF
+		}
+		var tai TAI
+		uli.TAI = &tai
+		uli.TAI.PLMN = &plmn
+		uli.TAI.PLMN.MCC, uli.TAI.PLMN.MNC, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
+		uli.TAI.TAC = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
 		offset += tailen
+
 	}
 	if i.Payload[0]>>4&0x01 == 1 {
-		uli.Ecgi.Plmn.Mcc, uli.Ecgi.Plmn.Mnc, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
-		uli.Ecgi.Eci = binary.BigEndian.Uint32(i.Payload[offset+3 : offset+7])
+		if l < (offset + ecgilen) {
+			return &uli, io.ErrUnexpectedEOF
+		}
+		var ecgi ECGI
+		uli.ECGI = &ecgi
+		uli.ECGI.PLMN = &plmn
+		uli.ECGI.PLMN.MCC, uli.ECGI.PLMN.MNC, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
+		uli.ECGI.ECI = binary.BigEndian.Uint32(i.Payload[offset+3 : offset+7])
 		offset += ecgilen
+
 	}
 	if i.Payload[0]>>5&0x01 == 1 {
-		uli.Lai.Plmn.Mcc, uli.Lai.Plmn.Mnc, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
-		uli.Lai.Lac = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
+		if l < (offset + lailen) {
+			return &uli, io.ErrUnexpectedEOF
+		}
+		var lai LAI
+		uli.LAI = &lai
+		uli.LAI.PLMN = &plmn
+		uli.LAI.PLMN.MCC, uli.LAI.PLMN.MNC, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
+		uli.LAI.LAC = binary.BigEndian.Uint16(i.Payload[offset+3 : offset+5])
 		offset += lailen
 	}
 	if i.Payload[0]>>6&0x01 == 1 {
-		uli.Menbi.Plmn.Mcc, uli.Menbi.Plmn.Mnc, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
-		uli.Menbi.Menbi = utils.Uint24To32(i.Payload[offset+3 : offset+6])
+		if l < (offset + menbilen) {
+			return &uli, io.ErrUnexpectedEOF
+		}
+		var menbi MENBI
+		uli.MENBI = &menbi
+		uli.MENBI.PLMN = &plmn
+		uli.MENBI.PLMN.MCC, uli.MENBI.PLMN.MNC, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
+		uli.MENBI.MENBI = utils.Uint24To32(i.Payload[offset+3 : offset+6])
 		offset += menbilen
 	}
 	if i.Payload[0]>>7&0x01 == 1 {
-		uli.Emenbi.Plmn.Mcc, uli.Emenbi.Plmn.Mnc, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
-		uli.Emenbi.Emenbi = utils.Uint24To32(i.Payload[offset+3 : offset+6])
+		if l < (offset + emenbilen) {
+			return &uli, io.ErrUnexpectedEOF
+		}
+		var emenbi EMENBI
+		uli.EMENBI = &emenbi
+		uli.EMENBI.PLMN = &plmn
+		uli.EMENBI.PLMN.MCC, uli.EMENBI.PLMN.MNC, _ = utils.DecodePLMN(i.Payload[offset : offset+3])
+		uli.EMENBI.EMENBI = utils.Uint24To32(i.Payload[offset+3 : offset+6])
 	}
-	return uli, nil
+	return &uli, nil
 }

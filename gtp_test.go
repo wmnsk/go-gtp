@@ -10,10 +10,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pascaldekloe/goe/verify"
 
-	v0msg "github.com/wmnsk/go-gtp/v0/messages"
-	v1msg "github.com/wmnsk/go-gtp/v1/messages"
-	v2ie "github.com/wmnsk/go-gtp/v2/ies"
-	v2msg "github.com/wmnsk/go-gtp/v2/messages"
+	v0msg "github.com/ErvinsK/go-gtp/v0/messages"
+	v1msg "github.com/ErvinsK/go-gtp/v1/messages"
+	v2ie "github.com/ErvinsK/go-gtp/v2/ies"
+	v2msg "github.com/ErvinsK/go-gtp/v2/messages"
 )
 
 var v0flow = struct {

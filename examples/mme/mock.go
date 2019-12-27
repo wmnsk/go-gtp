@@ -13,9 +13,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/ies"
+	v1 "github.com/ErvinsK/go-gtp/v1"
+	v2 "github.com/ErvinsK/go-gtp/v2"
+	"github.com/ErvinsK/go-gtp/v2/ies"
 )
 
 // getPGWIP is to get P-GW's IP address according to APN.

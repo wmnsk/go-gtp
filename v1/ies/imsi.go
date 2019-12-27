@@ -7,7 +7,7 @@ package ies
 import (
 	"io"
 
-	"github.com/wmnsk/go-gtp/utils"
+	"github.com/ErvinsK/go-gtp/utils"
 )
 
 // NewIMSI creates a new IMSI IE.

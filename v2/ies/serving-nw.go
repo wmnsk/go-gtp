@@ -7,7 +7,7 @@ package ies
 import (
 	"io"
 
-	"github.com/wmnsk/go-gtp/utils"
+	"github.com/ErvinsK/go-gtp/utils"
 )
 
 // NewServingNetwork creates a ServingNetwork IE.

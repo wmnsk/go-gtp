@@ -1,4 +1,4 @@
-module github.com/wmnsk/go-gtp
+module github.com/ErvinsK/go-gtp
 
 require (
 	github.com/google/go-cmp v0.2.0

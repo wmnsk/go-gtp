@@ -5,7 +5,7 @@
 package messages
 
 import (
-	"github.com/wmnsk/go-gtp/v2/ies"
+	"github.com/ErvinsK/go-gtp/v2/ies"
 )
 
 // CreateSessionRequest is a CreateSessionRequest Header and its IEs above.

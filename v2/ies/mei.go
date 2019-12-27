@@ -7,7 +7,7 @@ package ies
 import (
 	"io"
 
-	"github.com/wmnsk/go-gtp/utils"
+	"github.com/ErvinsK/go-gtp/utils"
 )
 
 // NewMobileEquipmentIdentity creates a new MobileEquipmentIdentity IE.

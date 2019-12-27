@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/ies"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v2 "github.com/ErvinsK/go-gtp/v2"
+	"github.com/ErvinsK/go-gtp/v2/ies"
+	"github.com/ErvinsK/go-gtp/v2/messages"
 )
 
 func setup(doneCh chan struct{}, errCh chan error) (cliConn, srvConn *v2.Conn, err error) {

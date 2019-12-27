@@ -5,7 +5,7 @@
 package messages
 
 import (
-	"github.com/wmnsk/go-gtp/v1/ies"
+	"github.com/ErvinsK/go-gtp/v1/ies"
 )
 
 // UpdatePDPContextRequest is a UpdatePDPContextRequest Header and its IEs above.

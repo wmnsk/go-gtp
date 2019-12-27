@@ -4,7 +4,7 @@
 
 package messages
 
-import "github.com/wmnsk/go-gtp/v2/ies"
+import "github.com/ErvinsK/go-gtp/v2/ies"
 
 // ReleaseAccessBearersRequest is a ReleaseAccessBearersRequest Header and its IEs above.
 type ReleaseAccessBearersRequest struct {

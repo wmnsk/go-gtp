@@ -5,7 +5,7 @@
 package messages
 
 import (
-	"github.com/wmnsk/go-gtp/v0/ies"
+	"github.com/ErvinsK/go-gtp/v0/ies"
 )
 
 // EchoResponse is a EchoResponse Header and its AdditionalIEs above.

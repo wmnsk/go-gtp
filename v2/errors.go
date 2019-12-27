@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/wmnsk/go-gtp/v2/messages"
+	"github.com/ErvinsK/go-gtp/v2/messages"
 )
 
 var (

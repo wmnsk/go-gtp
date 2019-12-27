@@ -12,7 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
+	v1 "github.com/ErvinsK/go-gtp/v1"
 )
 
 type testVal struct {

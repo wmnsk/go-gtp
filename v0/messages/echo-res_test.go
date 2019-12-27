@@ -7,9 +7,9 @@ package messages_test
 import (
 	"testing"
 
-	"github.com/wmnsk/go-gtp/v0/ies"
-	"github.com/wmnsk/go-gtp/v0/messages"
-	"github.com/wmnsk/go-gtp/v0/testutils"
+	"github.com/ErvinsK/go-gtp/v0/ies"
+	"github.com/ErvinsK/go-gtp/v0/messages"
+	"github.com/ErvinsK/go-gtp/v0/testutils"
 )
 
 func TestEchoResponse(t *testing.T) {

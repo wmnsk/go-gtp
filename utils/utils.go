@@ -124,8 +124,8 @@ func DecodePLMN(b []byte) (mcc, mnc string, err error) {
 	return
 }
 
-// DecodeECI decodes ECI uint32 into e-NodeB ID and Cell ID.
-func DecodeECI(eci uint32) (enbID uint32, cellID uint8, err error) {
+// ParseECI decodes ECI uint32 into e-NodeB ID and Cell ID.
+func ParseECI(eci uint32) (enbID uint32, cellID uint8, err error) {
 	buf := make([]byte, 4)
 	binary.BigEndian.PutUint32(buf, eci)
 	cellID = uint8(buf[3])

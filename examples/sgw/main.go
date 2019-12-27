@@ -32,9 +32,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v1 "github.com/ErvinsK/go-gtp/v1"
+	v2 "github.com/ErvinsK/go-gtp/v2"
+	"github.com/ErvinsK/go-gtp/v2/messages"
 )
 
 // command-line arguments and global variables
