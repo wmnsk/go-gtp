@@ -462,6 +462,9 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Messag
 // CreateSession sends a CreateSessionRequest and stores information given with IE
 // in the Session returned.
 //
+// After using this method, users don't need to call AddSession with the session
+// returned.
+//
 // By creating a Session with this method, a Bearer named "default" is also created
 // to be used as default bearer. The default bearer can be retrieved by using
 // (*Session) GetDefaultBearer() or (*Session) LookupBearerByName("default").
@@ -579,6 +582,9 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 			}
 		}
 	}
+
+	// add session here to registry in case of the response comes super fast.
+	c.AddSession(sess)
 
 	// set IEs into CreateSessionRequest.
 	msg := messages.NewCreateSessionRequest(0, 0, ie...)
