@@ -4,7 +4,7 @@
 
 package messages
 
-import "github.com/ErvinsK/go-gtp/v1/ies"
+import "github.com/wmnsk/go-gtp/v1/ies"
 
 // ErrorIndication is a ErrorIndication Header and its IEs above.
 type ErrorIndication struct {

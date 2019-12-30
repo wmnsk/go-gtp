@@ -13,8 +13,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
-	"github.com/ErvinsK/go-gtp/v1/ies"
-	"github.com/ErvinsK/go-gtp/v1/messages"
+	"github.com/wmnsk/go-gtp/v1/ies"
+	"github.com/wmnsk/go-gtp/v1/messages"
 )
 
 // Role is a role for Kernel GTP-U.

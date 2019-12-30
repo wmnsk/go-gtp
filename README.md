@@ -2,11 +2,11 @@
 
 Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol), implemented in the Go Programming Language.
 
-[![CircleCI](https://circleci.com/gh/ErvinsK/go-gtp.svg?style=shield)](https://circleci.com/gh/ErvinsK/go-gtp)
-[![GolangCI](https://golangci.com/badges/github.com/ErvinsK/go-gtp.svg)](https://golangci.com/r/github.com/ErvinsK/go-gtp)
-[![GoDoc](https://godoc.org/github.com/ErvinsK/go-gtp?status.svg)](https://godoc.org/github.com/ErvinsK/go-gtp)
-[![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/ErvinsK/go-gtp/blob/master/LICENSE)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FErvinsK%2Fgo-gtp.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FErvinsK%2Fgo-gtp?ref=badge_shield)
+[![CircleCI](https://circleci.com/gh/wmnsk/go-gtp.svg?style=shield)](https://circleci.com/gh/wmnsk/go-gtp)
+[![GolangCI](https://golangci.com/badges/github.com/wmnsk/go-gtp.svg)](https://golangci.com/r/github.com/wmnsk/go-gtp)
+[![GoDoc](https://godoc.org/github.com/wmnsk/go-gtp?status.svg)](https://godoc.org/github.com/wmnsk/go-gtp)
+[![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/wmnsk/go-gtp/blob/master/LICENSE)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp?ref=badge_shield)
 
 ## Features
 
@@ -105,13 +105,13 @@ This is still an experimental project. Any part of implementations(including exp
 
 ## Author(s)
 
-Yoshiyuki Kurauchi ([Twitter](https://twitter.com/ErvinsKdmms) / [LinkedIn](https://www.linkedin.com/in/yoshiyuki-kurauchi/))
+Yoshiyuki Kurauchi ([Twitter](https://twitter.com/wmnskdmms) / [LinkedIn](https://www.linkedin.com/in/yoshiyuki-kurauchi/))
 
 _I'm always open to welcome co-authors! Please feel free to talk to me._
 
 ## LICENSE
 
-[MIT](https://github.com/ErvinsK/go-gtp/blob/master/LICENSE)
+[MIT](https://github.com/wmnsk/go-gtp/blob/master/LICENSE)
 
 
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FErvinsK%2Fgo-gtp.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FErvinsK%2Fgo-gtp?ref=badge_large)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp?ref=badge_large)

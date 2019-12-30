@@ -5,7 +5,7 @@
 package ies
 
 import (
-	"github.com/ErvinsK/go-gtp/utils"
+	"github.com/wmnsk/go-gtp/utils"
 )
 
 // NewFlowQoS creates a new FlowQoS IE.

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ErvinsK/go-gtp/v2/messages"
+	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
 // Location is a subscriber's location.

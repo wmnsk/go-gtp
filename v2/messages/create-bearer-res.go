@@ -5,7 +5,7 @@
 package messages
 
 import (
-	"github.com/ErvinsK/go-gtp/v2/ies"
+	"github.com/wmnsk/go-gtp/v2/ies"
 )
 
 // CreateBearerResponse is a CreateBearerResponse Header and its IEs above.

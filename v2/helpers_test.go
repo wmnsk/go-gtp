@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	v2 "github.com/ErvinsK/go-gtp/v2"
+	v2 "github.com/wmnsk/go-gtp/v2"
 )
 
 var testConn *v2.Conn

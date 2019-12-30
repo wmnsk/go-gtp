@@ -4,7 +4,7 @@
 
 package messages
 
-import "github.com/ErvinsK/go-gtp/v2/ies"
+import "github.com/wmnsk/go-gtp/v2/ies"
 
 // ModifyBearerCommand is a ModifyBearerCommand Header and its IEs above.
 type ModifyBearerCommand struct {

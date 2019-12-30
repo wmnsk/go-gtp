@@ -8,7 +8,7 @@ import (
 	"net"
 	"testing"
 
-	v1 "github.com/ErvinsK/go-gtp/v1"
+	v1 "github.com/wmnsk/go-gtp/v1"
 )
 
 func TestRelay(t *testing.T) {

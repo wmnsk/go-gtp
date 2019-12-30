@@ -7,10 +7,10 @@ package messages_test
 import (
 	"testing"
 
-	v1 "github.com/ErvinsK/go-gtp/v1"
-	"github.com/ErvinsK/go-gtp/v1/ies"
-	"github.com/ErvinsK/go-gtp/v1/messages"
-	"github.com/ErvinsK/go-gtp/v1/testutils"
+	v1 "github.com/wmnsk/go-gtp/v1"
+	"github.com/wmnsk/go-gtp/v1/ies"
+	"github.com/wmnsk/go-gtp/v1/messages"
+	"github.com/wmnsk/go-gtp/v1/testutils"
 )
 
 func TestCreatePDPContextRequest(t *testing.T) {

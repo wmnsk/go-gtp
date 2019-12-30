@@ -7,8 +7,8 @@ package messages_test
 import (
 	"testing"
 
-	"github.com/ErvinsK/go-gtp/v1/messages"
-	"github.com/ErvinsK/go-gtp/v1/testutils"
+	"github.com/wmnsk/go-gtp/v1/messages"
+	"github.com/wmnsk/go-gtp/v1/testutils"
 )
 
 func TestTPDU(t *testing.T) {

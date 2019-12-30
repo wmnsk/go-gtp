@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	v2 "github.com/ErvinsK/go-gtp/v2"
-	"github.com/ErvinsK/go-gtp/v2/ies"
-	"github.com/ErvinsK/go-gtp/v2/messages"
+	v2 "github.com/wmnsk/go-gtp/v2"
+	"github.com/wmnsk/go-gtp/v2/ies"
+	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
 func handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {

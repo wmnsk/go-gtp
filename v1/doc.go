@@ -6,5 +6,5 @@
 //
 // Please see README.md for detailed usage of the APIs provided by this package.
 //
-// https://github.com/ErvinsK/go-gtp/blob/master/v1/README.md
+// https://github.com/wmnsk/go-gtp/blob/master/v1/README.md
 package v1

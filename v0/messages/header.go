@@ -8,7 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/ErvinsK/go-gtp/utils"
+	"github.com/wmnsk/go-gtp/utils"
 )
 
 // Header is a GTPv1 common header.

@@ -5,7 +5,7 @@
 package messages
 
 import (
-	"github.com/ErvinsK/go-gtp/v1/ies"
+	"github.com/wmnsk/go-gtp/v1/ies"
 )
 
 // CreatePDPContextRequest is a CreatePDPContextRequest Header and its IEs above.

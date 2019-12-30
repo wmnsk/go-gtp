@@ -9,12 +9,12 @@ import (
 	"net"
 	"strings"
 
-	v1 "github.com/ErvinsK/go-gtp/v1"
+	v1 "github.com/wmnsk/go-gtp/v1"
 
 	"github.com/pkg/errors"
-	v2 "github.com/ErvinsK/go-gtp/v2"
-	"github.com/ErvinsK/go-gtp/v2/ies"
-	"github.com/ErvinsK/go-gtp/v2/messages"
+	v2 "github.com/wmnsk/go-gtp/v2"
+	"github.com/wmnsk/go-gtp/v2/ies"
+	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
 // getSubscriberIP is to get IP address to be assigned to the subscriber.

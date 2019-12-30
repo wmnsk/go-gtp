@@ -7,7 +7,7 @@ package ies
 import (
 	"io"
 
-	"github.com/ErvinsK/go-gtp/utils"
+	"github.com/wmnsk/go-gtp/utils"
 )
 
 // NewPTMSISignature creates a new PTMSISignature IE.

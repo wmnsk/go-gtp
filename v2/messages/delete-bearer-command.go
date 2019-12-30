@@ -4,7 +4,7 @@
 
 package messages
 
-import "github.com/ErvinsK/go-gtp/v2/ies"
+import "github.com/wmnsk/go-gtp/v2/ies"
 
 // DeleteBearerCommand is a DeleteBearerCommand Header and its IEs above.
 type DeleteBearerCommand struct {

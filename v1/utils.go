@@ -4,7 +4,7 @@
 
 package v1
 
-import "github.com/ErvinsK/go-gtp/v1/messages"
+import "github.com/wmnsk/go-gtp/v1/messages"
 
 // Encapsulate encapsulates given bytes with GTPv1-U Header and returns in message.TPDU.
 func Encapsulate(teid uint32, payload []byte) *messages.TPDU {

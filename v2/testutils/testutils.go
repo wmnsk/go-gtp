@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/pascaldekloe/goe/verify"
-	"github.com/ErvinsK/go-gtp/v2/messages"
+	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
 // Serializable is just for testing v2.Messages. Don't use this.

@@ -5,7 +5,7 @@
 package messages
 
 import (
-	"github.com/ErvinsK/go-gtp/v2/ies"
+	"github.com/wmnsk/go-gtp/v2/ies"
 )
 
 // ContextRequest is a ContextRequest Header and its IEs above.
