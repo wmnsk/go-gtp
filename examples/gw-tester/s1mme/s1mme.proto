@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package s1mme;
+
+// Attacher defines the service to attach UE.
+service Attacher {
+    rpc Attach (AttachRequest) returns (AttachResponse) {}
+    rpc Detach (DetachRequest) returns (DetachResponse) {}
+}
+
+// AttachRequest is used to request MME to create a session/bearer.
+message AttachRequest {
+    string imsi = 1;
+    string msisdn = 2;
+    string imeisv = 3;
+    string s1u_addr = 4;
+    string src_ip = 5;
+    uint32 i_tei = 6;
+    Location location = 7;
+    bool reattach = 8;
+}
+
+// AttachResponse is used to respond to AttachRequest.
+message AttachResponse {
+    Cause cause = 1; // result
+    string sgw_addr = 2;
+    uint32 o_tei = 3;
+}
+
+// Cause represents a result of attach / detach.
+enum Cause {
+    INVALID = 0;
+    SUCCESS = 1;
+    GW_UNAVAILABLE = 2;
+}
+
+// Location represents a set of location-related information.
+message Location {
+    string mcc = 1;
+    string mnc = 2;
+    RATType rat_type = 3;
+    uint32 tai = 4;
+    uint32 eci = 5;
+
+    enum RATType {
+        INVALID = 0;
+        UTRAN = 1;
+        GERAN = 2;
+        WLAN = 3;
+        GAN = 4;
+        HSPA_EVOLUTION = 5;
+        EUTRAN = 6;
+        VIRTUAL = 7;
+        EUTRAN_NB_IOT = 8;
+        LTEM = 9;
+        NR = 10;
+    }
+}
+
+// DetachRequest is used to request MME to delete a session/bearer.
+message DetachRequest {
+    string imsi = 1;
+}
+
+// DetachResponse is used to respond to DetachRequest.
+message DetachResponse {
+    Cause cause = 1;
+}

@@ -1,0 +1,6 @@
+local_addresses:
+  s5c: "127.0.0.1:2123"
+  s5u: "127.0.0.1:2152"
+  sgi: "127.0.0.1"
+sgi_if_name: "enp0s9"
+route_subnet: "172.16.0.0/24"
