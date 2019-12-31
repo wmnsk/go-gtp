@@ -214,7 +214,9 @@ func (e *enb) attach(ctx context.Context, sub *Subscriber) error {
 			return err
 		}
 
-		if err := e.uConn.AddTunnel(net.ParseIP(sgwIP), net.ParseIP(req.SrcIp), rsp.OTei, req.ITei); err != nil {
+		if err := e.uConn.AddTunnelOverride(
+			net.ParseIP(sgwIP), net.ParseIP(req.SrcIp), rsp.OTei, req.ITei,
+		); err != nil {
 			log.Println(net.ParseIP(sgwIP), net.ParseIP(req.SrcIp), rsp.OTei, req.ITei)
 			e.errCh <- errors.Errorf("failed to create tunnel for %s: %s", sub.IMSI, err)
 			return nil

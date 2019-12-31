@@ -149,7 +149,6 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	if err != nil {
 		return err
 	}
-	s.s5cConn.AddSession(s5Session)
 	s5Session.AddTEID(s5uFTEID.MustInterfaceType(), s5uFTEID.MustTEID())
 
 	log.Printf("Sent Create Session Request to %s for %s", pgwAddrString, s5Session.IMSI)
@@ -208,12 +207,12 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	csRspFromSGW.SetTEID(s11mmeTEID)
 	csRspFromSGW.SetLength()
 
+	s11Session.AddTEID(senderFTEID.MustInterfaceType(), senderFTEID.MustTEID())
+	s11Session.AddTEID(s1usgwFTEID.MustInterfaceType(), s1usgwFTEID.MustTEID())
 	if err := s11Conn.RespondTo(mmeAddr, csReqFromMME, csRspFromSGW); err != nil {
 		s11Conn.RemoveSession(s11Session)
 		return err
 	}
-	s11Session.AddTEID(senderFTEID.MustInterfaceType(), senderFTEID.MustTEID())
-	s11Session.AddTEID(s1usgwFTEID.MustInterfaceType(), s1usgwFTEID.MustTEID())
 
 	s11sgwTEID, err := s11Session.GetTEID(v2.IFTypeS11S4SGWGTPC)
 	if err != nil {
@@ -290,6 +289,10 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg 
 	if err != nil {
 		return err
 	}
+	pgwIP, _, err := net.SplitHostPort(s5uBearer.RemoteAddress().String())
+	if err != nil {
+		return err
+	}
 
 	if err := s.s1uConn.AddTunnelOverride(
 		net.ParseIP(enbIP), net.ParseIP(s1uBearer.SubscriberIP), s1uBearer.OutgoingTEID(), s1usgwTEID,
@@ -297,7 +300,7 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg 
 		return err
 	}
 	if err := s.s5uConn.AddTunnelOverride(
-		net.ParseIP(enbIP), net.ParseIP(s5uBearer.SubscriberIP), s5uBearer.OutgoingTEID(), s5usgwTEID,
+		net.ParseIP(pgwIP), net.ParseIP(s5uBearer.SubscriberIP), s5uBearer.OutgoingTEID(), s5usgwTEID,
 	); err != nil {
 		return err
 	}

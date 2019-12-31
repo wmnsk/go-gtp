@@ -30,7 +30,7 @@ type sgw struct {
 
 func newSGW(cfg *Config) (*sgw, error) {
 	s := &sgw{
-		errCh: make(chan error),
+		errCh: make(chan error, 1),
 	}
 
 	s11, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11)
@@ -219,9 +219,5 @@ func (s *sgw) addRoutes() error {
 		s.addedRules = append(s.addedRules, rule)
 	}
 
-	return nil
-}
-
-func (s *sgw) setupUPlane() error {
 	return nil
 }

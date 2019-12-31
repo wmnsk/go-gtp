@@ -20,23 +20,9 @@ import (
 func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
 
-	var s5Session *v2.Session
-	// sometimes response comes so early that S-GW hasn't registered the session.
-	// TODO: this should be fixed in v2 package in the future...
-	tick := time.NewTicker(30 * time.Millisecond)
-	count := 3
-	for {
-		<-tick.C
-		var err error
-		s5Session, err = s5cConn.GetSessionByTEID(msg.TEID(), pgwAddr)
-		if err != nil {
-			count--
-			if count == 0 {
-				return err
-			}
-			continue
-		}
-		break
+	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID(), pgwAddr)
+	if err != nil {
+		return err
 	}
 
 	// assert type to refer to the struct field specific to the message.

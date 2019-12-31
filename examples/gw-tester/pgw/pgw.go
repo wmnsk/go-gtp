@@ -115,11 +115,7 @@ func (p *pgw) setupUPlane(peerIP, msIP net.IP, otei, itei uint32) error {
 		log.Printf("Started listening on %s", p.uConn.LocalAddr())
 	}
 
-	if err := p.uConn.DelTunnelByMSAddress(msIP); err != nil {
-		log.Println(err)
-	}
-
-	if err := p.uConn.AddTunnel(peerIP, msIP, otei, itei); err != nil {
+	if err := p.uConn.AddTunnelOverride(peerIP, msIP, otei, itei); err != nil {
 		return err
 	}
 
