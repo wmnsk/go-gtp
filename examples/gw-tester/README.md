@@ -4,6 +4,8 @@ A pseudo eNB and MME as a tester for S/P-GW.
 
 ## What's this?
 
+![diagram](./docs/diagram.png)
+
 It is a burden to use actual UE/eNB/MME just to test S/P-GW, isn't it?  
 GW Tester emulates the minimal required behavior of surrounding nodes to perform a quick and simple testing on S/P-GW.
 
@@ -67,7 +69,7 @@ go get github.com/wmnsk/go-gtp/examples/gw-tester/enb
 go get github.com/wmnsk/go-gtp/examples/gw-tester/mme
 ```
 
-And run them with YAML configuration. See [Configuration](#) section for details.
+And run them with YAML configuration. See [Configuration](#configurations) section for details.
 
 ```shell-session
 ./mme
@@ -92,13 +94,13 @@ After successful creation of the sessions, you can inject packets externally or 
 
 These values are used to identify eNB. Some of them are just to set inside the packets, and not validated.
 
-| config   | type of value | description              |
-|----------|---------------|--------------------------|
-| mcc      | string        | MCC of eNB               |
-| mnc      | string        | MNC of eNB               |
-| rat_type | uint8         | RAT Type (6 for E-UTRAN) |
-| tai      | uint16        | TAI of eNB               |
-| eci      | uint32        | ECI of eNB               |
+| config     | type of value | description                |
+|------------|---------------|----------------------------|
+| `mcc`      | string        | MCC of eNB                 |
+| `mnc`      | string        | MNC of eNB                 |
+| `rat_type` | uint8         | RAT Type (`6` for E-UTRAN) |
+| `tai`      | uint16        | TAI of eNB                 |
+| `eci`      | uint32        | ECI of eNB                 |
 
 #### Local Addressess
 
@@ -106,24 +108,24 @@ These values are used to identify eNB. Some of them are just to set inside the p
 
 | config | type of value | description                        |
 |--------|---------------|------------------------------------|
-| s1c    | string        | local IP/Port for S1-MME interface |
-| s1u    | string        | local IP/Port for S1-U interface   |
+| `s1c`  | string        | local IP/Port for S1-MME interface |
+| `s1u`  | string        | local IP/Port for S1-U interface   |
 
 #### Subscribers
 
 `subscribers` are the list of subscribers to attach.
 
-| config             | type of value | description                                                                                                                                                                 |
-|--------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| imsi               | string        | IMSI of the subscriber                                                                                                                                                      |
-| msisdn             | string        | MSISDN of the subscriber                                                                                                                                                    |
-| imeisv             | string        | IMEISV of the subscriber                                                                                                                                                    |
-| src_ip             | string        | sourcce IP of the subscriber (not assigned by P-GW)                                                                                                                         |
-| i_tei              | uint32        | Incoming TEID that S-GW should to specify this subscriber                                                                                                                   |
-| type               | string        | `external` or `http_get`. see [U-Plane Data Injection](#u-plane-data-injection)                                                                                             |
-| euu_if_name        | string        | name of network interface on eUu side.</br>type=`external`: Used to receive traffic from external UE</br>type=`http_get`: Used as a source interface that `src_ip` is added |
-| http_url           | string        | URL to HTTP GET by built-in traffic generator                                                                                                                               |
-| reattach_on_reload | bool          | whether to perform attach procedure again on config reload                                                                                                                  |
+| config               | type of value | description                                                                                                                                                                 |
+|----------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `imsi`               | string        | IMSI of the subscriber                                                                                                                                                      |
+| `msisdn`             | string        | MSISDN of the subscriber                                                                                                                                                    |
+| `imeisv`             | string        | IMEISV of the subscriber                                                                                                                                                    |
+| `src_ip`             | string        | sourcce IP of the subscriber (not assigned by P-GW)                                                                                                                         |
+| `i_tei`              | uint32        | incoming TEID that S-GW should to specify this subscriber                                                                                                                   |
+| type                 | string        | `external` or `http_get`. see [U-Plane Data Injection](#u-plane-data-injection)                                                                                             |
+| `euu_if_name`        | string        | name of network interface on eUu side.</br>type=`external`: Used to receive traffic from external UE</br>type=`http_get`: Used as a source interface that `src_ip` is added |
+| `http_url`           | string        | URL to HTTP GET by built-in traffic generator                                                                                                                               |
+| `reattach_on_reload` | bool          | whether to perform attach procedure again on config reload                                                                                                                  |
 ### MME
 
 #### Global
@@ -132,9 +134,9 @@ These values are used to identify MME. Some of them are just to set inside the p
 
 | config | type of value | description                        |
 |--------|---------------|------------------------------------|
-| mcc    | string        | MCC of MME                         |
-| mnc    | string        | MNC of MME                         |
-| apn    | string        | APN assigned to all the subscriber |
+| `mcc`  | string        | MCC of MME                         |
+| `mnc`  | string        | MNC of MME                         |
+| `apn`  | string        | APN assigned to all the subscriber |
 
 #### Local Addressess
 
@@ -142,29 +144,55 @@ These values are used to identify MME. Some of them are just to set inside the p
 
 | config | type of value | description                        |
 |--------|---------------|------------------------------------|
-| s1c    | string        | local IP/Port for S1-MME interface |
-| s11    | string        | local IP/Port for S11 interface    |
+| `s1c`  | string        | local IP/Port for S1-MME interface |
+| `s11`  | string        | local IP/Port for S11 interface    |
 
 #### Gateway IPs
 
 IP addresses required to know/tell S-GW. This is normally done by DNS lookup with APN, but for now it's static.
 
-| config     | type of value | description                  |
-|------------|---------------|------------------------------|
-| sgw_s11_ip | string        | S-GW's IP for S11 interface  |
-| pgw_s5c_ip | string        | P-GW's IP for S5-C interface |
+| config       | type of value | description                  |
+|--------------|---------------|------------------------------|
+| `sgw_s11_ip` | string        | S-GW's IP for S11 interface  |
+| `pgw_s5c_ip` | string        | P-GW's IP for S5-C interface |
 
 ### S-GW
 
-_(to be updated...)_
+#### Local Addressess
+
+`local_addresses` are the IP addresses/ports to be bound on local machine.
+
+| config | type of value | description                      |
+|--------|---------------|----------------------------------|
+| `s11`  | string        | local IP/Port for S11 interface  |
+| `s1u`  | string        | local IP/Port for S1-U interface |
+| `s5c`  | string        | local IP/Port for S5-C interface |
+| `s5u`  | string        | local IP/Port for S5-U interface |
+
 
 ### P-GW
 
-_(to be updated...)_
+#### Global
+
+| config         | type of value | description                                                            |
+|----------------|---------------|------------------------------------------------------------------------|
+| `sgi_if_name`  | string        | name of network interface on SGi side. Used to downlink route traffic. |
+| `route_subnet` | string        | IP subnet of UEs that should be routed properly.                       |
+
+#### Local Addressess
+
+`local_addresses` are the IP addresses/ports to be bound on local machine.  
+_Note that `sgi` is just an IP address, no port number expected._
+
+| config | type of value | description                      |
+|--------|---------------|----------------------------------|
+| `s5c`  | string        | local IP/Port for S5-C interface |
+| `s5u`  | string        | local IP/Port for S5-U interface |
+| `sgi`  | string        | local IP for SGi interface       |
 
 ## Other Features
 
-### Reload config
+### Reloading config
 
 The programs can handle `SIGHUP` to reload config without deleting sessions. Update YAML file and send `SIGHUP` to the process.
 
