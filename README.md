@@ -6,7 +6,6 @@ Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol
 [![GolangCI](https://golangci.com/badges/github.com/wmnsk/go-gtp.svg)](https://golangci.com/r/github.com/wmnsk/go-gtp)
 [![GoDoc](https://godoc.org/github.com/wmnsk/go-gtp?status.svg)](https://godoc.org/github.com/wmnsk/go-gtp)
 [![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/wmnsk/go-gtp/blob/master/LICENSE)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp?ref=badge_shield)
 
 ## Features
 
@@ -80,7 +79,7 @@ The basic idea behind the current implementation is;
 For the detailed usage of specific version, see README.md under each version's directory.
 
 | Version | Details                   |
-| ------- | ------------------------- |
+|---------|---------------------------|
 | GTPv0   | [README.md](v0/README.md) |
 | GTPv1   | [README.md](v1/README.md) |
 | GTPv2   | [README.md](v2/README.md) |
@@ -93,7 +92,7 @@ In other words, even if a message/IE is not marked as "Yes", you can make it wor
 Your contribution is welcome to implement helpers for all the types, of course!
 
 | Version           | Messages | IEs   | Networking (state machine)                           | Details                                               |
-| ----------------- | -------- | ----- | ---------------------------------------------------- | ----------------------------------------------------- |
+|-------------------|----------|-------|------------------------------------------------------|-------------------------------------------------------|
 | GTPv0             | 35.7%    | 81.8% | not implemented yet                                  | [Supported Features](v0/README.md#supported-features) |
 | GTPv1             | 26.6%    | 30.1% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](v1/README.md#supported-features) |
 | GTPv2             | 41.0%    | 43.2% | almost functional                                    | [Supported Features](v2/README.md#supported-features) |
@@ -112,6 +111,3 @@ _I'm always open to welcome co-authors! Please feel free to talk to me._
 ## LICENSE
 
 [MIT](https://github.com/wmnsk/go-gtp/blob/master/LICENSE)
-
-
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwmnsk%2Fgo-gtp?ref=badge_large)
