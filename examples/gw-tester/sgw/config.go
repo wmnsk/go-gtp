@@ -18,6 +18,7 @@ type Config struct {
 		S5C string `yaml:"s5c"`
 		S5U string `yaml:"s5u"`
 	} `yaml:"local_addresses"`
+	EnableKernGTP bool `yaml:"enable_kern_gtp"`
 }
 
 func loadConfig(path string) (*Config, error) {

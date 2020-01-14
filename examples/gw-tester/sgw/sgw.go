@@ -22,6 +22,8 @@ type sgw struct {
 
 	s11IP, s5cIP, s1uIP, s5uIP string
 
+	enableKernGTP bool
+
 	addedRoutes []*netlink.Route
 	addedRules  []*netlink.Rule
 
@@ -30,7 +32,8 @@ type sgw struct {
 
 func newSGW(cfg *Config) (*sgw, error) {
 	s := &sgw{
-		errCh: make(chan error, 1),
+		enableKernGTP: cfg.EnableKernGTP,
+		errCh:         make(chan error, 1),
 	}
 
 	s11, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11)
@@ -65,29 +68,43 @@ func newSGW(cfg *Config) (*sgw, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.s1uConn, err = v1.ListenAndServeUPlaneKernel("gtp-sgw-s1", v1.RoleGGSN, s1u, 0, s.errCh)
-	if err != nil {
-		return nil, err
-	}
-	s.s1uIP, _, err = net.SplitHostPort(s1u.String())
-	if err != nil {
-		return nil, err
-	}
-
 	s5u, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5U)
 	if err != nil {
 		return nil, err
 	}
-	s.s5uConn, err = v1.ListenAndServeUPlaneKernel("gtp-sgw-s5", v1.RoleSGSN, s5u, 0, s.errCh)
+
+	if s.enableKernGTP {
+		s.s1uConn, err = v1.ListenAndServeUPlaneKernel("gtp-sgw-s1", v1.RoleGGSN, s1u, 0, s.errCh)
+		if err != nil {
+			return nil, err
+		}
+
+		s.s5uConn, err = v1.ListenAndServeUPlaneKernel("gtp-sgw-s5", v1.RoleSGSN, s5u, 0, s.errCh)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := s.addRoutes(); err != nil {
+			return nil, err
+		}
+	} else {
+		s.s1uConn, err = v1.ListenAndServeUPlane(s1u, 0, s.errCh)
+		if err != nil {
+			return nil, err
+		}
+
+		s.s5uConn, err = v1.ListenAndServeUPlane(s5u, 0, s.errCh)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	s.s1uIP, _, err = net.SplitHostPort(s1u.String())
 	if err != nil {
 		return nil, err
 	}
 	s.s5uIP, _, err = net.SplitHostPort(s5u.String())
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.addRoutes(); err != nil {
 		return nil, err
 	}
 
@@ -107,14 +124,17 @@ func (s *sgw) run(ctx context.Context) error {
 
 func (s *sgw) close() error {
 	var errs []error
-	for _, r := range s.addedRoutes {
-		if err := netlink.RouteDel(r); err != nil {
-			errs = append(errs, err)
+
+	if s.enableKernGTP {
+		for _, r := range s.addedRoutes {
+			if err := netlink.RouteDel(r); err != nil {
+				errs = append(errs, err)
+			}
 		}
-	}
-	for _, r := range s.addedRules {
-		if err := netlink.RuleDel(r); err != nil {
-			errs = append(errs, err)
+		for _, r := range s.addedRules {
+			if err := netlink.RuleDel(r); err != nil {
+				errs = append(errs, err)
+			}
 		}
 	}
 

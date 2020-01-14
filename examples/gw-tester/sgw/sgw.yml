@@ -3,3 +3,4 @@ local_addresses:
   s1u: "127.0.0.1:2152"
   s5c: "127.0.0.1:2123"
   s5u: "127.0.0.1:2152"
+enable_kern_gtp: true

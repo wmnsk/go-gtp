@@ -285,7 +285,7 @@ func (u *UPlaneConn) serve() {
 
 			// just use original packet not to get it slow.
 			binary.BigEndian.PutUint32(buf[4:8], peer.teid)
-			if _, err := peer.srcConn.WriteTo(buf, peer.addr); err != nil {
+			if _, err := peer.srcConn.WriteTo(buf[:n], peer.addr); err != nil {
 				go func() {
 					u.errCh <- err
 				}()
