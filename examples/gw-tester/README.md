@@ -88,28 +88,32 @@ After successful creation of the sessions, you can inject packets externally or 
 
 ## Configurations
 
+Each node has a YAML file as a configuration.  
+In general, config consists of the network information of local/remote node, and some node-specific parameters.
+
 ### eNB
 
 #### Global
 
 These values are used to identify eNB. Some of them are just to set inside the packets, and not validated.
 
-| config     | type of value | description                |
-|------------|---------------|----------------------------|
-| `mcc`      | string        | MCC of eNB                 |
-| `mnc`      | string        | MNC of eNB                 |
-| `rat_type` | uint8         | RAT Type (`6` for E-UTRAN) |
-| `tai`      | uint16        | TAI of eNB                 |
-| `eci`      | uint32        | ECI of eNB                 |
+| config     | type of value | description                                  |
+|------------|---------------|----------------------------------------------|
+| `mcc`      | string        | MCC of eNB                                   |
+| `mnc`      | string        | MNC of eNB                                   |
+| `rat_type` | uint8         | RAT Type (`6` for E-UTRAN)                   |
+| `tai`      | uint16        | TAI of eNB                                   |
+| `eci`      | uint32        | ECI of eNB                                   |
+| `mme_addr` | string        | IP/Port of MME to dial, for S1-MME interface |
 
 #### Local Addressess
 
 `local_addresses` are the IP addresses/ports to be bound on local machine.
 
-| config | type of value | description                        |
-|--------|---------------|------------------------------------|
-| `s1c`  | string        | local IP/Port for S1-MME interface |
-| `s1u`  | string        | local IP/Port for S1-U interface   |
+| config     | type of value | description                        |
+|------------|---------------|------------------------------------|
+| `s1c_ip`   | string        | local IP/Port for S1-MME interface |
+| `s1u_addr` | string        | local IP/Port for S1-U interface   |
 
 #### Subscribers
 
@@ -126,6 +130,7 @@ These values are used to identify eNB. Some of them are just to set inside the p
 | `euu_if_name`        | string        | name of network interface on eUu side.</br>type=`external`: Used to receive traffic from external UE</br>type=`http_get`: Used as a source interface that `src_ip` is added |
 | `http_url`           | string        | URL to HTTP GET by built-in traffic generator                                                                                                                               |
 | `reattach_on_reload` | bool          | whether to perform attach procedure again on config reload                                                                                                                  |
+
 ### MME
 
 #### Global
@@ -142,10 +147,10 @@ These values are used to identify MME. Some of them are just to set inside the p
 
 `local_addresses` are the IP addresses/ports to be bound on local machine.
 
-| config | type of value | description                        |
-|--------|---------------|------------------------------------|
-| `s1c`  | string        | local IP/Port for S1-MME interface |
-| `s11`  | string        | local IP/Port for S11 interface    |
+| config     | type of value | description                        |
+|------------|---------------|------------------------------------|
+| `s1c_addr` | string        | local IP/Port for S1-MME interface |
+| `s11_addr` | string        | local IP/Port for S11 interface    |
 
 #### Gateway IPs
 
@@ -162,13 +167,12 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 
 `local_addresses` are the IP addresses/ports to be bound on local machine.
 
-| config | type of value | description                      |
-|--------|---------------|----------------------------------|
-| `s11`  | string        | local IP/Port for S11 interface  |
-| `s1u`  | string        | local IP/Port for S1-U interface |
-| `s5c`  | string        | local IP/Port for S5-C interface |
-| `s5u`  | string        | local IP/Port for S5-U interface |
-
+| config     | type of value | description                      |
+|------------|---------------|----------------------------------|
+| `s11_addr` | string        | local IP/Port for S11 interface  |
+| `s1u_addr` | string        | local IP/Port for S1-U interface |
+| `s5c_addr` | string        | local IP/Port for S5-C interface |
+| `s5u_addr` | string        | local IP/Port for S5-U interface |
 
 ### P-GW
 
@@ -181,14 +185,13 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 
 #### Local Addressess
 
-`local_addresses` are the IP addresses/ports to be bound on local machine.  
-_Note that `sgi` is just an IP address, no port number expected._
+`local_addresses` are the IP addresses/ports to be bound on local machine.
 
-| config | type of value | description                      |
-|--------|---------------|----------------------------------|
-| `s5c`  | string        | local IP/Port for S5-C interface |
-| `s5u`  | string        | local IP/Port for S5-U interface |
-| `sgi`  | string        | local IP for SGi interface       |
+| config     | type of value | description                      |
+|------------|---------------|----------------------------------|
+| `s5c_addr` | string        | local IP/Port for S5-C interface |
+| `s5u_addr` | string        | local IP/Port for S5-U interface |
+| `sgi_ip`   | string        | local IP for SGi interface       |
 
 ## Other Features
 
