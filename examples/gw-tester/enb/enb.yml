@@ -4,8 +4,9 @@ rat_type: 6 # E-UTRAN
 tai: 0x0001
 eci: 0x00000001
 local_addresses:
-  s1c: "127.0.1.11:36412"
-  s1u: "127.0.0.11:2152"
+  s1c_ip: "127.0.1.11"
+  s1u_addr: "127.0.0.11:2152"
+mme_addr: "127.0.1.12:36412"
 subscribers:
   - imsi: "001010000000001"
     msisdn: "814000000001"

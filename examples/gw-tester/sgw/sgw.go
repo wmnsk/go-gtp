@@ -33,7 +33,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 		errCh: make(chan error, 1),
 	}
 
-	s11, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11)
+	s11, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11Addr)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 	}
 	log.Printf("Started serving on %s", s.s11Conn.LocalAddr())
 
-	s5c, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5C)
+	s5c, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5CAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 	}
 	log.Printf("Started serving on %s", s.s5cConn.LocalAddr())
 
-	s1u, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1U)
+	s1u, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 		return nil, err
 	}
 
-	s5u, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5U)
+	s5u, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5UAddr)
 	if err != nil {
 		return nil, err
 	}

@@ -59,7 +59,7 @@ func newENB(cfg *Config) (*enb, error) {
 		errCh: make(chan error, 1),
 	}
 
-	laddr, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1U)
+	laddr, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,8 @@ func newENB(cfg *Config) (*enb, error) {
 		return nil, err
 	}
 
-	conn, err := grpc.Dial(cfg.LocalAddrs.S1C, grpc.WithInsecure())
+	// TODO: bind local address(cfg.LocalAddrs.S1CIP) with WithDialer option?
+	conn, err := grpc.Dial(cfg.MMEAddr, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}

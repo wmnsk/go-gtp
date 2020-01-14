@@ -13,9 +13,9 @@ import (
 // Config is a configurations loaded from yaml.
 type Config struct {
 	LocalAddrs struct {
-		S5C string `yaml:"s5c"`
-		S5U string `yaml:"s5u"`
-		SGi string `yaml:"sgi"`
+		S5CAddr string `yaml:"s5c_addr"`
+		S5UAddr string `yaml:"s5u_addr"`
+		SGiIP   string `yaml:"sgi_ip"`
 	} `yaml:"local_addresses"`
 
 	SGiIFName   string `yaml:"sgi_if_name"`
