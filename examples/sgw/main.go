@@ -62,21 +62,27 @@ func newSGW(s11, s5c, s1u, s5u net.Addr) (*sGateway, error) {
 		errCh:    make(chan error),
 	}
 
-	var err error
-	s.s11Conn, err = v2.ListenAndServe(s11, 0, s.errCh)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("Started serving on %s", s.s11Conn.LocalAddr())
-
-	s.s5cConn, err = v2.ListenAndServe(s5c, 0, s.errCh)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("Started serving on %s", s.s5cConn.LocalAddr())
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	var err error
+	s.s11Conn = v2.NewConn(s11, 0)
+	go func() {
+		if err = s.s11Conn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
+	log.Printf("Started serving on %s", s11)
+
+	s.s5cConn = v2.NewConn(s5c, 0)
+	go func() {
+		if err = s.s5cConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
+	log.Printf("Started serving on %s", s5c)
 
 	s.s1uConn = v1.NewUPlaneConn(s1u)
 	go func() {
