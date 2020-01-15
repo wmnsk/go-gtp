@@ -14,9 +14,11 @@ import (
 // Config is a configurations loaded from yaml.
 type Config struct {
 	LocalAddrs struct {
-		S1C string `yaml:"s1c"`
-		S1U string `yaml:"s1u"`
+		S1CIP   string `yaml:"s1c_ip"`
+		S1UAddr string `yaml:"s1u_addr"`
 	} `yaml:"local_addresses"`
+
+	MMEAddr string `yaml:"mme_addr"`
 
 	MCC         string        `yaml:"mcc"`
 	MNC         string        `yaml:"mnc"`

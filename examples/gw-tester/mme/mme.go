@@ -76,7 +76,7 @@ func newMME(cfg *Config) (*mme, error) {
 	m.pgw.s5cIP = cfg.PgwS5C
 
 	// setup S11 conn
-	s11, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11)
+	s11, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11Addr)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func newMME(cfg *Config) (*mme, error) {
 	if err != nil {
 		return nil, err
 	}
-	m.s11IP, _, err = net.SplitHostPort(cfg.LocalAddrs.S11)
+	m.s11IP, _, err = net.SplitHostPort(cfg.LocalAddrs.S11Addr)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func newMME(cfg *Config) (*mme, error) {
 	})
 
 	// setup gRPC server
-	m.s1mmeListener, err = net.Listen("tcp", cfg.LocalAddrs.S1C)
+	m.s1mmeListener, err = net.Listen("tcp", cfg.LocalAddrs.S1CAddr)
 	if err != nil {
 		return nil, err
 	}

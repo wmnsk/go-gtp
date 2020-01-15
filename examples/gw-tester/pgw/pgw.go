@@ -32,8 +32,8 @@ type pgw struct {
 
 func newPGW(cfg *Config) (*pgw, error) {
 	p := &pgw{
-		s5c:   cfg.LocalAddrs.S5C,
-		s5u:   cfg.LocalAddrs.S5U,
+		s5c:   cfg.LocalAddrs.S5CAddr,
+		s5u:   cfg.LocalAddrs.S5UAddr,
 		sgiIF: cfg.SGiIFName,
 
 		errCh: make(chan error, 1),
