@@ -4,24 +4,39 @@ Package v2 provides the simple and painless handling of GTPv2-C protocol in pure
 
 ## Getting Started
 
-_Working examples are available in [example](../examples) directory, which might be better instruction._
+_Working examples are available in [example](../examples) directory, which might be the better instruction for developers._
 
-### Creating a Session as a client
+### Opening a connection
 
-Use `Dial()`, `AddHandler()`, `CreateSession()`, and you can get `*Conn`, `*Session` and `*Bearer`.
+#### Client
 
-1. `Dial()` to retrieve *v2.Conn
-
+`Dial` opens a connection between the specified peer by confirming the peer is alive by Echo Request/Response exchange. If you don't need Echo, see Server section.
 
 ```go
-// give local/remote net.Addr, restart counter, channel to let background process pass the errors.
-conn, err := v2.Dial(laddr, raddr, 0, errCh)
+// Note that the conn is not bound to raddr. to let a Conn to be able to communicate with multiple peers.
+conn, err := v2.Dial(ctx, laddr, raddr, 0)
 if err != nil {
     // ...
 }
 ```
 
-2. `AddHandler()` to register your own handler before creating session.
+#### Server 
+
+Retrieve `Conn` with `NewConn`, and `ListenAndServe` to start listening.
+
+```go
+srvConn := v2.NewConn(srvAddr, 0)
+if err := srvConn.ListenAndServe(ctx); err != nil {
+    // ...
+}
+```
+
+### Handling incoming messages
+
+Prepare functions that comform to [`HandlerFunc`](https://godoc.org/github.com/wmnsk/go-gtp/v2#Conn.AddHandler), and register them to `Conn` with `AddHandler`. This should be done as soon as you get `Conn` not to miss the incoming messages.
+
+`HandlerFunc` is to handle the incoming messages by message type. See [example](../examples) for how it is like.  
+Also consider using `AddHandlers` when you have many `HandlerFunc`s.
 
 ```go
 // write what you expect to do on receiving a message. Handlers should be added per message type.
@@ -31,92 +46,22 @@ conn.AddHandler(
     messages.MsgTypeCreateSessionResponse,
     // second param is the HandlerFunc to describe how you handle the message coming from peer.
     func(c *v2.Conn, senderAddr net.Addr, msg messages.Message) error {
-        // GetSessionByTEID helps you get the relevant Session(=created when you run CreateSession()).
-        session, err := c.GetSessionByTEID(msg.TEID())
-        if err != nil {
-            c.RemoveSession(session)
-            return err
-        }
-        // GetDefaultBearer() helps you get the default bearer.
-        // to get other bearers, use GetBearerByName("name"), or GetBearerByEBI(ebi).
-        bearer := session.GetDefaultBearer()
-
-        // assert type to refer to the struct field specific to the message.
-        // in general, no need to check if it can be type-asserted, as long as the MessageType is
-        // specified correctly in AddHandler().
-        csRsp := msg.(*messages.CreateSessionResponse)
-
-        // all struct fields(except Header) are typed as *ies.IE, and there are the helpers methods
-        // to retrieve the value from an IE's payload.
-        // it's important to confirm the IE is not nil, as the other endpoint does not necessarily
-        // contain the IE you expect.
-        if ie := csRsp.Cause; ie != nil {
-            if cause := ie.Cause(); cause != v2.CauseRequestAccepted {
-                // before returning on failure, RemoveSession() to delete if it's no longer used.
-                c.RemoveSession(session)
-                // some errors expected to be used so often is available in v2/errors.go.
-                return &v2.ErrCauseNotOK{
-                    MsgType: csRsp.MessageTypeName(),
-                    Cause:   cause,
-                    Msg:     fmt.Sprintf("subscriber: %s", session.IMSI),
-                }
-            }
-        } else {
-            // if the missing IE is required to proceed, returns error.
-            c.RemoveSession(session)
-            return &v2.ErrRequiredIEMissing{Type: msg.MessageType()}
-        }
-
-        // do not forget to add TEID to Session by AddTEID() when you receive F-TEID.
-        if ie := csRsp.SenderFTEIDC; ie != nil {
-            session.AddTEID(ie.InterfaceType(), ie.TEID())
-        } else {
-            return &v2.ErrRequiredIEMissing{Type: ies.FullyQualifiedTEID}
-        }
-        
-        // IEs inside grouped IE can be handled by ranging over ie.ChildIEs.
-        // also, grouped IE has FindByType(), but it might be slower.
-        if brCtxIE := csRsp.BearerContextsCreated; brCtxIE != nil {
-            for _, ie := range brCtxIE.ChildIEs {
-                switch ie.Type {
-                case ies.EPSBearerID:
-                    bearer.EBI = ie.EPSBearerID()
-                case ies.FullyQualifiedTEID:
-                    if ie.Instance() != 0 {
-                        continue
-                    }
-                    // do not forget to add TEID to Session by AddTEID() when you receive F-TEID.
-                    session.AddTEID(ie.InterfaceType(), ie.TEID())
-                }    
-            }
-        } else {
-            return &v2.ErrRequiredIEMissing{Type: ies.BearerContext}
-        }
-        
-        // if Session is ready, let's active it.
-        if err := session.Activate(); err != nil {
-            c.RemoveSession(session)
-            return err
-        }
-
-    },
-)
-
-// default handlers can be overridden just by specifying its type and giving a HandlerFunc.
-conn.AddHandler(
-    messages.MsgTypeEchoResponse,
-    func(c *v2.Conn, senderAddr net.Addr, msg messages.Message) error {
-        log.Printf("Got %s from %s", msg.MessageTypeName(), senderAddr)
-        // do something special for Echo Response.
+        // Do what you want with CreateSessionResponse message here.
+        // see examples directly for functional examples
     },
 )
 ```
 
-3. `CreateSession()` to start creating a Session.
+### Manipulating sessions
+
+With `Conn`, you can create, modify, delete GTPv2-C sessions and bearers with the built-in methods.
+
+#### Session creation
+
+`CreateSession` creates a Session, while storing values given as IEs and creating a default bearer.
+In the following call, for example, IMSI and TEID for S1-U eNB is stored in the created `Session`.
 
 ```go
-// CreateSession() sends Create Session Request with given IEs, and stores information
-// inside Session returned.
 session, err := c.CreateSession(
     // put IEs required for your implementation here.
     // it is easier to use constructors in ies package.
@@ -139,27 +84,10 @@ if err != nil {
 c.AddSession(session)
 ```
 
-### Waiting for a Session to be created as a server
+#### Session deletion / Bearer modification
 
-Use `ListenAndServe()`, `AddHandler()`, and you can get `*Conn`, `*Session`, and `*Bearer`.
-
-1. `ListenAndServe()` to retrieve *v2.Conn and start listening.
-
-```go
-// give local net.Addr, restart counter, channel to let background process pass the errors.
-conn, err := v2.ListenAndServe(laddr, 0, errCh)
-if err != nil {
-    // ...
-}
-```
-
-2. `AddHandler()` to register your own handler in the same way as previous section.
-
-When adding handler for server, the following things should be taken into account;
-
-* `Session` should be created by your own with `NewSession()`, and the subscriber/bearer information should be set properly(which is often in the request message).
-
-* Response with error should be sent before returning with failure.
+`DeleteSession` and `ModifyBearer` methods are provided to send each message as easy as possible.
+Unlike `CreateSession`, they don't manipulate the Session information automatically.
 
 ### Opening a U-Plane connection
 

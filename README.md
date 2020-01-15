@@ -72,9 +72,9 @@ _If you want to see fewer number of subscribers, please comment-out the `v2.Subs
 Each version has `net.PacketConn`-like APIs and GTP-specific ones which is often version-specific.
 The basic idea behind the current implementation is;
 
-* `Dial()` or `ListenAndServe()` to create a connection(`Conn`) between nodes.
-* Register handlers to the `Conn` for specific messages with `AddHandler()`, which allows users to handle the messages coming from the remote endpoint as flexible as possible, with less pain.
-* `CreateXXX()` to create session or PDP context with arbitrary IEs given. Session/PDP context is structured and they also have some helpers like `AddTEID()` to handle known TEID properly.
+* `Dial` or `ListenAndServe` to create a connection(`Conn`) between nodes.
+* Register handlers to the `Conn` for specific messages with `AddHandler`, which allows users to handle the messages coming from the remote endpoint as flexible as possible, with less pain.
+* `CreateXXX` to create session or PDP context with arbitrary IEs given. Session/PDP context is structured and they also have some helpers like `AddTEID` to handle known TEID properly.
 
 For the detailed usage of specific version, see README.md under each version's directory.
 
