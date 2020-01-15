@@ -5,6 +5,7 @@
 package v2
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/binary"
 	"net"
@@ -20,6 +21,7 @@ import (
 // Conn represents a GTPv2-C connection.
 type Conn struct {
 	mu      sync.Mutex
+	laddr   net.Addr
 	pktConn net.PacketConn
 
 	validationEnabled bool
@@ -48,47 +50,16 @@ type Conn struct {
 //
 // This is for special situation that the user already have a net.PacketConn to be used for
 // GTPv2-C connection. Otherwise, Dial() or ListenAndServe() should be used to create a Conn.
-func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
-	c := &Conn{
+func NewConn(laddr net.Addr, counter uint8) *Conn {
+	return &Conn{
 		mu:                sync.Mutex{},
-		pktConn:           pktConn,
+		laddr:             laddr,
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
-		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
 		sequence:          0,
 		RestartCounter:    counter,
 	}
-
-	// send EchoRequest to raddr.
-	if _, err := c.EchoRequest(raddr); err != nil {
-		return nil, err
-	}
-
-	buf := make([]byte, 1600)
-	// if no response coming within 3 seconds, returns error without retrying.
-	if err := c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
-		return nil, err
-	}
-	n, raddr, err := c.pktConn.ReadFrom(buf)
-	if err != nil {
-		return nil, err
-	}
-	if err := c.pktConn.SetReadDeadline(time.Time{}); err != nil {
-		return nil, err
-	}
-
-	// decode incoming message and let it be handled by default handler funcs.
-	msg, err := messages.Parse(buf[:n])
-	if err != nil {
-		return nil, err
-	}
-	if err := c.handleMessage(raddr, msg); err != nil {
-		return nil, err
-	}
-
-	go c.serve()
-	return c, nil
 }
 
 // Dial exchanges the GTPv2 Echo with raddr and returns *Conn.
@@ -103,12 +74,11 @@ func NewConn(pktConn net.PacketConn, raddr net.Addr, counter uint8, errCh chan e
 // The errCh should be monitored continuously by caller after retrieving *Conn.
 // Otherwise the background process may get stuck. This error handling manner might
 // be changed in the future.
-func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
+func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
-		errCh:             errCh,
 		msgHandlerMap:     defaultHandlerMap,
 		sequence:          0,
 		RestartCounter:    counter,
@@ -151,7 +121,12 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 		return nil, err
 	}
 
-	go c.serve()
+	go func() {
+		if err := c.serve(ctx); err != nil {
+			logf("fatal error on Conn %s: %s", c.LocalAddr(), err)
+			_ = c.Close()
+		}
+	}()
 	return c, nil
 }
 
@@ -160,45 +135,40 @@ func Dial(laddr, raddr net.Addr, counter uint8, errCh chan error) (*Conn, error)
 // The errCh should be monitored continuously by caller after retrieving *Conn.
 // Otherwise the background process may get stuck. This error handling manner might
 // be changed in the future.
-func ListenAndServe(laddr net.Addr, counter uint8, errCh chan error) (*Conn, error) {
-	c := &Conn{
-		mu:                sync.Mutex{},
-		validationEnabled: true,
-		closeCh:           make(chan struct{}),
-		errCh:             errCh,
-		msgHandlerMap:     defaultHandlerMap,
-		sequence:          0,
-		RestartCounter:    counter,
-	}
-
+func (c *Conn) ListenAndServe(ctx context.Context) error {
 	var err error
-	c.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
+	c.pktConn, err = net.ListenPacket(c.laddr.Network(), c.laddr.String())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	go c.serve()
-	return c, nil
+	return c.listenAndServe(ctx)
+}
+
+func (c *Conn) listenAndServe(ctx context.Context) error {
+	// TODO: this func is left for future enhancement.
+	return c.serve(ctx)
 }
 
 func (c *Conn) closed() <-chan struct{} {
 	return c.closeCh
 }
 
-func (c *Conn) serve() {
-	buf := make([]byte, 1600)
+func (c *Conn) serve(ctx context.Context) error {
+	buf := make([]byte, 1500)
 	for {
 		select {
+		case <-ctx.Done():
+			return nil
 		case <-c.closed():
-			return
+			return nil
 		default:
 			// do nothing and go forward.
 		}
 
 		n, raddr, err := c.pktConn.ReadFrom(buf)
 		if err != nil {
-			logf("error reading from conn: %s: %v", c.LocalAddr(), err)
-			continue
+			return errors.Errorf("error reading on Conn %s: %s", c.LocalAddr(), err)
 		}
 
 		raw := make([]byte, n)
@@ -211,7 +181,7 @@ func (c *Conn) serve() {
 			}
 
 			if err := c.handleMessage(raddr, msg); err != nil {
-				c.errCh <- err
+				logf("error handling message on Conn %s: %s", c.LocalAddr(), err)
 			}
 		}()
 	}
