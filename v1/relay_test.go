@@ -28,14 +28,16 @@ func TestRelay(t *testing.T) {
 	leftConn := v1.NewUPlaneConn(leftAddr)
 	go func() {
 		if err := leftConn.ListenAndServe(ctx); err != nil {
-			t.Fatal(err)
+			t.Errorf("failed to listen on %s: %s", leftConn.LocalAddr(), err)
+			return
 		}
 	}()
 
 	rightConn := v1.NewUPlaneConn(rightAddr)
 	go func() {
 		if err := rightConn.ListenAndServe(ctx); err != nil {
-			t.Fatal(err)
+			t.Errorf("failed to listen on %s: %s", rightConn.LocalAddr(), err)
+			return
 		}
 	}()
 
