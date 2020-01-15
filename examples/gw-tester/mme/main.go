@@ -41,7 +41,6 @@ func main() {
 			fatalCh <- err
 		}
 	}()
-	log.Printf("Started running MME\n  S1MME: %s, S11: %s", mme.s1mmeListener.Addr(), mme.s11Conn.LocalAddr())
 
 	for {
 		select {

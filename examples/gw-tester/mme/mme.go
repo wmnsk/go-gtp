@@ -32,6 +32,7 @@ type Session struct {
 
 type mme struct {
 	s1mmeListener net.Listener
+	s11Addr       net.Addr
 	s11IP         string
 	s11Conn       *v2.Conn
 
@@ -76,11 +77,8 @@ func newMME(cfg *Config) (*mme, error) {
 	m.pgw.s5cIP = cfg.PgwS5C
 
 	// setup S11 conn
-	s11, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11Addr)
-	if err != nil {
-		return nil, err
-	}
-	m.s11Conn, err = v2.ListenAndServe(s11, 0, m.errCh)
+	var err error
+	m.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11Addr)
 	if err != nil {
 		return nil, err
 	}
@@ -88,12 +86,6 @@ func newMME(cfg *Config) (*mme, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	m.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionResponse: m.handleCreateSessionResponse,
-		messages.MsgTypeModifyBearerResponse:  m.handleModifyBearerResponse,
-		messages.MsgTypeDeleteSessionResponse: m.handleDeleteSessionResponse,
-	})
 
 	// setup gRPC server
 	m.s1mmeListener, err = net.Listen("tcp", cfg.LocalAddrs.S1CAddr)
@@ -115,6 +107,21 @@ func (m *mme) run(ctx context.Context) error {
 			return
 		}
 	}()
+
+	m.s11Conn = v2.NewConn(m.s11Addr, 0)
+	go func() {
+		if err := m.s11Conn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
+	log.Printf("Started running MME\n  S1MME: %s, S11: %s", m.s1mmeListener.Addr(), m.s11Addr)
+
+	m.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
+		messages.MsgTypeCreateSessionResponse: m.handleCreateSessionResponse,
+		messages.MsgTypeModifyBearerResponse:  m.handleModifyBearerResponse,
+		messages.MsgTypeDeleteSessionResponse: m.handleDeleteSessionResponse,
+	})
 
 	for {
 		select {
