@@ -204,18 +204,6 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 	}
 	c.AddSession(session)
 
-	if uConn == nil {
-		laddr, err := net.ResolveUDPAddr("udp", *s5u)
-		if err != nil {
-			return err
-		}
-		uConn, err = v1.ListenAndServeUPlane(laddr, 0, errCh)
-		if err != nil {
-			return err
-		}
-	}
-	loggerCh <- fmt.Sprintf("Started listening on %s", uConn.LocalAddr())
-
 	go func() {
 		buf := make([]byte, 1500)
 		for {
