@@ -26,9 +26,14 @@ import (
 type enb struct {
 	mu sync.Mutex
 
+	// S1-MME
+	cAddr       net.Addr
 	cConn       *grpc.ClientConn
-	uConn       *v1.UPlaneConn
 	s1mmeClient s1mme.AttacherClient
+
+	// S1-U
+	uAddr net.Addr
+	uConn *v1.UPlaneConn
 
 	location *s1mme.Location
 
@@ -59,27 +64,40 @@ func newENB(cfg *Config) (*enb, error) {
 		errCh: make(chan error, 1),
 	}
 
-	laddr, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UAddr)
+	var err error
+	e.uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	e.uConn, err = v1.ListenAndServeUPlaneKernel("gtp-enb", v1.RoleSGSN, laddr, 0, e.errCh)
+	e.cAddr, err = net.ResolveTCPAddr("tcp", cfg.MMEAddr)
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: bind local address(cfg.LocalAddrs.S1CIP) with WithDialer option?
-	conn, err := grpc.Dial(cfg.MMEAddr, grpc.WithInsecure())
-	if err != nil {
-		return nil, err
-	}
-	e.s1mmeClient = s1mme.NewAttacherClient(conn)
 
 	return e, nil
 }
 
 func (e *enb) run(ctx context.Context) error {
+	// TODO: bind local address(cfg.LocalAddrs.S1CIP) with WithDialer option?
+	conn, err := grpc.Dial(e.cAddr.String(), grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	e.s1mmeClient = s1mme.NewAttacherClient(conn)
+
+	e.uConn = v1.NewUPlaneConn(e.uAddr)
+	if err := e.uConn.EnableKernelGTP("gtp-enb", v1.RoleSGSN); err != nil {
+		return err
+	}
+	go func() {
+		if err := e.uConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println("uConn.ListenAndServe exitted")
+	}()
+
 	for _, sub := range e.candidateSubs {
 		select {
 		case <-ctx.Done():
