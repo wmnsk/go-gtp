@@ -49,23 +49,17 @@ type UPlaneConn struct {
 	// for Linux kernel GTP with netlink
 	kernGTPEnabled bool
 	GTPLink        *netlink.GTP
-
-	// RestartCounter is the RestartCounter value in Recovery IE, which represents how many
-	// times the GTPv1-U endpoint is restarted.
-	RestartCounter uint8
 }
 
 // DialUPlane sends Echo Request to raddr to check if the endpoint is alive and
 // keep connection information.
-func DialUPlane(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*UPlaneConn, error) {
+func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error) {
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
-
-		RestartCounter: counter,
 	}
 
 	// setup UDPConn first.
@@ -126,15 +120,13 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*UPl
 
 // DialUPlaneKernel works similar to DialUPlane but uses Linux Kernel GTP-U
 // instead of handling G-DPU message in userland.
-func DialUPlaneKernel(ctx context.Context, devname string, role Role, laddr, raddr net.Addr, counter uint8) (*UPlaneConn, error) {
+func DialUPlaneKernel(ctx context.Context, devname string, role Role, laddr, raddr net.Addr) (*UPlaneConn, error) {
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
-
-		RestartCounter: counter,
 	}
 
 	// setup UDPConn first.
@@ -213,7 +205,7 @@ func DialUPlaneKernel(ctx context.Context, devname string, role Role, laddr, rad
 
 // NewUPlaneConn creates a new UPlaneConn used for server.
 // On client side, use DialUPlane instead.
-func NewUPlaneConn(laddr net.Addr, counter uint8) *UPlaneConn {
+func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
 	return &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
@@ -221,14 +213,16 @@ func NewUPlaneConn(laddr net.Addr, counter uint8) *UPlaneConn {
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
-
-		RestartCounter: counter,
 	}
 }
 
 // EnableKernelGTP enables Linux Kernel GTP-U.
 // Using Kernel is much more performant than userland, but requires the root privilege.
 func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
+	if u.kernGTPEnabled {
+		return nil
+	}
+
 	f, err := u.pktConn.(*net.UDPConn).File()
 	if err != nil {
 		return err
@@ -504,7 +498,7 @@ func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg messages.Message) er
 
 // EchoRequest sends a EchoRequest.
 func (u *UPlaneConn) EchoRequest(raddr net.Addr) error {
-	b, err := messages.NewEchoRequest(0, ies.NewRecovery(u.RestartCounter)).Marshal()
+	b, err := messages.NewEchoRequest(0, ies.NewRecovery(0)).Marshal()
 	if err != nil {
 		return err
 	}
@@ -517,7 +511,7 @@ func (u *UPlaneConn) EchoRequest(raddr net.Addr) error {
 
 // EchoResponse sends a EchoResponse.
 func (u *UPlaneConn) EchoResponse(raddr net.Addr) error {
-	b, err := messages.NewEchoResponse(0, ies.NewRecovery(u.RestartCounter)).Marshal()
+	b, err := messages.NewEchoResponse(0, ies.NewRecovery(0)).Marshal()
 	if err != nil {
 		return err
 	}
@@ -565,5 +559,5 @@ func (u *UPlaneConn) RespondTo(raddr net.Addr, received, toBeSent messages.Messa
 
 // Restarts returns the number of restarts in uint8.
 func (u *UPlaneConn) Restarts() uint8 {
-	return u.RestartCounter
+	return 0
 }

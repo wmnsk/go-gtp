@@ -25,14 +25,14 @@ func TestRelay(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	leftConn := v1.NewUPlaneConn(leftAddr, 0)
+	leftConn := v1.NewUPlaneConn(leftAddr)
 	go func() {
 		if err := leftConn.ListenAndServe(ctx); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	rightConn := v1.NewUPlaneConn(rightAddr, 0)
+	rightConn := v1.NewUPlaneConn(rightAddr)
 	go func() {
 		if err := rightConn.ListenAndServe(ctx); err != nil {
 			t.Fatal(err)

@@ -32,7 +32,7 @@ func setup(ctx context.Context) (cliConn, srvConn *v1.UPlaneConn, err error) {
 	}
 
 	go func() {
-		srvConn = v1.NewUPlaneConn(srvAddr, 0)
+		srvConn = v1.NewUPlaneConn(srvAddr)
 		if err := srvConn.ListenAndServe(ctx); err != nil {
 			return
 		}
@@ -40,7 +40,7 @@ func setup(ctx context.Context) (cliConn, srvConn *v1.UPlaneConn, err error) {
 
 	// XXX - waiting for server to be well-prepared, should consider better way.
 	time.Sleep(1 * time.Second)
-	cliConn, err = v1.DialUPlane(ctx, cliAddr, srvAddr, 0)
+	cliConn, err = v1.DialUPlane(ctx, cliAddr, srvAddr)
 	if err != nil {
 		return nil, nil, err
 	}
