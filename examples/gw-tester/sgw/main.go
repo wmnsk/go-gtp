@@ -12,9 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
 func main() {
@@ -33,19 +30,6 @@ func main() {
 		log.Printf("failed to initialize SGW: %s", err)
 	}
 	defer sgw.close()
-
-	// register handlers for ALL the messages you expect remote endpoint to send.
-	sgw.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionRequest: sgw.handleCreateSessionRequest,
-		messages.MsgTypeModifyBearerRequest:  sgw.handleModifyBearerRequest,
-		messages.MsgTypeDeleteSessionRequest: sgw.handleDeleteSessionRequest,
-		messages.MsgTypeDeleteBearerResponse: sgw.handleDeleteBearerResponse,
-	})
-	sgw.s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionResponse: sgw.handleCreateSessionResponse,
-		messages.MsgTypeDeleteSessionResponse: sgw.handleDeleteSessionResponse,
-		messages.MsgTypeDeleteBearerRequest:   sgw.handleDeleteBearerRequest,
-	})
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGHUP)
