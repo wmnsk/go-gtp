@@ -5,29 +5,19 @@
 // Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol),
 // implemented in the Go Programming Language.
 //
-// Examples for specific node are available in examples directory, which can be  as it is
-// in the following way.
-// As for the detailed usage as a package, see v0/v1/v2 directory for what you can do with
-// the current implementation.
+// This package is the wrapper of all versions of GTP that is available.
+// Please see the godocs of each version instead.
 //
-// 1. Open four terminals on the same machine and start capturing on loopback interface.
+// GTPv0: https://godoc.org/github.com/wmnsk/go-gtp/v0
 //
-// 2. Start P-GW on terminal #1 and #2
-//   // on terminal #1
-//   ./pgw
+// GTPv1: https://godoc.org/github.com/wmnsk/go-gtp/v1
 //
-//   // on terminal #2
-//   ./pgw -s5c 127.0.0.53:2123 -s5u 127.0.0.5:2152
+// GTPv2: https://godoc.org/github.com/wmnsk/go-gtp/v2
 //
-// 3. Start S-GW on terminal #3
+// Please also see README.md for detailed usage of the APIs provided by this package,
+// as well as how to run the examples.
 //
-//   // on terminal #3
-//   ./sgw
+// https://github.com/wmnsk/go-gtp/blob/master/README.md
 //
-// 4. Start MME on terminal #4
-//
-//   // on terminal #4
-//   ./mme
-//
-// 5. You will see the nodes exchanging Create Session and Modify Bearer on C-Plane, and ICMP Echo on U-Plane afterwards.
+// https://github.com/wmnsk/go-gtp/tree/master/examples/gw-tester
 package gtp

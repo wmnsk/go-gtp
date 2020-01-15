@@ -5,6 +5,8 @@
 package v2_test
 
 import (
+	"context"
+	"log"
 	"net"
 	"testing"
 	"time"
@@ -15,7 +17,7 @@ import (
 	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
-func setup(doneCh chan struct{}, errCh chan error) (cliConn, srvConn *v2.Conn, err error) {
+func setup(ctx context.Context) (cliConn, srvConn *v2.Conn, err error) {
 	cliAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:2123")
 	if err != nil {
 		return nil, nil, err
@@ -25,14 +27,9 @@ func setup(doneCh chan struct{}, errCh chan error) (cliConn, srvConn *v2.Conn, e
 		return nil, nil, err
 	}
 
-	connCh := make(chan struct{})
-	fatalCh := make(chan error)
+	doneCh := make(chan struct{})
 	go func() {
-		srvConn, err = v2.ListenAndServe(srvAddr, 0, errCh)
-		if err != nil {
-			fatalCh <- err
-			return
-		}
+		srvConn = v2.NewConn(srvAddr, 0)
 		srvConn.AddHandler(
 			messages.MsgTypeCreateSessionRequest,
 			func(c *v2.Conn, cliAddr net.Addr, msg messages.Message) error {
@@ -64,38 +61,33 @@ func setup(doneCh chan struct{}, errCh chan error) (cliConn, srvConn *v2.Conn, e
 				return nil
 			},
 		)
-		connCh <- struct{}{}
+
+		if err := srvConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
 	}()
 
 	// XXX - waiting for server to be well-prepared, should consider better way.
 	time.Sleep(1 * time.Second)
-	cliConn, err = v2.Dial(cliAddr, srvAddr, 0, errCh)
+	cliConn, err = v2.Dial(ctx, cliAddr, srvAddr, 0)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	select {
-	case <-connCh:
-		return cliConn, srvConn, nil
-	case err := <-fatalCh:
-		return nil, nil, err
-	case <-time.After(1 * time.Second):
-		return nil, nil, err
-	}
+	return cliConn, srvConn, nil
 }
 
 func TestCreateSession(t *testing.T) {
-	var (
-		rspSent = make(chan struct{})
-		rspOK   = make(chan struct{})
-		errCh   = make(chan error)
-	)
-	cliConn, srvConn, err := setup(rspSent, errCh)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cliConn, srvConn, err := setup(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { cliConn.Close(); srvConn.Close() }()
 
+	rspOK := make(chan struct{})
 	cliConn.AddHandler(
 		messages.MsgTypeCreateSessionResponse,
 		func(c *v2.Conn, srvAddr net.Addr, msg messages.Message) error {
@@ -145,28 +137,21 @@ func TestCreateSession(t *testing.T) {
 	cliConn.AddSession(session)
 
 	select {
-	case <-rspSent:
-		select {
-		case <-rspOK:
-			if count := cliConn.SessionCount(); count != 1 {
-				t.Errorf("wrong SessionCount in cliConn. want %d, got: %d", 1, count)
-			}
-			if count := cliConn.BearerCount(); count != 1 {
-				t.Errorf("wrong BearerCount in cliConn. want %d, got: %d", 1, count)
-			}
-			if count := srvConn.SessionCount(); count != 1 {
-				t.Errorf("wrong SessionCount in srvConn. want %d, got: %d", 1, count)
-			}
-			if count := srvConn.BearerCount(); count != 1 {
-				t.Errorf("wrong BearerCount in srvConn. want %d, got: %d", 1, count)
-			}
-			return
-		case <-time.After(3 * time.Second):
-			t.Fatal("timed out while waiting for validating Create Session Response")
+	case <-rspOK:
+		if count := cliConn.SessionCount(); count != 1 {
+			t.Errorf("wrong SessionCount in cliConn. want %d, got: %d", 1, count)
 		}
-	case err := <-errCh:
-		t.Fatal(err)
-	case <-time.After(1 * time.Second):
-		t.Fatal("timed out while waiting for Create Session Response")
+		if count := cliConn.BearerCount(); count != 1 {
+			t.Errorf("wrong BearerCount in cliConn. want %d, got: %d", 1, count)
+		}
+		if count := srvConn.SessionCount(); count != 1 {
+			t.Errorf("wrong SessionCount in srvConn. want %d, got: %d", 1, count)
+		}
+		if count := srvConn.BearerCount(); count != 1 {
+			t.Errorf("wrong BearerCount in srvConn. want %d, got: %d", 1, count)
+		}
+		return
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out while waiting for validating Create Session Response")
 	}
 }

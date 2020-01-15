@@ -54,10 +54,13 @@ func (p *pgw) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	p.cConn, err = v2.ListenAndServe(cAddr, 0, p.errCh)
-	if err != nil {
-		return err
-	}
+	p.cConn = v2.NewConn(cAddr, 0)
+	go func() {
+		if err := p.cConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
 	log.Printf("Started listening on %s", cAddr)
 
 	// register handlers for ALL the messages you expect remote endpoint to send.

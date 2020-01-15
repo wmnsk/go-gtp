@@ -74,8 +74,11 @@ func main() {
 		return
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// setup *Conn first to check if the remote endpoint is awaken.
-	s11Conn, err := v2.Dial(laddr, raddr, 0, errCh)
+	s11Conn, err := v2.Dial(ctx, laddr, raddr, 0)
 	if err != nil {
 		log.Println(err)
 		return
@@ -100,9 +103,6 @@ func main() {
 
 	uConn = v1.NewUPlaneConn(enbUPlaneAddr)
 	defer uConn.Close()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	go func() {
 		if err = uConn.ListenAndServe(ctx); err != nil {

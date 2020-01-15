@@ -48,14 +48,18 @@ func main() {
 		return
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// start listening on the specified IP:Port.
-	s5cConn, err := v2.ListenAndServe(s5cAddr, 0, errCh)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer s5cConn.Close()
-	log.Printf("Started serving on %s", s5cConn.LocalAddr())
+	s5cConn := v2.NewConn(s5cAddr, 0)
+	go func() {
+		if err := s5cConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
+	log.Printf("Started serving C-Plane on %s", s5cAddr)
 
 	// register handlers for ALL the messages you expect remote endpoint to send.
 	s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
@@ -72,16 +76,13 @@ func main() {
 	uConn = v1.NewUPlaneConn(s5uAddr)
 	defer uConn.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	go func() {
 		if err = uConn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
 			return
 		}
 	}()
-	log.Printf("Started listening on %s", uConn.LocalAddr())
+	log.Printf("Started serving U-Plane on %s", s5uAddr)
 
 	for {
 		select {

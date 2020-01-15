@@ -80,17 +80,22 @@ func newSGW(cfg *Config) (*sgw, error) {
 }
 
 func (s *sgw) run(ctx context.Context) error {
-	var err error
-	s.s11Conn, err = v2.ListenAndServe(s.s11Addr, 0, s.errCh)
-	if err != nil {
-		return err
-	}
+	s.s11Conn = v2.NewConn(s.s11Addr, 0)
+	go func() {
+		if err := s.s11Conn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
 	log.Printf("Started serving on %s", s.s11Addr)
 
-	s.s5cConn, err = v2.ListenAndServe(s.s5cAddr, 0, s.errCh)
-	if err != nil {
-		return err
-	}
+	s.s5cConn = v2.NewConn(s.s5cAddr, 0)
+	go func() {
+		if err := s.s5cConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
 	log.Printf("Started serving on %s", s.s5cAddr)
 
 	// register handlers for ALL the messages you expect remote endpoint to send.
