@@ -27,8 +27,6 @@ type Conn struct {
 	validationEnabled bool
 
 	closeCh chan struct{}
-	errCh   chan error
-
 	*msgHandlerMap
 
 	// sequence is the last SequenceNumber used in the request.
@@ -68,12 +66,6 @@ func NewConn(laddr net.Addr, counter uint8) *Conn {
 // It is not required behavior by the spec but important because Dial does not actually
 // dials remote address like net.Dial. This enables a Conn to be used with multiple
 // source/destination addresses.
-// The only difference between Dial and ListenAndServe is just a presence of Echo
-// exchange before returning *Conn.
-//
-// The errCh should be monitored continuously by caller after retrieving *Conn.
-// Otherwise the background process may get stuck. This error handling manner might
-// be changed in the future.
 func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
@@ -131,10 +123,6 @@ func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*Conn, err
 }
 
 // ListenAndServe creates a new GTPv2-C Conn and start serving background.
-//
-// The errCh should be monitored continuously by caller after retrieving *Conn.
-// Otherwise the background process may get stuck. This error handling manner might
-// be changed in the future.
 func (c *Conn) ListenAndServe(ctx context.Context) error {
 	var err error
 	c.pktConn, err = net.ListenPacket(c.laddr.Network(), c.laddr.String())
@@ -306,7 +294,7 @@ func (c *Conn) handleMessage(senderAddr net.Addr, msg messages.Message) error {
 		return &HandlerNotFoundError{MsgType: msg.MessageTypeName()}
 	}
 	if err := handle(c, senderAddr, msg); err != nil {
-		c.errCh <- err
+		logf("failed to handle message %s: %s", msg, err)
 	}
 
 	return nil
