@@ -5,7 +5,9 @@
 package v1
 
 import (
+	"context"
 	"encoding/binary"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -36,6 +38,7 @@ type tpduSet struct {
 // UPlaneConn represents a U-Plane Connection of GTPv1.
 type UPlaneConn struct {
 	mu      sync.Mutex
+	laddr   net.Addr
 	pktConn net.PacketConn
 	*msgHandlerMap
 
@@ -56,14 +59,13 @@ type UPlaneConn struct {
 
 // DialUPlane sends Echo Request to raddr to check if the endpoint is alive and
 // keep connection information.
-func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
+func DialUPlane(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*UPlaneConn, error) {
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
-		errCh:   errCh,
 
 		RestartCounter: counter,
 	}
@@ -82,6 +84,13 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 
 	buf := make([]byte, 1600)
 	for {
+		select {
+		case <-ctx.Done():
+			return nil, nil
+		default:
+			// go forward
+		}
+
 		// send EchoRequest to raddr.
 		if err := u.EchoRequest(raddr); err != nil {
 			return nil, err
@@ -107,43 +116,25 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 		break
 	}
 
-	go u.serve()
-	return u, nil
-}
+	go func() {
+		if err := u.serve(ctx); err != nil {
+			log.Printf("fatal error on UPlaneConn %s: %s", u.LocalAddr(), err)
+			_ = u.Close()
+		}
+	}()
 
-// ListenAndServeUPlane creates a new GTPv2-C *Conn and start serving.
-func ListenAndServeUPlane(laddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
-	u := &UPlaneConn{
-		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
-
-		tpduCh:  make(chan *tpduSet),
-		closeCh: make(chan struct{}),
-		errCh:   errCh,
-
-		RestartCounter: counter,
-	}
-
-	var err error
-	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
-	if err != nil {
-		return nil, err
-	}
-
-	go u.serve()
 	return u, nil
 }
 
 // DialUPlaneKernel works similar to DialUPlane but uses Linux Kernel GTP-U
 // instead of handling G-DPU message in userland.
-func DialUPlaneKernel(devname string, role Role, laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
+func DialUPlaneKernel(ctx context.Context, devname string, role Role, laddr, raddr net.Addr, counter uint8) (*UPlaneConn, error) {
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
-		errCh:   errCh,
 
 		RestartCounter: counter,
 	}
@@ -162,6 +153,13 @@ func DialUPlaneKernel(devname string, role Role, laddr, raddr net.Addr, counter 
 
 	buf := make([]byte, 1600)
 	for {
+		select {
+		case <-ctx.Done():
+			return nil, nil
+		default:
+			// go forward
+		}
+
 		// send EchoRequest to raddr.
 		if err := u.EchoRequest(raddr); err != nil {
 			return nil, err
@@ -206,31 +204,38 @@ func DialUPlaneKernel(devname string, role Role, laddr, raddr net.Addr, counter 
 	}
 	u.kernGTPEnabled = true
 
-	go u.serve()
+	go func() {
+		if err := u.serve(ctx); err != nil {
+			log.Printf("fatal error on UPlaneConn %s: %s", u.LocalAddr(), err)
+			_ = u.Close()
+		}
+	}()
 	return u, nil
 }
 
-// ListenAndServeUPlaneKernel works similar to ListenAndServeUPlane but uses Linux Kernel GTP-U
-// instead of handling G-DPU message in userland.
-func ListenAndServeUPlaneKernel(devname string, role Role, laddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
-	u := &UPlaneConn{
+// NewUPlaneConn creates a new UPlaneConn used for server.
+// On client side, use DialUPlane instead.
+func NewUPlaneConn(laddr net.Addr, counter uint8) *UPlaneConn {
+	return &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
+		laddr:         laddr,
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
-		errCh:   errCh,
 
 		RestartCounter: counter,
 	}
+}
 
-	var err error
-	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
+// EnableKernelGTP enables Linux Kernel GTP-U.
+// Using Kernel is much more performant than userland, but requires the root privilege.
+func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
+	f, err := u.pktConn.(*net.UDPConn).File()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	f, _ := u.pktConn.(*net.UDPConn).File()
 	u.GTPLink = &netlink.GTP{
 		LinkAttrs: netlink.LinkAttrs{
 			Name: devname,
@@ -238,34 +243,64 @@ func ListenAndServeUPlaneKernel(devname string, role Role, laddr net.Addr, count
 		FD1:  int(f.Fd()),
 		Role: int(role),
 	}
-	if err := netlink.LinkAdd(u.GTPLink); err != nil {
-		return nil, errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
-		return nil, errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
-		return nil, errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
-	}
-	u.kernGTPEnabled = true
 
-	go u.serve()
-	return u, nil
+	u.kernGTPEnabled = true
+	return nil
 }
 
-func (u *UPlaneConn) serve() {
+// ListenAndServe creates a new GTPv2-C *Conn and start serving.
+// This blocks, and returns error only if it face the fatal one. Non-fatal errors are logged
+// with logger. See SetLogger/EnableLogger/DisableLogger for handling of those logs.
+func (u *UPlaneConn) ListenAndServe(ctx context.Context) error {
+	var err error
+	u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+	if err != nil {
+		return err
+	}
+
+	if u.kernGTPEnabled {
+		return u.listenAndServeKernel(ctx)
+	}
+	return u.listenAndServe(ctx)
+}
+
+// listenAndServe creates a new GTPv2-C *Conn and start serving.
+func (u *UPlaneConn) listenAndServe(ctx context.Context) error {
+	// TODO: this func is left for future enhancement.
+	return u.serve(ctx)
+}
+
+// listenAndServeKernel works similar to ListenAndServeUPlane but uses Linux Kernel GTP-U
+// instead of handling G-DPU message in userland.
+func (u *UPlaneConn) listenAndServeKernel(ctx context.Context) error {
+	if err := netlink.LinkAdd(u.GTPLink); err != nil {
+		return errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
+	}
+	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
+		return errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
+	}
+	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
+		return errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
+	}
+
+	return u.serve(ctx)
+}
+
+func (u *UPlaneConn) serve(ctx context.Context) error {
 	buf := make([]byte, 1500)
 	for {
 		select {
+		case <-ctx.Done():
+			return nil
 		case <-u.closed():
-			return
+			return nil
 		default:
 			// do nothing and go forward.
 		}
 
 		n, raddr, err := u.pktConn.ReadFrom(buf)
 		if err != nil {
-			return
+			return errors.Errorf("error reading on UPlaneConn %s: %s", u.LocalAddr(), err)
 		}
 
 		// just forward T-PDU instead of passing it to reader if relayer is
@@ -286,9 +321,8 @@ func (u *UPlaneConn) serve() {
 			// just use original packet not to get it slow.
 			binary.BigEndian.PutUint32(buf[4:8], peer.teid)
 			if _, err := peer.srcConn.WriteTo(buf, peer.addr); err != nil {
-				go func() {
-					u.errCh <- err
-				}()
+				// should not stop serving with this error
+				log.Printf("error sending on UPlaneConn %s: %s", u.LocalAddr(), err)
 			}
 			continue
 		}
@@ -299,11 +333,8 @@ func (u *UPlaneConn) serve() {
 		}
 
 		if err := u.handleMessage(raddr, msg); err != nil {
-			// errors should be handled by user
-			go func() {
-				u.errCh <- err
-			}()
-			continue
+			// should not stop serving with this error
+			log.Printf("error handling message on UPlaneConn %s: %s", u.LocalAddr(), err)
 		}
 	}
 }
@@ -383,7 +414,9 @@ func (u *UPlaneConn) Close() error {
 	u.relayMap = nil
 
 	if u.kernGTPEnabled {
-		_ = netlink.LinkDel(u.GTPLink)
+		if err := netlink.LinkDel(u.GTPLink); err != nil {
+			log.Printf("error deleting GTPLink: %s", err)
+		}
 	}
 
 	// triggers error in blocking Read() / Write() after 1ms.

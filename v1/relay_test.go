@@ -5,6 +5,7 @@
 package v1_test
 
 import (
+	"context"
 	"net"
 	"testing"
 
@@ -21,17 +22,22 @@ func TestRelay(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	errCh := make(chan error)
-	leftConn, err := v1.ListenAndServeUPlane(leftAddr, 0, errCh)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer leftConn.Close()
-	rightConn, err := v1.ListenAndServeUPlane(rightAddr, 0, errCh)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer rightConn.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	leftConn := v1.NewUPlaneConn(leftAddr, 0)
+	go func() {
+		if err := leftConn.ListenAndServe(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	rightConn := v1.NewUPlaneConn(rightAddr, 0)
+	go func() {
+		if err := rightConn.ListenAndServe(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	if err := leftConn.RelayTo(rightConn, 0x22222222, 0x11111111, rightAddr); err != nil {
 		t.Fatal(err)

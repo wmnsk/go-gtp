@@ -5,7 +5,7 @@
 package v1_test
 
 import (
-	"errors"
+	"context"
 	"net"
 	"testing"
 	"time"
@@ -21,7 +21,7 @@ type testVal struct {
 	payload         []byte
 }
 
-func setup(errCh chan error) (cliConn, srvConn *v1.UPlaneConn, err error) {
+func setup(ctx context.Context) (cliConn, srvConn *v1.UPlaneConn, err error) {
 	cliAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:2152")
 	if err != nil {
 		return nil, nil, err
@@ -31,32 +31,21 @@ func setup(errCh chan error) (cliConn, srvConn *v1.UPlaneConn, err error) {
 		return nil, nil, err
 	}
 
-	doneCh := make(chan struct{})
-	fatalCh := make(chan error)
 	go func() {
-		srvConn, err = v1.ListenAndServeUPlane(srvAddr, 0, errCh)
-		if err != nil {
-			fatalCh <- err
+		srvConn = v1.NewUPlaneConn(srvAddr, 0)
+		if err := srvConn.ListenAndServe(ctx); err != nil {
 			return
 		}
-		doneCh <- struct{}{}
 	}()
 
 	// XXX - waiting for server to be well-prepared, should consider better way.
 	time.Sleep(1 * time.Second)
-	cliConn, err = v1.DialUPlane(cliAddr, srvAddr, 0, errCh)
+	cliConn, err = v1.DialUPlane(ctx, cliAddr, srvAddr, 0)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	select {
-	case <-doneCh:
-		return cliConn, srvConn, nil
-	case err := <-fatalCh:
-		return nil, nil, err
-	case <-time.After(1 * time.Second):
-		return nil, nil, errors.New("timeout")
-	}
+	return cliConn, srvConn, nil
 }
 
 func TestClientWrite(t *testing.T) {
@@ -70,7 +59,9 @@ func TestClientWrite(t *testing.T) {
 		}
 	)
 
-	cliConn, srvConn, err := setup(errCh)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cliConn, srvConn, err := setup(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
