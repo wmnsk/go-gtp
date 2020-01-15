@@ -7,7 +7,6 @@ package v1
 import (
 	"context"
 	"encoding/binary"
-	"log"
 	"net"
 	"strings"
 	"sync"
@@ -118,7 +117,7 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*UPl
 
 	go func() {
 		if err := u.serve(ctx); err != nil {
-			log.Printf("fatal error on UPlaneConn %s: %s", u.LocalAddr(), err)
+			logf("fatal error on UPlaneConn %s: %s", u.LocalAddr(), err)
 			_ = u.Close()
 		}
 	}()
@@ -206,7 +205,7 @@ func DialUPlaneKernel(ctx context.Context, devname string, role Role, laddr, rad
 
 	go func() {
 		if err := u.serve(ctx); err != nil {
-			log.Printf("fatal error on UPlaneConn %s: %s", u.LocalAddr(), err)
+			logf("fatal error on UPlaneConn %s: %s", u.LocalAddr(), err)
 			_ = u.Close()
 		}
 	}()
@@ -322,7 +321,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 			binary.BigEndian.PutUint32(buf[4:8], peer.teid)
 			if _, err := peer.srcConn.WriteTo(buf, peer.addr); err != nil {
 				// should not stop serving with this error
-				log.Printf("error sending on UPlaneConn %s: %s", u.LocalAddr(), err)
+				logf("error sending on UPlaneConn %s: %s", u.LocalAddr(), err)
 			}
 			continue
 		}
@@ -334,7 +333,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 
 		if err := u.handleMessage(raddr, msg); err != nil {
 			// should not stop serving with this error
-			log.Printf("error handling message on UPlaneConn %s: %s", u.LocalAddr(), err)
+			logf("error handling message on UPlaneConn %s: %s", u.LocalAddr(), err)
 		}
 	}
 }
@@ -415,7 +414,7 @@ func (u *UPlaneConn) Close() error {
 
 	if u.kernGTPEnabled {
 		if err := netlink.LinkDel(u.GTPLink); err != nil {
-			log.Printf("error deleting GTPLink: %s", err)
+			logf("error deleting GTPLink: %s", err)
 		}
 	}
 
