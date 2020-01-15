@@ -312,7 +312,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 
 			// just use original packet not to get it slow.
 			binary.BigEndian.PutUint32(buf[4:8], peer.teid)
-			if _, err := peer.srcConn.WriteTo(buf, peer.addr); err != nil {
+			if _, err := peer.srcConn.WriteTo(buf[:n], peer.addr); err != nil {
 				// should not stop serving with this error
 				logf("error sending on UPlaneConn %s: %s", u.LocalAddr(), err)
 			}
