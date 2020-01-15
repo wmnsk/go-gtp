@@ -26,6 +26,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -34,6 +35,7 @@ import (
 	"sync"
 	"time"
 
+	v1 "github.com/wmnsk/go-gtp/v1"
 	v2 "github.com/wmnsk/go-gtp/v2"
 	"github.com/wmnsk/go-gtp/v2/ies"
 	"github.com/wmnsk/go-gtp/v2/messages"
@@ -63,17 +65,20 @@ func main() {
 
 	laddr, err := net.ResolveUDPAddr("udp", *s11mme)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	raddr, err := net.ResolveUDPAddr("udp", *s11sgw)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	// setup *Conn first to check if the remote endpoint is awaken.
 	s11Conn, err := v2.Dial(laddr, raddr, 0, errCh)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	defer s11Conn.Close()
 	log.Printf("Connection established with %s", raddr.String())
@@ -85,6 +90,27 @@ func main() {
 		messages.MsgTypeModifyBearerResponse:  handleModifyBearerResponse,
 		messages.MsgTypeDeleteSessionResponse: handleDeleteSessionResponse,
 	})
+
+	// Listen on eNB S1-U interface.
+	enbUPlaneAddr, err := net.ResolveUDPAddr("udp", *s1enb)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	uConn = v1.NewUPlaneConn(enbUPlaneAddr)
+	defer uConn.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		if err = uConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
+	log.Printf("Started listening on %s", uConn.LocalAddr())
 
 	// here you should wait for UEs to come attaching to your network.
 	// in this example, the following five subscribers are to be attached.

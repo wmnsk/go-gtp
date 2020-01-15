@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"strings"
 	"time"
@@ -137,7 +136,7 @@ var (
 )
 
 type mockUEeNB struct {
-	laddr, raddr net.Addr
+	raddr net.Addr
 
 	subscriberIP string
 	teidOut      uint32
@@ -145,21 +144,6 @@ type mockUEeNB struct {
 }
 
 func (m mockUEeNB) run(errCh chan error) {
-	if uConn == nil {
-		// Listen on eNB S1-U interface.
-		enbUPlaneAddr, err := net.ResolveUDPAddr("udp", *s1enb)
-		if err != nil {
-			log.Fatal(err)
-		}
-		m.laddr = enbUPlaneAddr
-
-		uConn, err = v1.ListenAndServeUPlane(m.laddr, 0, errCh)
-		if err != nil {
-			errCh <- err
-			return
-		}
-	}
-
 	go func(teid uint32, payload []byte, raddr net.Addr) {
 		for {
 			copy(payload[12:16], net.ParseIP(m.subscriberIP).To4())
