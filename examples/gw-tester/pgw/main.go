@@ -12,9 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
 func main() {
@@ -34,13 +31,6 @@ func main() {
 		return
 	}
 	defer pgw.close()
-	log.Printf("Started serving on %s", pgw.cConn.LocalAddr())
-
-	// register handlers for ALL the messages you expect remote endpoint to send.
-	pgw.cConn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionRequest: pgw.handleCreateSessionRequest,
-		messages.MsgTypeDeleteSessionRequest: pgw.handleDeleteSessionRequest,
-	})
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGHUP)

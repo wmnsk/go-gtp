@@ -14,10 +14,16 @@ import (
 
 	v1 "github.com/wmnsk/go-gtp/v1"
 	v2 "github.com/wmnsk/go-gtp/v2"
+	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
 type sgw struct {
+	// C-Plane
+	s11Addr, s5cAddr net.Addr
 	s11Conn, s5cConn *v2.Conn
+
+	// U-Plane
+	s1uAddr, s5uAddr net.Addr
 	s1uConn, s5uConn *v1.UPlaneConn
 
 	s11IP, s5cIP, s1uIP, s5uIP string
@@ -33,61 +39,40 @@ func newSGW(cfg *Config) (*sgw, error) {
 		errCh: make(chan error, 1),
 	}
 
-	s11, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11Addr)
+	var err error
+	s.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11Addr)
 	if err != nil {
 		return nil, err
 	}
-	s.s11Conn, err = v2.ListenAndServe(s11, 0, s.errCh)
-	if err != nil {
-		return nil, err
-	}
-	s.s11IP, _, err = net.SplitHostPort(s11.String())
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("Started serving on %s", s.s11Conn.LocalAddr())
-
-	s5c, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5CAddr)
-	if err != nil {
-		return nil, err
-	}
-	s.s5cConn, err = v2.ListenAndServe(s5c, 0, s.errCh)
-	if err != nil {
-		return nil, err
-	}
-	s.s5cIP, _, err = net.SplitHostPort(s5c.String())
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("Started serving on %s", s.s5cConn.LocalAddr())
-
-	s1u, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UAddr)
-	if err != nil {
-		return nil, err
-	}
-	s.s1uConn, err = v1.ListenAndServeUPlaneKernel("gtp-sgw-s1", v1.RoleGGSN, s1u, 0, s.errCh)
-	if err != nil {
-		return nil, err
-	}
-	s.s1uIP, _, err = net.SplitHostPort(s1u.String())
+	s.s11IP, _, err = net.SplitHostPort(s.s11Addr.String())
 	if err != nil {
 		return nil, err
 	}
 
-	s5u, err := net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5UAddr)
+	s.s5cAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5CAddr)
 	if err != nil {
 		return nil, err
 	}
-	s.s5uConn, err = v1.ListenAndServeUPlaneKernel("gtp-sgw-s5", v1.RoleSGSN, s5u, 0, s.errCh)
-	if err != nil {
-		return nil, err
-	}
-	s.s5uIP, _, err = net.SplitHostPort(s5u.String())
+	s.s5cIP, _, err = net.SplitHostPort(s.s5cAddr.String())
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.addRoutes(); err != nil {
+	s.s1uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UAddr)
+	if err != nil {
+		return nil, err
+	}
+	s.s1uIP, _, err = net.SplitHostPort(s.s1uAddr.String())
+	if err != nil {
+		return nil, err
+	}
+
+	s.s5uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5UAddr)
+	if err != nil {
+		return nil, err
+	}
+	s.s5uIP, _, err = net.SplitHostPort(s.s5uAddr.String())
+	if err != nil {
 		return nil, err
 	}
 
@@ -95,6 +80,62 @@ func newSGW(cfg *Config) (*sgw, error) {
 }
 
 func (s *sgw) run(ctx context.Context) error {
+	var err error
+	s.s11Conn, err = v2.ListenAndServe(s.s11Addr, 0, s.errCh)
+	if err != nil {
+		return err
+	}
+	log.Printf("Started serving on %s", s.s11Addr)
+
+	s.s5cConn, err = v2.ListenAndServe(s.s5cAddr, 0, s.errCh)
+	if err != nil {
+		return err
+	}
+	log.Printf("Started serving on %s", s.s5cAddr)
+
+	// register handlers for ALL the messages you expect remote endpoint to send.
+	s.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
+		messages.MsgTypeCreateSessionRequest: s.handleCreateSessionRequest,
+		messages.MsgTypeModifyBearerRequest:  s.handleModifyBearerRequest,
+		messages.MsgTypeDeleteSessionRequest: s.handleDeleteSessionRequest,
+		messages.MsgTypeDeleteBearerResponse: s.handleDeleteBearerResponse,
+	})
+	s.s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
+		messages.MsgTypeCreateSessionResponse: s.handleCreateSessionResponse,
+		messages.MsgTypeDeleteSessionResponse: s.handleDeleteSessionResponse,
+		messages.MsgTypeDeleteBearerRequest:   s.handleDeleteBearerRequest,
+	})
+
+	s.s1uConn = v1.NewUPlaneConn(s.s1uAddr)
+	if err := s.s1uConn.EnableKernelGTP("gtp-sgw-s1", v1.RoleGGSN); err != nil {
+		return err
+	}
+	go func() {
+		if err := s.s1uConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println("uConn.ListenAndServe exitted")
+	}()
+	log.Printf("Started serving on %s", s.s1uAddr)
+
+	s.s5uConn = v1.NewUPlaneConn(s.s5uAddr)
+	if err := s.s5uConn.EnableKernelGTP("gtp-sgw-s5", v1.RoleSGSN); err != nil {
+		return err
+	}
+	go func() {
+		if err := s.s5uConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println("uConn.ListenAndServe exitted")
+	}()
+	log.Printf("Started serving on %s", s.s5uAddr)
+
+	if err := s.addRoutes(); err != nil {
+		return err
+	}
+
 	for {
 		select {
 		case <-ctx.Done():

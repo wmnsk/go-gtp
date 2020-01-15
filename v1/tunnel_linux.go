@@ -11,6 +11,74 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
+// Role is a role for Kernel GTP-U.
+type Role int
+
+// Role definitions.
+const (
+	RoleGGSN Role = iota
+	RoleSGSN
+)
+
+// EnableKernelGTP enables Linux Kernel GTP-U.
+// Note that this removes all the existing userland tunnels, and cannot be disabled while
+// the program is working (at least at this moment).
+//
+// Using Kernel GTP-U is much more performant than userland, but requires root privilege.
+// After enabled, users should add tunnels by AddTunnel func, and also add appropriate
+// routing entries. For handling downlink traffic on P-GW, for example;
+//
+//  ip route add <UE's IP> dev <devname> table <table ID>
+//  ip rule add from <SGi side of I/F> lookup <table ID>
+//
+// This let the traffic from SGi side of network I/F to be forwarded to GTP device,
+// and if the UE's IP is known to Kernel GTP-U(by AddTunnel), it is encapsulated and
+// forwarded to the peer(S-GW, in this case).
+//
+// Please see the examples/gw-tester for how each node handles routing from the program.
+func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
+	if u.pktConn == nil {
+		var err error
+		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+		if err != nil {
+			return err
+		}
+	}
+
+	f, err := u.pktConn.(*net.UDPConn).File()
+	if err != nil {
+		return errors.Wrapf(err, "failed to retrieve file from conn")
+	}
+
+	u.GTPLink = &netlink.GTP{
+		LinkAttrs: netlink.LinkAttrs{
+			Name: devname,
+		},
+		FD1:  int(f.Fd()),
+		Role: int(role),
+	}
+
+	if err := netlink.LinkAdd(u.GTPLink); err != nil {
+		return errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
+	}
+	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
+		return errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
+	}
+	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
+		return errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
+	}
+	u.kernGTPEnabled = true
+
+	// remove relayed userland tunnels if exists
+	if len(u.relayMap) != 0 {
+		u.mu.Lock()
+		u.relayMap = nil
+		u.mu.Unlock()
+	}
+
+	return nil
+}
+
 // AddTunnel adds a GTP-U tunnel with Linux Kernel GTP-U via netlink.
 func (u *UPlaneConn) AddTunnel(peerIP, msIP net.IP, otei, itei uint32) error {
 	if !u.kernGTPEnabled {

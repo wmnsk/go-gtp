@@ -5,6 +5,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/binary"
 	"net"
 	"strings"
@@ -17,15 +18,6 @@ import (
 	"github.com/wmnsk/go-gtp/v1/messages"
 )
 
-// Role is a role for Kernel GTP-U.
-type Role int
-
-// Role definitions.
-const (
-	RoleGGSN Role = iota
-	RoleSGSN
-)
-
 type tpduSet struct {
 	raddr   net.Addr
 	teid    uint32
@@ -36,43 +28,50 @@ type tpduSet struct {
 // UPlaneConn represents a U-Plane Connection of GTPv1.
 type UPlaneConn struct {
 	mu      sync.Mutex
+	laddr   net.Addr
 	pktConn net.PacketConn
 	*msgHandlerMap
 
 	tpduCh  chan *tpduSet
 	closeCh chan struct{}
-	errCh   chan error
 
 	relayMap map[uint32]*peer
 
 	// for Linux kernel GTP with netlink
 	kernGTPEnabled bool
 	GTPLink        *netlink.GTP
-
-	// RestartCounter is the RestartCounter value in Recovery IE, which represents how many
-	// times the GTPv1-U endpoint is restarted.
-	RestartCounter uint8
 }
 
-// DialUPlane sends Echo Request to raddr to check if the endpoint is alive and
-// keep connection information.
-func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
-	u := &UPlaneConn{
+// NewUPlaneConn creates a new UPlaneConn used for server. On client side, use DialUPlane instead.
+func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
+	return &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
+		laddr:         laddr,
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
-		errCh:   errCh,
+	}
+}
 
-		RestartCounter: counter,
+// DialUPlane sends Echo Request to raddr to check if the endpoint is alive and returns UPlaneConn.
+func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error) {
+	u := &UPlaneConn{
+		mu:            sync.Mutex{},
+		msgHandlerMap: defaultHandlerMap,
+		laddr:         laddr,
+
+		tpduCh:  make(chan *tpduSet),
+		closeCh: make(chan struct{}),
 	}
 
 	// setup UDPConn first.
-	var err error
-	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
-	if err != nil {
-		return nil, err
+	if u.pktConn == nil {
+		var err error
+		u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// if no response coming within 5 seconds, returns error.
@@ -82,6 +81,13 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 
 	buf := make([]byte, 1600)
 	for {
+		select {
+		case <-ctx.Done():
+			return nil, nil
+		default:
+			// go forward
+		}
+
 		// send EchoRequest to raddr.
 		if err := u.EchoRequest(raddr); err != nil {
 			return nil, err
@@ -107,165 +113,51 @@ func DialUPlane(laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlane
 		break
 	}
 
-	go u.serve()
-	return u, nil
-}
-
-// ListenAndServeUPlane creates a new GTPv2-C *Conn and start serving.
-func ListenAndServeUPlane(laddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
-	u := &UPlaneConn{
-		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
-
-		tpduCh:  make(chan *tpduSet),
-		closeCh: make(chan struct{}),
-		errCh:   errCh,
-
-		RestartCounter: counter,
-	}
-
-	var err error
-	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
-	if err != nil {
-		return nil, err
-	}
-
-	go u.serve()
-	return u, nil
-}
-
-// DialUPlaneKernel works similar to DialUPlane but uses Linux Kernel GTP-U
-// instead of handling G-DPU message in userland.
-func DialUPlaneKernel(devname string, role Role, laddr, raddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
-	u := &UPlaneConn{
-		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
-
-		tpduCh:  make(chan *tpduSet),
-		closeCh: make(chan struct{}),
-		errCh:   errCh,
-
-		RestartCounter: counter,
-	}
-
-	// setup UDPConn first.
-	var err error
-	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
-	if err != nil {
-		return nil, err
-	}
-
-	// if no response coming within 5 seconds, returns error.
-	if err := u.pktConn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
-		return nil, err
-	}
-
-	buf := make([]byte, 1600)
-	for {
-		// send EchoRequest to raddr.
-		if err := u.EchoRequest(raddr); err != nil {
-			return nil, err
+	go func() {
+		if err := u.serve(ctx); err != nil {
+			logf("fatal error on UPlaneConn %s: %s", u.LocalAddr(), err)
+			_ = u.Close()
 		}
+	}()
 
-		n, _, err := u.pktConn.ReadFrom(buf)
+	return u, nil
+}
+
+// ListenAndServe creates a new GTPv2-C *Conn and start serving.
+// This blocks, and returns error only if it face the fatal one. Non-fatal errors are logged
+// with logger. See SetLogger/EnableLogger/DisableLogger for handling of those logs.
+func (u *UPlaneConn) ListenAndServe(ctx context.Context) error {
+	if u.pktConn == nil {
+		var err error
+		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
 		if err != nil {
-			return nil, err
+			return err
 		}
-		if err := u.pktConn.SetReadDeadline(time.Time{}); err != nil {
-			return nil, err
-		}
-
-		// decode incoming message and let it be handled by default handler funcs.
-		msg, err := messages.Parse(buf[:n])
-		if err != nil {
-			return nil, err
-		}
-		if _, ok := msg.(*messages.EchoResponse); !ok {
-			continue
-		}
-
-		break
 	}
 
-	f, _ := u.pktConn.(*net.UDPConn).File()
-	u.GTPLink = &netlink.GTP{
-		LinkAttrs: netlink.LinkAttrs{
-			Name: devname,
-		},
-		FD1:  int(f.Fd()),
-		Role: int(role),
-	}
-	if err := netlink.LinkAdd(u.GTPLink); err != nil {
-		return nil, errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
-		return nil, errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
-		return nil, errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
-	}
-	u.kernGTPEnabled = true
-
-	go u.serve()
-	return u, nil
+	return u.listenAndServe(ctx)
 }
 
-// ListenAndServeUPlaneKernel works similar to ListenAndServeUPlane but uses Linux Kernel GTP-U
-// instead of handling G-DPU message in userland.
-func ListenAndServeUPlaneKernel(devname string, role Role, laddr net.Addr, counter uint8, errCh chan error) (*UPlaneConn, error) {
-	u := &UPlaneConn{
-		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
-
-		tpduCh:  make(chan *tpduSet),
-		closeCh: make(chan struct{}),
-		errCh:   errCh,
-
-		RestartCounter: counter,
-	}
-
-	var err error
-	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
-	if err != nil {
-		return nil, err
-	}
-
-	f, _ := u.pktConn.(*net.UDPConn).File()
-	u.GTPLink = &netlink.GTP{
-		LinkAttrs: netlink.LinkAttrs{
-			Name: devname,
-		},
-		FD1:  int(f.Fd()),
-		Role: int(role),
-	}
-	if err := netlink.LinkAdd(u.GTPLink); err != nil {
-		return nil, errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
-		return nil, errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
-		return nil, errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
-	}
-	u.kernGTPEnabled = true
-
-	go u.serve()
-	return u, nil
+func (u *UPlaneConn) listenAndServe(ctx context.Context) error {
+	// TODO: this func is left for future enhancement.
+	return u.serve(ctx)
 }
 
-func (u *UPlaneConn) serve() {
+func (u *UPlaneConn) serve(ctx context.Context) error {
 	buf := make([]byte, 1500)
 	for {
 		select {
+		case <-ctx.Done():
+			return nil
 		case <-u.closed():
-			return
+			return nil
 		default:
 			// do nothing and go forward.
 		}
 
 		n, raddr, err := u.pktConn.ReadFrom(buf)
 		if err != nil {
-			return
+			return errors.Errorf("error reading on UPlaneConn %s: %s", u.LocalAddr(), err)
 		}
 
 		// just forward T-PDU instead of passing it to reader if relayer is
@@ -285,10 +177,9 @@ func (u *UPlaneConn) serve() {
 
 			// just use original packet not to get it slow.
 			binary.BigEndian.PutUint32(buf[4:8], peer.teid)
-			if _, err := peer.srcConn.WriteTo(buf, peer.addr); err != nil {
-				go func() {
-					u.errCh <- err
-				}()
+			if _, err := peer.srcConn.WriteTo(buf[:n], peer.addr); err != nil {
+				// should not stop serving with this error
+				logf("error sending on UPlaneConn %s: %s", u.LocalAddr(), err)
 			}
 			continue
 		}
@@ -299,11 +190,8 @@ func (u *UPlaneConn) serve() {
 		}
 
 		if err := u.handleMessage(raddr, msg); err != nil {
-			// errors should be handled by user
-			go func() {
-				u.errCh <- err
-			}()
-			continue
+			// should not stop serving with this error
+			logf("error handling message on UPlaneConn %s: %s", u.LocalAddr(), err)
 		}
 	}
 }
@@ -383,7 +271,9 @@ func (u *UPlaneConn) Close() error {
 	u.relayMap = nil
 
 	if u.kernGTPEnabled {
-		_ = netlink.LinkDel(u.GTPLink)
+		if err := netlink.LinkDel(u.GTPLink); err != nil {
+			logf("error deleting GTPLink: %s", err)
+		}
 	}
 
 	// triggers error in blocking Read() / Write() after 1ms.
@@ -464,7 +354,7 @@ func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg messages.Message) er
 	}
 	go func() {
 		if err := handle(u, senderAddr, msg); err != nil {
-			u.errCh <- err
+			logf("failed to handle message %s: %s", msg, err)
 		}
 	}()
 
@@ -473,7 +363,7 @@ func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg messages.Message) er
 
 // EchoRequest sends a EchoRequest.
 func (u *UPlaneConn) EchoRequest(raddr net.Addr) error {
-	b, err := messages.NewEchoRequest(0, ies.NewRecovery(u.RestartCounter)).Marshal()
+	b, err := messages.NewEchoRequest(0, ies.NewRecovery(0)).Marshal()
 	if err != nil {
 		return err
 	}
@@ -486,7 +376,7 @@ func (u *UPlaneConn) EchoRequest(raddr net.Addr) error {
 
 // EchoResponse sends a EchoResponse.
 func (u *UPlaneConn) EchoResponse(raddr net.Addr) error {
-	b, err := messages.NewEchoResponse(0, ies.NewRecovery(u.RestartCounter)).Marshal()
+	b, err := messages.NewEchoResponse(0, ies.NewRecovery(0)).Marshal()
 	if err != nil {
 		return err
 	}
@@ -534,5 +424,5 @@ func (u *UPlaneConn) RespondTo(raddr net.Addr, received, toBeSent messages.Messa
 
 // Restarts returns the number of restarts in uint8.
 func (u *UPlaneConn) Restarts() uint8 {
-	return u.RestartCounter
+	return 0
 }

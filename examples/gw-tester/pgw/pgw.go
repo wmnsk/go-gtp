@@ -11,6 +11,7 @@ import (
 
 	"github.com/vishvananda/netlink"
 	v1 "github.com/wmnsk/go-gtp/v1"
+	"github.com/wmnsk/go-gtp/v2/messages"
 
 	"github.com/pkg/errors"
 	v2 "github.com/wmnsk/go-gtp/v2"
@@ -39,16 +40,7 @@ func newPGW(cfg *Config) (*pgw, error) {
 		errCh: make(chan error, 1),
 	}
 
-	laddr, err := net.ResolveUDPAddr("udp", p.s5c)
-	if err != nil {
-		return nil, err
-	}
-
-	p.cConn, err = v2.ListenAndServe(laddr, 0, p.errCh)
-	if err != nil {
-		return nil, err
-	}
-
+	var err error
 	_, p.routeSubnet, err = net.ParseCIDR(cfg.RouteSubnet)
 	if err != nil {
 		return nil, err
@@ -58,6 +50,39 @@ func newPGW(cfg *Config) (*pgw, error) {
 }
 
 func (p *pgw) run(ctx context.Context) error {
+	cAddr, err := net.ResolveUDPAddr("udp", p.s5c)
+	if err != nil {
+		return err
+	}
+	p.cConn, err = v2.ListenAndServe(cAddr, 0, p.errCh)
+	if err != nil {
+		return err
+	}
+	log.Printf("Started listening on %s", cAddr)
+
+	// register handlers for ALL the messages you expect remote endpoint to send.
+	p.cConn.AddHandlers(map[uint8]v2.HandlerFunc{
+		messages.MsgTypeCreateSessionRequest: p.handleCreateSessionRequest,
+		messages.MsgTypeDeleteSessionRequest: p.handleDeleteSessionRequest,
+	})
+
+	uAddr, err := net.ResolveUDPAddr("udp", p.s5u)
+	if err != nil {
+		return err
+	}
+	p.uConn = v1.NewUPlaneConn(uAddr)
+	if err := p.uConn.EnableKernelGTP("gtp-pgw", v1.RoleGGSN); err != nil {
+		return err
+	}
+	go func() {
+		if err = p.uConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println("uConn.ListenAndServe exitted")
+	}()
+	log.Printf("Started listening on %s", uAddr)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -103,18 +128,6 @@ func (p *pgw) close() error {
 }
 
 func (p *pgw) setupUPlane(peerIP, msIP net.IP, otei, itei uint32) error {
-	if p.uConn == nil {
-		laddr, err := net.ResolveUDPAddr("udp", p.s5u)
-		if err != nil {
-			return err
-		}
-		p.uConn, err = v1.ListenAndServeUPlaneKernel("gtp-pgw", v1.RoleGGSN, laddr, 0, p.errCh)
-		if err != nil {
-			return err
-		}
-		log.Printf("Started listening on %s", p.uConn.LocalAddr())
-	}
-
 	if err := p.uConn.AddTunnelOverride(peerIP, msIP, otei, itei); err != nil {
 		return err
 	}

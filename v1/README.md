@@ -4,7 +4,7 @@ Package v1 provides the simple and painless handling of GTPv1-C and GTPv1-U prot
 
 ## Getting Started
 
-This package is still under construction. The networking feature is only available for GTPv1-U. GTPv1-C feature would be available in the future.
+This package is still under construction. The networking feature is only available for GTPv1-U. GTPv1-C feature would be available in the future.  
 See messages and ies directory for what you can do with the current implementation. 
 
 ### Creating a PDP Context as a client
@@ -17,40 +17,53 @@ _NOT IMPLEMENTED YET!_
 
 ### Opening a U-Plane connection
 
-#### On Linux
+Retrieve `UPlaneConn` first, using `DialUPlane` (for client) or `NewUPlaneConn` (for server). 
 
-Linux Kernel supports native GTP-U support since 4.12, which is quite performant and easy to use. `go-gtp` provides some APIs to handle it in the customizable way.
+#### Client
 
-Use `DialUPlaneKernel()` or `ListenAndServeKernel()` to retrieve `UPlaneConn`.The difference between the two functions is;
-
-* `DialUPlaneKernel()` sends Echo Request and returns `UPlaneConn` if it succeeds.
+`DialUPlane` sends Echo Request and returns `UPlaneConn` if it succeeds.
+If you don't need Echo, see Server section. As GTP is UDP-based connection, and there are no session management on `UPlaneConn`, the behavior of `Dial` and `ListenAndServe` is not quite different.
 
 ```go
-// give name for GTP device, role(GGSN/SGSN), local/remote net.Addr, restart counter,
-// channel to let background process pass the errors.
-uConn, err := v1.DialUPlaneKernel("gtp0", v1.RoleGGSN, laddr, raddr, 0, errCh)
+uConn, err := v1.Dial(ctx, laddr, raddr)
 if err != nil {
-    // ...
+	// ...
+}
+defer uConn.Close()
+```
+
+#### Server
+
+Retrieve `UPlaneConn` with `NewUPlaneConn`, and `ListenAndServe` to start listening.
+
+```go
+uConn := v1.NewUPlaneConn(laddr)
+if err != nil {
+	// ...
+}
+defer uConn.Close()
+
+// This blocks, and returns an error when it's fatal.
+if err := uConn.ListenAndServe(ctx); err != nil {
+	// ...
 }
 ```
 
-* `ListenAndServeKernel()` just returns `UPlaneConn` without any validation.
-
-```go
-// give name for GTP device, role(GGSN/SGSN), local net.Addr, restart counter,
-// channel to let background process pass the errors.
-uConn, err := v1.ListenAndServeKernel("gtp0", v1.RoleSGSN, laddr, 0, errCh)
-if err != nil {
-    // ...
-}
-```
+### Manupulating `UPlaneConn`
 
 With `UPlaneConn`, you can add and delete tunnels, and manipulate device directly.
 
-* Adding tunnels
+#### Using Linux Kernel GTP-U
 
-Use `AddTunnel()` or `AddTunnelOverride()` to add a tunnel.
+Linux Kernel GTP-U is quite performant and easy to handle, but it requires root privilege, and of course it works only on Linux. So it is disabled by default. To get started, enable it first. Note that it cannot be disabled while the program is working.
 
+```go
+if err := uConn.EnableKernelGTP("gtp0", v1.roleSGSN); err != nil {
+	// ...
+}
+```
+
+Then, when the bearer information is ready, use `AddTunnel` or `AddTunnelOverride` to add a tunnel.  
 The latter one deletes the existing tunnel with the same IP and/or incoming TEID before creating a tunnel,
 while the former fails if there's any duplication.
 
@@ -66,11 +79,8 @@ if err := uConn.AddTunnelOverride(
 }
 ```
 
-* Deleting tunnels
-
-Use `DelTunnelByITEI()` or `DelTunnelByMSAddress()` to delete a tunnel.
-
-Or, by `Close()`-ing the `UPlaneConn`, all the tunnels associated will the cleared.
+When the tunnel is no longer necessary, use `DelTunnelByITEI` or `DelTunnelByMSAddress` to delete it.  
+Or, by `Close`-ing the `UPlaneConn`, all the tunnels associated will the cleared.
 
 ```go
 // delete a tunnel by giving an incoming TEID.
@@ -84,98 +94,73 @@ if err := uConn.DelTunnelByMSAddress(net.ParseIP("1.1.1.1")); err != nil {
 }
 ```
 
-The packets not forwarded by the Kernel can be handled automatically by giving a handler to `UPlaneConn`.
-
-Handlers for T-PDU, Echo Request/Response, and Error Indication are registered by default.
+The packets NOT forwarded by the Kernel can be handled automatically by giving a handler to `UPlaneConn`.  
+Handlers for T-PDU, Echo Request/Response, and Error Indication are registered by default, but you can override them using `AddHandler`.
 
 ```go
 uConn.AddHandler(messages.MsgTypeEchoRequest, func(c v1.Conn, senderAddr net.Addr, msg messages.Message) error {
-    // do anything you want for Echo Request here.
-    // errors returned here are passed to `errCh` that is given to UPlaneConn at the beginning.
+	// do anything you want for Echo Request here.
+	// errors returned here are passed to `errCh` that is given to UPlaneConn at the beginning.
 	return nil
 })
 ```
 
-Manipulate the unhandled T-PDUs directly with `ReadFromGTP()` and send something with `WriteToGTP()`.
+If the tunnel with appropriate IP or TEID is not found for a T-PDU packet, Kernel sends it to userland. You can manipulate it with `ReadFromGTP`.
 
-* `ReadFromGTP()` reads from `UPlaneConn`, and returns the number of bytes copied into the given buffer(not including header), sender's net.Addr, incoming TEID set in GTP header, and error if occurred.
+```go
+buf := make([]byte, 1500)
+
+// the 3rd returned value is TEID in GTPv1-U Header.
+n, raddr, teid, err := uConn.ReadFromGTP(buf)
+if err != nil {
+	// ...
+}
+
+fmt.Printf("%x", buf[:n]) // prints only the payload, no GTP header included.
+```
+
+Also, you can send any payload by using `WriteToGTP`. It writes the given payload with GTP header to the specified addr over `UPlaneConn`.
+
+```go
+// first return value is the number of bytes written.
+if _, err := uConn.WriteToGTP(teid, payload, addr); err != nil {
+	// ...
+}
+```
+
+#### Using userland GTP-U
+
+**Note:** _package v1 does provide the encapsulation/decapsulation and some networking features, but it does NOT provide routing of the decapsulated packets, nor capturing IP layer and above on the specified interface. This is because such kind of operations cannot be done without platform-specific codes._
+
+You can use to `ReadFromGTP` read the packets coming into uConn. This does not work for the packets which are handled by `RelayTo`.
 
 ```go
 buf := make([]byte, 1500)
 n, raddr, teid, err := uConn.ReadFromGTP(buf)
 if err != nil {
-    // ...
+	// ...
 }
 
 fmt.Printf("%x", buf[:n]) // prints the payload encapsulated in the GTP header.
 ```
 
-* `WriteToGTP()` writes the payload encapsulated with GTP header to the specified addr over `UPlaneConn`.
+Also, you can send any payload by using `WriteToGTP`. It writes the given payload with GTP header to the specified addr over `UPlaneConn`.
 
 ```go
 // first return value is the number of bytes written.
 if _, err := uConn.WriteToGTP(teid, payload, addr); err != nil {
-    // ...
+	// ...
 }
 ```
 
-#### On non-Linux platform
-
-Use `DialUPlane()` or `ListenAndServe()` to retrieve `UPlaneConn`.The difference between the two functions is;
-
-* `DialUPlane()` sends Echo Request and returns `UPlaneConn` if it succeeds.
-
-```go
-// give local/remote net.Addr, restart counter, channel to let background process pass the errors.
-uConn, err := v1.DialUPlane(laddr, raddr, 0, errCh)
-if err != nil {
-    // ...
-}
-```
-
-* `ListenAndServe()` just returns `UPlaneConn` without any validation.
-
-```go
-// give local net.Addr, restart counter, channel to let background process pass the errors.
-uConn, err := v1.ListenAndServe(laddr, 0, errCh)
-if err != nil {
-    // ...
-}
-```
-
-With `UPlaneConn`, you can `ReadFromGTP()` and `WriteToGTP()`, which gives you a easy handling of TEID and remote address.
-
-* `ReadFromGTP()` reads from `UPlaneConn`, and returns the number of bytes copied into the given buffer(not including header), sender's net.Addr, incoming TEID set in GTP header, and error if occurred.
-
-```go
-buf := make([]byte, 1500)
-n, raddr, teid, err := uConn.ReadFromGTP(buf)
-if err != nil {
-    // ...
-}
-
-fmt.Printf("%x", buf[:n]) // prints the payload encapsulated in the GTP header.
-```
-
-* `WriteToGTP()` writes the payload encapsulated with GTP header to the specified addr over `UPlaneConn`.
-
-```go
-// first return value is the number of bytes written.
-if _, err := uConn.WriteToGTP(teid, payload, addr); err != nil {
-    // ...
-}
-```
-
-For SGSN/S-GW-ish nodes, this package provides a method to swap TEID and forward T-PDU packets efficiently.  
-By using `*UPlaneConn.RelayTo()`, the connection automatically handles the T-PDU packet in background with the least cost.
+Especially or SGSN/S-GW-ish nodes(=have multiple GTP tunnels and its raison d'être is just to forward traffic right to left/left to right) we provide a method to swap TEID and forward T-PDU packets automatically and efficiently.  
+By using `RelayTo`, the `UPlaneConn` automatically handles the T-PDU packet in background with the least cost. Note that it's performed on the userland and thus it's not so performant.
 
 ```go
 // this is the example for S-GW that completed establishing a session and ready to forward U-Plane packets.
-s1uConn.RelayTo(s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress())
-s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress())
+s1uConn.RelayTo(s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID, s5uBearer.RemoteAddress)
+s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID, s1uBearer.RemoteAddress)
 ```
-
-_Note: _package v1 does provide encapsulation/decapsulation and some networking features, but it does not provide routing of the decapsulated packets, nor capturing IP layer and above on the specified interface. This is because such kind of operations cannot be done without platform-specific codes._
 
 ## Supported Features
 
@@ -183,10 +168,10 @@ _Note: _package v1 does provide encapsulation/decapsulation and some networking 
 
 The following Messages marked with "Yes" are currently available with their own useful constructors.
 
-_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGeneric()`._
+_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGeneric`._
 
 | ID        | Name                                        | Supported |
-| --------- | ------------------------------------------- | --------- |
+|-----------|---------------------------------------------|-----------|
 | 0         | (Spare/Reserved)                            | -         |
 | 1         | Echo Request                                | Yes       |
 | 2         | Echo Response                               | Yes       |
@@ -271,10 +256,10 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 
 The following Information Elements marked with "Yes" are currently supported with their own useful constructors.
 
-_Even there are some missing IEs, you can create any kind of IEs by using `ies.New()` function or by initializing ies.IE directly._
+_Even there are some missing IEs, you can create any kind of IEs by using `ies.New` function or by initializing ies.IE directly._
 
 | ID      | Name                                      | Supported |
-| ------- | ----------------------------------------- | --------- |
+|---------|-------------------------------------------|-----------|
 | 0       | (Spare/Reserved)                          | -         |
 | 1       | Cause                                     | Yes       |
 | 2       | IMSI                                      | Yes       |

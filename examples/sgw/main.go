@@ -25,6 +25,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net"
@@ -74,15 +75,24 @@ func newSGW(s11, s5c, s1u, s5u net.Addr) (*sGateway, error) {
 	}
 	log.Printf("Started serving on %s", s.s5cConn.LocalAddr())
 
-	s.s1uConn, err = v1.ListenAndServeUPlane(s1u, 0, s.errCh)
-	if err != nil {
-		log.Fatal(err)
-	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	s.s5uConn, err = v1.ListenAndServeUPlane(s5u, 0, s.errCh)
-	if err != nil {
-		log.Fatal(err)
-	}
+	s.s1uConn = v1.NewUPlaneConn(s1u)
+	go func() {
+		if err = s.s1uConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
+
+	go func() {
+		s.s5uConn = v1.NewUPlaneConn(s5u)
+		if err = s.s5uConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
 
 	return s, nil
 }
@@ -128,24 +138,29 @@ func main() {
 	// resolve specified IP:Port as net.UDPAddr.
 	s11, err := net.ResolveUDPAddr("udp", *s11)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	s5c, err := net.ResolveUDPAddr("udp", *s5c)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	s1u, err := net.ResolveUDPAddr("udp", *s1u)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	s5u, err := net.ResolveUDPAddr("udp", *s5u)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	sgw, err = newSGW(s11, s5c, s1u, s5u)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	// register handlers for ALL the messages you expect remote endpoint to send.

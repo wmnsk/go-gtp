@@ -4,6 +4,8 @@
 
 // Command pgw is a dead simple implementation of P-GW only with GTP-related features.
 //
+// This example is not maintained well. Please see example/gw-tester/pgw for better implementation.
+//
 // P-GW follows the steps below if there's no unexpected events in the middle. Note
 // that the Gx procedure is just mocked to make it work in standalone manner.
 //
@@ -19,11 +21,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net"
 	"time"
 
+	v1 "github.com/wmnsk/go-gtp/v1"
 	v2 "github.com/wmnsk/go-gtp/v2"
 	"github.com/wmnsk/go-gtp/v2/messages"
 )
@@ -38,15 +42,17 @@ func main() {
 	flag.Parse()
 	log.SetPrefix("[P-GW] ")
 
-	laddr, err := net.ResolveUDPAddr("udp", *s5c)
+	s5cAddr, err := net.ResolveUDPAddr("udp", *s5c)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	// start listening on the specified IP:Port.
-	s5cConn, err := v2.ListenAndServe(laddr, 0, errCh)
+	s5cConn, err := v2.ListenAndServe(s5cAddr, 0, errCh)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	defer s5cConn.Close()
 	log.Printf("Started serving on %s", s5cConn.LocalAddr())
@@ -56,6 +62,26 @@ func main() {
 		messages.MsgTypeCreateSessionRequest: handleCreateSessionRequest,
 		messages.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
 	})
+
+	s5uAddr, err := net.ResolveUDPAddr("udp", *s5u)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	uConn = v1.NewUPlaneConn(s5uAddr)
+	defer uConn.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		if err = uConn.ListenAndServe(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
+	log.Printf("Started listening on %s", uConn.LocalAddr())
 
 	for {
 		select {
