@@ -43,7 +43,6 @@ type UPlaneConn struct {
 
 	tpduCh  chan *tpduSet
 	closeCh chan struct{}
-	errCh   chan error
 
 	relayMap map[uint32]*peer
 
@@ -496,7 +495,7 @@ func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg messages.Message) er
 	}
 	go func() {
 		if err := handle(u, senderAddr, msg); err != nil {
-			u.errCh <- err
+			logf("failed to handle message %s: %s", msg, err)
 		}
 	}()
 
