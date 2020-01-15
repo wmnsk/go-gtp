@@ -37,8 +37,12 @@ const (
 //
 // Please see the examples/gw-tester for how each node handles routing from the program.
 func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
-	if u.kernGTPEnabled {
-		return nil
+	if u.pktConn == nil {
+		var err error
+		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+		if err != nil {
+			return err
+		}
 	}
 
 	f, err := u.pktConn.(*net.UDPConn).File()
@@ -63,7 +67,6 @@ func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
 	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
 		return errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
 	}
-
 	u.kernGTPEnabled = true
 
 	// remove relayed userland tunnels if exists

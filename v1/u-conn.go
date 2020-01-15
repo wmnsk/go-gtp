@@ -59,16 +59,19 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
+		laddr:         laddr,
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
 	}
 
 	// setup UDPConn first.
-	var err error
-	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
-	if err != nil {
-		return nil, err
+	if u.pktConn == nil {
+		var err error
+		u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// if no response coming within 5 seconds, returns error.
@@ -124,10 +127,12 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 // This blocks, and returns error only if it face the fatal one. Non-fatal errors are logged
 // with logger. See SetLogger/EnableLogger/DisableLogger for handling of those logs.
 func (u *UPlaneConn) ListenAndServe(ctx context.Context) error {
-	var err error
-	u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
-	if err != nil {
-		return err
+	if u.pktConn == nil {
+		var err error
+		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+		if err != nil {
+			return err
+		}
 	}
 
 	return u.listenAndServe(ctx)
