@@ -19,6 +19,13 @@ import (
 )
 
 // Conn represents a GTPv2-C connection.
+//
+// Conn provides the automatic handling of message by adding handlers to it with
+// AddHandler(s). See AddHandler for detailed usage.
+//
+// Conn also provides the functions to manage Sessions/Bearers that works over the
+// connection(=between a node to another).
+// See the docs of CreateSession, AddSession, DeleteSession methods for details.
 type Conn struct {
 	mu      sync.Mutex
 	laddr   net.Addr
@@ -44,10 +51,7 @@ type Conn struct {
 	Sessions []*Session
 }
 
-// NewConn creates a new Conn over existing net.PacketConn.
-//
-// This is for special situation that the user already have a net.PacketConn to be used for
-// GTPv2-C connection. Otherwise, Dial() or ListenAndServe() should be used to create a Conn.
+// NewConn creates a new Conn used for server. On client side, use Dial instead.
 func NewConn(laddr net.Addr, counter uint8) *Conn {
 	return &Conn{
 		mu:                sync.Mutex{},
@@ -60,12 +64,12 @@ func NewConn(laddr net.Addr, counter uint8) *Conn {
 	}
 }
 
-// Dial exchanges the GTPv2 Echo with raddr and returns *Conn.
+// Dial sends Echo Request to raddr to check if the endpoint is alive and returns Conn.
 //
-// The purpose of exchanging Echo is to check if the remote node is up and running.
-// It is not required behavior by the spec but important because Dial does not actually
-// dials remote address like net.Dial. This enables a Conn to be used with multiple
-// source/destination addresses.
+// It does not bind the raddr to the underlying connection, which enables a Conn to
+// send to/receive from multiple peers with single laddr.
+//
+// If Echo exchange is unnecessary, use NewConn and ListenAndServe instead.
 func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
@@ -255,27 +259,31 @@ func (c *Conn) SetWriteDeadline(t time.Time) error {
 	return c.pktConn.SetWriteDeadline(t)
 }
 
-// AddHandler adds a message handler to *Conn.
+// AddHandler adds a message handler to Conn.
 //
-// By adding HandlerFuncs, *Conn (and *Session, *Bearer created by the *Conn) will handle
+// By adding HandlerFunc, Conn(and Session, Bearer created over the Conn) will handle
 // the specified type of message with it's paired HandlerFunc when receiving.
-// Messages without registered handlers are just ignored and discarded and the user will
-// get ErrNoHandlersFound error.
+// Messages without registered handlers are just ignored and logged.
 //
-// This should be performed just after creating *Conn, otherwise the user cannot retrieve
+// This should be performed just after creating Conn, otherwise the user cannot retrieve
 // any values, which is in most cases vital to continue working as a node, from the incoming
 // messages.
 //
-// HandlerFuncs for EchoResponse and VersionNotSupportedIndication are registered by default.
-// These HandlerFuncs can be overwritten by specifying messages.MsgTypeEchoResponse and/or
+// The error returned from handler is just logged. Any important due should be done inside
+// the HandlerFunc before returning. This behavior might change in the future.
+//
+// HandlerFunc for EchoResponse and VersionNotSupportedIndication are registered by default.
+// These HandlerFunc can be overridden by specifying messages.MsgTypeEchoResponse and/or
 // messages.MsgTypeVersionNotSupportedIndication as msgType parameter.
 func (c *Conn) AddHandler(msgType uint8, fn HandlerFunc) {
 	c.msgHandlerMap.store(msgType, fn)
 }
 
-// AddHandlers adds multiple handler funcs at a time.
+// AddHandlers adds multiple handler funcs at a time, using a map.
+// The key of the map is message type of the GTPv2-C messages. You can use MsgTypeFooBar
+// constants defined in this package as well as any raw uint8 values.
 //
-// See AddHandler for detailed usage.
+// See AddHandler for how the given handlers behave.
 func (c *Conn) AddHandlers(funcs map[uint8]HandlerFunc) {
 	for msgType, fn := range funcs {
 		c.msgHandlerMap.store(msgType, fn)
@@ -285,13 +293,13 @@ func (c *Conn) AddHandlers(funcs map[uint8]HandlerFunc) {
 func (c *Conn) handleMessage(senderAddr net.Addr, msg messages.Message) error {
 	if c.validationEnabled {
 		if err := c.validate(senderAddr, msg); err != nil {
-			return err
+			logf("failed to validate a message: %s", err)
 		}
 	}
 
 	handle, ok := c.msgHandlerMap.load(msg.MessageType())
 	if !ok {
-		return &HandlerNotFoundError{MsgType: msg.MessageTypeName()}
+		logf("%v", &HandlerNotFoundError{MsgType: msg.MessageTypeName()})
 	}
 	if err := handle(c, senderAddr, msg); err != nil {
 		logf("failed to handle message %s: %s", msg, err)
@@ -303,6 +311,15 @@ func (c *Conn) handleMessage(senderAddr net.Addr, msg messages.Message) error {
 // EnableValidation turns on automatic validation of incoming messages.
 // This is expected to be used only after DisableValidation() is used, as the validation
 // is enabled by default.
+//
+// Conn checks if;
+//
+//  GTP Version is 2
+//  TEID is known to Conn
+//
+// Even the validation is failed, it does not return error to user. Instead, it just logs
+// and discards the packets so that the HandlerFunc won't get the invalid message.
+// Extra validations should be done in HandlerFunc.
 func (c *Conn) EnableValidation() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -311,6 +328,8 @@ func (c *Conn) EnableValidation() {
 
 // DisableValidation turns off automatic validation of incoming messages.
 // It is not recommended to use this except the node is in debugging mode.
+//
+// See EnableValidation for what are validated.
 func (c *Conn) DisableValidation() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -321,8 +340,9 @@ func (c *Conn) validate(senderAddr net.Addr, msg messages.Message) error {
 	// check GTP version
 	if msg.Version() != 2 {
 		if err := c.VersionNotSupportedIndication(senderAddr, msg); err != nil {
-			return err
+			return errors.Errorf("failed to respond with VersionNotSupportedIndication: %s", err)
 		}
+		return errors.Errorf("received an invalid version(%d) of message: %v", msg.Version(), msg)
 	}
 
 	// check if TEID is known or not
@@ -335,8 +355,7 @@ func (c *Conn) validate(senderAddr net.Addr, msg messages.Message) error {
 }
 
 // SendMessageTo sends a message to addr.
-// Unlike WriteTo, it sets the Sequence Number properly and returns the one
-// used in the message.
+// Unlike WriteTo, it sets the Sequence Number properly and returns the one used in the message.
 func (c *Conn) SendMessageTo(msg messages.Message, addr net.Addr) (uint32, error) {
 	seq := c.IncSequence()
 	msg.SetSequenceNumber(seq)
@@ -423,12 +442,17 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Messag
 // After using this method, users don't need to call AddSession with the session
 // returned.
 //
-// By creating a Session with this method, a Bearer named "default" is also created
-// to be used as default bearer. The default bearer can be retrieved by using
-// (*Session) GetDefaultBearer() or (*Session) LookupBearerByName("default").
+// By creating a Session with this method, the values in IEs given, such as TEID in F-TEID
+// are stored with "best effort". See the source code to see what kind information is
+// handled automatically in this method.
+//
+// Also, a Bearer named "default" is also created to be used as default bearer.
+// The default bearer can be retrieved by using GetDefaultBearer() or LookupBearerByName("default").
 //
 // Note that this method doesn't care IEs given are sufficient or not, as the required IE
 // varies much depending on the context in which the Create Session Request is used.
+// In other words, any kind of IE can be put on the Create Session Request message using
+// this method.
 func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, error) {
 	// retrieve values from IEs given.
 	sess := NewSession(raddr, &Subscriber{Location: &Location{}})
@@ -602,8 +626,8 @@ func (c *Conn) DeleteBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32,
 	return seq, nil
 }
 
-// RespondTo sends a message(specified with "toBeSent" param) in response to
-// a message(specified with "received" param).
+// RespondTo sends a message(specified with "toBeSent" param) in response to a message
+// (specified with "received" param).
 //
 // This exists to make it easier to handle SequenceNumber.
 func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) error {
@@ -671,8 +695,7 @@ func (c *Conn) GetIMSIByTEID(teid uint32, peer net.Addr) (string, error) {
 }
 
 // AddSession adds a session to c.Sessions.
-// If Session with the same IMSI already exists, it removes the old one and
-// stores the given one.
+// If Session with the same IMSI already exists, it removes the old one and stores the given one.
 func (c *Conn) AddSession(session *Session) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -736,7 +759,12 @@ func (c *Conn) RemoveSessionByIMSI(imsi string) {
 }
 
 // NewFTEID creates a new F-TEID with random TEID value that is unique within Conn.
-// If there's a lot of Session on the Conn, it may take a long time to find unique one.
+// To ensure the uniqueness, don't create in the other way if you once use this method.
+//
+// Note that in the case there's a lot of Session on the Conn, it may take a long
+// time to find a new unique value.
+//
+// TODO: optimize performance...
 func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -769,7 +797,7 @@ func generateUniqueUint32(vals []uint32) uint32 {
 
 // SessionCount returns the number of sessions registered in Conn.
 //
-// This may have impact on performance in case of large number of Session exists.
+// This may have some impact on performance in case of large number of Session exists.
 func (c *Conn) SessionCount() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -785,8 +813,7 @@ func (c *Conn) SessionCount() int {
 
 // BearerCount returns the number of bearers registered in Conn.
 //
-// This may have impact on performance in case of large number of Session and
-// Bearer exist.
+// This may have some impact on performance in case of large number of Session and Bearer exist.
 func (c *Conn) BearerCount() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
