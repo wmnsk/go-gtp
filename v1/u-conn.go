@@ -18,15 +18,6 @@ import (
 	"github.com/wmnsk/go-gtp/v1/messages"
 )
 
-// Role is a role for Kernel GTP-U.
-type Role int
-
-// Role definitions.
-const (
-	RoleGGSN Role = iota
-	RoleSGSN
-)
-
 type tpduSet struct {
 	raddr   net.Addr
 	teid    uint32
@@ -51,8 +42,19 @@ type UPlaneConn struct {
 	GTPLink        *netlink.GTP
 }
 
-// DialUPlane sends Echo Request to raddr to check if the endpoint is alive and
-// keep connection information.
+// NewUPlaneConn creates a new UPlaneConn used for server. On client side, use DialUPlane instead.
+func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
+	return &UPlaneConn{
+		mu:            sync.Mutex{},
+		msgHandlerMap: defaultHandlerMap,
+		laddr:         laddr,
+
+		tpduCh:  make(chan *tpduSet),
+		closeCh: make(chan struct{}),
+	}
+}
+
+// DialUPlane sends Echo Request to raddr to check if the endpoint is alive and returns UPlaneConn.
 func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error) {
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
@@ -118,128 +120,6 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 	return u, nil
 }
 
-// DialUPlaneKernel works similar to DialUPlane but uses Linux Kernel GTP-U
-// instead of handling G-DPU message in userland.
-func DialUPlaneKernel(ctx context.Context, devname string, role Role, laddr, raddr net.Addr) (*UPlaneConn, error) {
-	u := &UPlaneConn{
-		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
-
-		tpduCh:  make(chan *tpduSet),
-		closeCh: make(chan struct{}),
-	}
-
-	// setup UDPConn first.
-	var err error
-	u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
-	if err != nil {
-		return nil, err
-	}
-
-	// if no response coming within 5 seconds, returns error.
-	if err := u.pktConn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
-		return nil, err
-	}
-
-	buf := make([]byte, 1600)
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, nil
-		default:
-			// go forward
-		}
-
-		// send EchoRequest to raddr.
-		if err := u.EchoRequest(raddr); err != nil {
-			return nil, err
-		}
-
-		n, _, err := u.pktConn.ReadFrom(buf)
-		if err != nil {
-			return nil, err
-		}
-		if err := u.pktConn.SetReadDeadline(time.Time{}); err != nil {
-			return nil, err
-		}
-
-		// decode incoming message and let it be handled by default handler funcs.
-		msg, err := messages.Parse(buf[:n])
-		if err != nil {
-			return nil, err
-		}
-		if _, ok := msg.(*messages.EchoResponse); !ok {
-			continue
-		}
-
-		break
-	}
-
-	f, _ := u.pktConn.(*net.UDPConn).File()
-	u.GTPLink = &netlink.GTP{
-		LinkAttrs: netlink.LinkAttrs{
-			Name: devname,
-		},
-		FD1:  int(f.Fd()),
-		Role: int(role),
-	}
-	if err := netlink.LinkAdd(u.GTPLink); err != nil {
-		return nil, errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
-		return nil, errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
-		return nil, errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
-	}
-	u.kernGTPEnabled = true
-
-	go func() {
-		if err := u.serve(ctx); err != nil {
-			logf("fatal error on UPlaneConn %s: %s", u.LocalAddr(), err)
-			_ = u.Close()
-		}
-	}()
-	return u, nil
-}
-
-// NewUPlaneConn creates a new UPlaneConn used for server.
-// On client side, use DialUPlane instead.
-func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
-	return &UPlaneConn{
-		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
-		laddr:         laddr,
-
-		tpduCh:  make(chan *tpduSet),
-		closeCh: make(chan struct{}),
-	}
-}
-
-// EnableKernelGTP enables Linux Kernel GTP-U.
-// Using Kernel is much more performant than userland, but requires the root privilege.
-func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
-	if u.kernGTPEnabled {
-		return nil
-	}
-
-	f, err := u.pktConn.(*net.UDPConn).File()
-	if err != nil {
-		return err
-	}
-
-	u.GTPLink = &netlink.GTP{
-		LinkAttrs: netlink.LinkAttrs{
-			Name: devname,
-		},
-		FD1:  int(f.Fd()),
-		Role: int(role),
-	}
-
-	u.kernGTPEnabled = true
-	return nil
-}
-
 // ListenAndServe creates a new GTPv2-C *Conn and start serving.
 // This blocks, and returns error only if it face the fatal one. Non-fatal errors are logged
 // with logger. See SetLogger/EnableLogger/DisableLogger for handling of those logs.
@@ -250,31 +130,11 @@ func (u *UPlaneConn) ListenAndServe(ctx context.Context) error {
 		return err
 	}
 
-	if u.kernGTPEnabled {
-		return u.listenAndServeKernel(ctx)
-	}
 	return u.listenAndServe(ctx)
 }
 
-// listenAndServe creates a new GTPv2-C *Conn and start serving.
 func (u *UPlaneConn) listenAndServe(ctx context.Context) error {
 	// TODO: this func is left for future enhancement.
-	return u.serve(ctx)
-}
-
-// listenAndServeKernel works similar to ListenAndServeUPlane but uses Linux Kernel GTP-U
-// instead of handling G-DPU message in userland.
-func (u *UPlaneConn) listenAndServeKernel(ctx context.Context) error {
-	if err := netlink.LinkAdd(u.GTPLink); err != nil {
-		return errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
-		return errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
-	}
-	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
-		return errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
-	}
-
 	return u.serve(ctx)
 }
 
