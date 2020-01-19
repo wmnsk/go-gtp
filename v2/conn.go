@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
+	"io"
 	"net"
 	"sync"
 	"time"
@@ -120,7 +121,6 @@ func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*Conn, err
 	go func() {
 		if err := c.serve(ctx); err != nil {
 			logf("fatal error on Conn %s: %s", c.LocalAddr(), err)
-			_ = c.Close()
 		}
 	}()
 	return c, nil
@@ -160,7 +160,10 @@ func (c *Conn) serve(ctx context.Context) error {
 
 		n, raddr, err := c.pktConn.ReadFrom(buf)
 		if err != nil {
-			return errors.Errorf("error reading on Conn %s: %s", c.LocalAddr(), err)
+			if err == io.EOF {
+				return nil
+			}
+			return errors.Errorf("error reading from Conn %s: %s", c.LocalAddr(), err)
 		}
 
 		raw := make([]byte, n)
@@ -212,9 +215,8 @@ func (c *Conn) Close() error {
 	c.RestartCounter = 0
 	close(c.closeCh)
 
-	// triggers error in blocking Read() / Write() immediately.
-	if err := c.pktConn.SetDeadline(time.Now().Add(1 * time.Millisecond)); err != nil {
-		return err
+	if err := c.pktConn.Close(); err != nil {
+		logf("error closing the underlying conn: %s", err)
 	}
 	return nil
 }
