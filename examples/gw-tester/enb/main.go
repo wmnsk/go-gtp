@@ -42,7 +42,6 @@ func main() {
 			fatalCh <- err
 		}
 	}()
-	log.Println("Started running eNB")
 
 	for {
 		select {

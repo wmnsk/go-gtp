@@ -120,6 +120,7 @@ func (m *mme) run(ctx context.Context) error {
 			return
 		}
 	}()
+	log.Printf("Started serving S1-MME on: %s", m.s1mmeListener.Addr())
 
 	m.s11Conn = v2.NewConn(m.s11Addr, 0)
 	go func() {
@@ -128,7 +129,7 @@ func (m *mme) run(ctx context.Context) error {
 			return
 		}
 	}()
-	log.Printf("Started running MME\n  S1MME: %s, S11: %s", m.s1mmeListener.Addr(), m.s11Addr)
+	log.Printf("Started serving S11 on: %s", m.s11Addr)
 
 	m.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
 		messages.MsgTypeCreateSessionResponse: m.handleCreateSessionResponse,
@@ -148,6 +149,7 @@ func (m *mme) run(ctx context.Context) error {
 				log.Println(err)
 			}
 		}()
+		log.Printf("Started serving Prometheus on %s", m.promAddr)
 	}
 
 	for {

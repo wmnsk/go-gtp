@@ -74,7 +74,7 @@ func (p *pgw) run(ctx context.Context) error {
 			return
 		}
 	}()
-	log.Printf("Started listening on %s", cAddr)
+	log.Printf("Started serving S5-C on %s", cAddr)
 
 	// register handlers for ALL the messages you expect remote endpoint to send.
 	p.cConn.AddHandlers(map[uint8]v2.HandlerFunc{
@@ -97,7 +97,7 @@ func (p *pgw) run(ctx context.Context) error {
 		}
 		log.Println("uConn.ListenAndServe exitted")
 	}()
-	log.Printf("Started listening on %s", uAddr)
+	log.Printf("Started serving S5-U on %s", uAddr)
 
 	// start serving Prometheus, if address is given
 	if p.promAddr != "" {
@@ -111,6 +111,7 @@ func (p *pgw) run(ctx context.Context) error {
 				log.Println(err)
 			}
 		}()
+		log.Printf("Started serving Prometheus on %s", p.promAddr)
 	}
 
 	for {

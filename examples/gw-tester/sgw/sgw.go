@@ -100,7 +100,7 @@ func (s *sgw) run(ctx context.Context) error {
 			return
 		}
 	}()
-	log.Printf("Started serving on %s", s.s11Addr)
+	log.Printf("Started serving S11 on %s", s.s11Addr)
 
 	s.s5cConn = v2.NewConn(s.s5cAddr, 0)
 	go func() {
@@ -109,7 +109,7 @@ func (s *sgw) run(ctx context.Context) error {
 			return
 		}
 	}()
-	log.Printf("Started serving on %s", s.s5cAddr)
+	log.Printf("Started serving S5-C on %s", s.s5cAddr)
 
 	// register handlers for ALL the messages you expect remote endpoint to send.
 	s.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
@@ -135,7 +135,7 @@ func (s *sgw) run(ctx context.Context) error {
 		}
 		log.Println("uConn.ListenAndServe exitted")
 	}()
-	log.Printf("Started serving on %s", s.s1uAddr)
+	log.Printf("Started serving S1-U on %s", s.s1uAddr)
 
 	s.s5uConn = v1.NewUPlaneConn(s.s5uAddr)
 	if err := s.s5uConn.EnableKernelGTP("gtp-sgw-s5", v1.RoleSGSN); err != nil {
@@ -148,7 +148,7 @@ func (s *sgw) run(ctx context.Context) error {
 		}
 		log.Println("uConn.ListenAndServe exitted")
 	}()
-	log.Printf("Started serving on %s", s.s5uAddr)
+	log.Printf("Started serving S5-U on %s", s.s5uAddr)
 
 	if err := s.addRoutes(); err != nil {
 		return err
@@ -166,6 +166,7 @@ func (s *sgw) run(ctx context.Context) error {
 				log.Println(err)
 			}
 		}()
+		log.Printf("Started serving Prometheus on %s", s.promAddr)
 	}
 
 	for {

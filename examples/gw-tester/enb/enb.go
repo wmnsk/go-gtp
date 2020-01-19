@@ -28,7 +28,7 @@ type enb struct {
 	mu sync.Mutex
 
 	// S1-MME
-	cAddr       net.Addr
+	mmeAddr     net.Addr
 	cConn       *grpc.ClientConn
 	s1mmeClient s1mme.AttacherClient
 
@@ -74,7 +74,7 @@ func newENB(cfg *Config) (*enb, error) {
 		return nil, err
 	}
 
-	e.cAddr, err = net.ResolveTCPAddr("tcp", cfg.MMEAddr)
+	e.mmeAddr, err = net.ResolveTCPAddr("tcp", cfg.MMEAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -92,11 +92,12 @@ func newENB(cfg *Config) (*enb, error) {
 
 func (e *enb) run(ctx context.Context) error {
 	// TODO: bind local address(cfg.LocalAddrs.S1CIP) with WithDialer option?
-	conn, err := grpc.Dial(e.cAddr.String(), grpc.WithInsecure())
+	conn, err := grpc.Dial(e.mmeAddr.String(), grpc.WithInsecure())
 	if err != nil {
 		return err
 	}
 	e.s1mmeClient = s1mme.NewAttacherClient(conn)
+	log.Printf("Established S1-MME connection with %s", e.mmeAddr)
 
 	e.uConn = v1.NewUPlaneConn(e.uAddr)
 	if err := e.uConn.EnableKernelGTP("gtp-enb", v1.RoleSGSN); err != nil {
@@ -109,6 +110,7 @@ func (e *enb) run(ctx context.Context) error {
 		}
 		log.Println("uConn.ListenAndServe exitted")
 	}()
+	log.Printf("Started serving S1-U on %s", e.uAddr)
 
 	// start serving Prometheus, if address is given
 	if e.promAddr != "" {
@@ -122,6 +124,7 @@ func (e *enb) run(ctx context.Context) error {
 				log.Println(err)
 			}
 		}()
+		log.Printf("Started serving Prometheus on %s", e.promAddr)
 	}
 
 	for _, sub := range e.candidateSubs {
@@ -251,8 +254,8 @@ func (e *enb) attach(ctx context.Context, sub *Subscriber) error {
 		return err
 	}
 	if e.mc != nil {
-		e.mc.messagesSent.WithLabelValues(e.cAddr.String(), "Attach Request").Inc()
-		e.mc.messagesReceived.WithLabelValues(e.cAddr.String(), "Attach Response").Inc()
+		e.mc.messagesSent.WithLabelValues(e.mmeAddr.String(), "Attach Request").Inc()
+		e.mc.messagesReceived.WithLabelValues(e.mmeAddr.String(), "Attach Response").Inc()
 	}
 
 	switch rsp.Cause {
