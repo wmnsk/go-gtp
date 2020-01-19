@@ -8,9 +8,11 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 
 	"github.com/wmnsk/go-gtp/examples/gw-tester/s1mme"
@@ -59,6 +61,9 @@ type mme struct {
 		s5cIP string
 	}
 
+	promAddr string
+	mc       *metricsCollector
+
 	errCh chan error
 }
 
@@ -93,6 +98,14 @@ func newMME(cfg *Config) (*mme, error) {
 		return nil, err
 	}
 
+	if cfg.PromAddr != "" {
+		// validate if the address is valid or not.
+		if _, err = net.ResolveTCPAddr("tcp", cfg.PromAddr); err != nil {
+			return nil, err
+		}
+		m.promAddr = cfg.PromAddr
+	}
+
 	return m, nil
 }
 
@@ -122,6 +135,20 @@ func (m *mme) run(ctx context.Context) error {
 		messages.MsgTypeModifyBearerResponse:  m.handleModifyBearerResponse,
 		messages.MsgTypeDeleteSessionResponse: m.handleDeleteSessionResponse,
 	})
+
+	// start serving Prometheus, if address is given
+	if m.promAddr != "" {
+		if err := m.runMetricsCollector(); err != nil {
+			return err
+		}
+
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			if err := http.ListenAndServe(m.promAddr, nil); err != nil {
+				log.Println(err)
+			}
+		}()
+	}
 
 	for {
 		select {
@@ -266,6 +293,9 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 	if err != nil {
 		return nil, err
 	}
+	if m.mc != nil {
+		m.mc.messagesSent.WithLabelValues(raddr.String(), "Create Session Request").Inc()
+	}
 
 	m.s11Conn.AddSession(session)
 	return session, nil
@@ -283,6 +313,9 @@ func (m *mme) ModifyBearer(sess *v2.Session, sub *Session) (*v2.Bearer, error) {
 		ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), fteid, ies.NewPortNumber(2152)),
 	); err != nil {
 		return nil, err
+	}
+	if m.mc != nil {
+		m.mc.messagesSent.WithLabelValues(sess.PeerAddr().String(), "Modify Bearer Request").Inc()
 	}
 
 	return nil, nil

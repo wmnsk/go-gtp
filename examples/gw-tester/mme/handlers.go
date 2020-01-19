@@ -16,6 +16,9 @@ import (
 
 func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
+	if m.mc != nil {
+		m.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	// find the session associated with TEID
 	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)
@@ -117,6 +120,9 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 
 func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
+	if m.mc != nil {
+		m.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)
 	if err != nil {
@@ -174,6 +180,9 @@ func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messa
 
 func (m *mme) handleDeleteSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
+	if m.mc != nil {
+		m.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)
 	if err != nil {
