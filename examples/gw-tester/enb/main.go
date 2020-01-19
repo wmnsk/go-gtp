@@ -36,14 +36,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fatalCh := make(chan error)
+	fatalCh := make(chan error, 1)
 	go func() {
 		if err := enb.run(ctx); err != nil {
 			fatalCh <- err
-
 		}
 	}()
-	log.Println("Started running eNB")
 
 	for {
 		select {

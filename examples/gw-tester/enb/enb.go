@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 	"google.golang.org/grpc"
 
@@ -27,7 +28,7 @@ type enb struct {
 	mu sync.Mutex
 
 	// S1-MME
-	cAddr       net.Addr
+	mmeAddr     net.Addr
 	cConn       *grpc.ClientConn
 	s1mmeClient s1mme.AttacherClient
 
@@ -44,6 +45,9 @@ type enb struct {
 	addedAddrs  map[netlink.Link]*netlink.Addr
 	addedRoutes []*netlink.Route
 	addedRules  []*netlink.Rule
+
+	promAddr string
+	mc       *metricsCollector
 
 	errCh chan error
 }
@@ -70,9 +74,17 @@ func newENB(cfg *Config) (*enb, error) {
 		return nil, err
 	}
 
-	e.cAddr, err = net.ResolveTCPAddr("tcp", cfg.MMEAddr)
+	e.mmeAddr, err = net.ResolveTCPAddr("tcp", cfg.MMEAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	if cfg.PromAddr != "" {
+		// validate if the address is valid or not.
+		if _, err = net.ResolveTCPAddr("tcp", cfg.PromAddr); err != nil {
+			return nil, err
+		}
+		e.promAddr = cfg.PromAddr
 	}
 
 	return e, nil
@@ -80,11 +92,12 @@ func newENB(cfg *Config) (*enb, error) {
 
 func (e *enb) run(ctx context.Context) error {
 	// TODO: bind local address(cfg.LocalAddrs.S1CIP) with WithDialer option?
-	conn, err := grpc.Dial(e.cAddr.String(), grpc.WithInsecure())
+	conn, err := grpc.Dial(e.mmeAddr.String(), grpc.WithInsecure())
 	if err != nil {
 		return err
 	}
 	e.s1mmeClient = s1mme.NewAttacherClient(conn)
+	log.Printf("Established S1-MME connection with %s", e.mmeAddr)
 
 	e.uConn = v1.NewUPlaneConn(e.uAddr)
 	if err := e.uConn.EnableKernelGTP("gtp-enb", v1.RoleSGSN); err != nil {
@@ -97,6 +110,22 @@ func (e *enb) run(ctx context.Context) error {
 		}
 		log.Println("uConn.ListenAndServe exitted")
 	}()
+	log.Printf("Started serving S1-U on %s", e.uAddr)
+
+	// start serving Prometheus, if address is given
+	if e.promAddr != "" {
+		if err := e.runMetricsCollector(); err != nil {
+			return err
+		}
+
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			if err := http.ListenAndServe(e.promAddr, nil); err != nil {
+				log.Println(err)
+			}
+		}()
+		log.Printf("Started serving Prometheus on %s", e.promAddr)
+	}
 
 	for _, sub := range e.candidateSubs {
 		select {
@@ -111,10 +140,9 @@ func (e *enb) run(ctx context.Context) error {
 		}
 	}
 
+	// wait for new subscribers to be attached
 	e.attachCh = make(chan *Subscriber)
 	defer close(e.attachCh)
-
-	// wait for new subscribers to be attached
 	for {
 		select {
 		case <-ctx.Done():
@@ -224,6 +252,10 @@ func (e *enb) attach(ctx context.Context, sub *Subscriber) error {
 	rsp, err := e.s1mmeClient.Attach(ctx, req)
 	if err != nil {
 		return err
+	}
+	if e.mc != nil {
+		e.mc.messagesSent.WithLabelValues(e.mmeAddr.String(), "Attach Request").Inc()
+		e.mc.messagesReceived.WithLabelValues(e.mmeAddr.String(), "Attach Response").Inc()
 	}
 
 	switch rsp.Cause {

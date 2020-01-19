@@ -17,6 +17,9 @@ import (
 
 func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
+	if p.mc != nil {
+		p.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
@@ -173,6 +176,9 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	if err := c.RespondTo(sgwAddr, csReqFromSGW, csRspFromPGW); err != nil {
 		return err
 	}
+	if p.mc != nil {
+		p.mc.messagesSent.WithLabelValues(sgwAddr.String(), csRspFromPGW.MessageTypeName()).Inc()
+	}
 
 	s5pgwTEID, err := session.GetTEID(v2.IFTypeS5S8PGWGTPC)
 	if err != nil {
@@ -197,6 +203,9 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 
 func (p *pgw) handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
+	if p.mc != nil {
+		p.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
@@ -226,6 +235,9 @@ func (p *pgw) handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	)
 	if err := c.RespondTo(sgwAddr, msg, dsr); err != nil {
 		return err
+	}
+	if p.mc != nil {
+		p.mc.messagesSent.WithLabelValues(sgwAddr.String(), dsr.MessageTypeName()).Inc()
 	}
 
 	log.Printf("Session deleted for Subscriber: %s", session.IMSI)

@@ -6,3 +6,4 @@ local_addresses:
   s11_addr: "127.0.1.12:2123"
 sgw_s11_ip: "127.0.1.13"
 pgw_s5c_ip: "127.0.1.14"
+prom_addr: "127.0.10.2:58080"

@@ -4,3 +4,4 @@ local_addresses:
   sgi_ip: "127.0.0.254"
 sgi_if_name: "enp0s9"
 route_subnet: "192.168.101.0/24"
+prom_addr: "127.0.10.4"

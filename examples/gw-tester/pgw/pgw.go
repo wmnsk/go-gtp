@@ -8,7 +8,9 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 	v1 "github.com/wmnsk/go-gtp/v1"
 	"github.com/wmnsk/go-gtp/v2/messages"
@@ -28,6 +30,9 @@ type pgw struct {
 	addedRoutes []*netlink.Route
 	addedRules  []*netlink.Rule
 
+	promAddr string
+	mc       *metricsCollector
+
 	errCh chan error
 }
 
@@ -46,6 +51,14 @@ func newPGW(cfg *Config) (*pgw, error) {
 		return nil, err
 	}
 
+	if cfg.PromAddr != "" {
+		// validate if the address is valid or not.
+		if _, err = net.ResolveTCPAddr("tcp", cfg.PromAddr); err != nil {
+			return nil, err
+		}
+		p.promAddr = cfg.PromAddr
+	}
+
 	return p, nil
 }
 
@@ -61,7 +74,7 @@ func (p *pgw) run(ctx context.Context) error {
 			return
 		}
 	}()
-	log.Printf("Started listening on %s", cAddr)
+	log.Printf("Started serving S5-C on %s", cAddr)
 
 	// register handlers for ALL the messages you expect remote endpoint to send.
 	p.cConn.AddHandlers(map[uint8]v2.HandlerFunc{
@@ -84,7 +97,22 @@ func (p *pgw) run(ctx context.Context) error {
 		}
 		log.Println("uConn.ListenAndServe exitted")
 	}()
-	log.Printf("Started listening on %s", uAddr)
+	log.Printf("Started serving S5-U on %s", uAddr)
+
+	// start serving Prometheus, if address is given
+	if p.promAddr != "" {
+		if err := p.runMetricsCollector(); err != nil {
+			return err
+		}
+
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			if err := http.ListenAndServe(p.promAddr, nil); err != nil {
+				log.Println(err)
+			}
+		}()
+		log.Printf("Started serving Prometheus on %s", p.promAddr)
+	}
 
 	for {
 		select {
