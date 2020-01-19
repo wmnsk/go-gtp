@@ -18,6 +18,8 @@ type Config struct {
 		SGiIP   string `yaml:"sgi_ip"`
 	} `yaml:"local_addresses"`
 
+	PromAddr string `yaml:"prom_addr"`
+
 	SGiIFName   string `yaml:"sgi_if_name"`
 	RouteSubnet string `yaml:"route_subnet"`
 }
