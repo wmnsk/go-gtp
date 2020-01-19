@@ -9,6 +9,8 @@ A pseudo eNB and MME as a tester for S/P-GW.
 It is a burden to use actual UE/eNB/MME just to test S/P-GW, isn't it?  
 GW Tester emulates the minimal required behavior of surrounding nodes to perform a quick and simple testing on S/P-GW.
 
+A blog post by the author is available [here](https://wmnsk.com/posts/20200116_gw-tester/) for those who interested :)
+
 ## How it works
 
 ### Authentication
@@ -97,14 +99,15 @@ In general, config consists of the network information of local/remote node, and
 
 These values are used to identify eNB. Some of them are just to set inside the packets, and not validated.
 
-| config     | type of value | description                                  |
-|------------|---------------|----------------------------------------------|
-| `mcc`      | string        | MCC of eNB                                   |
-| `mnc`      | string        | MNC of eNB                                   |
-| `rat_type` | uint8         | RAT Type (`6` for E-UTRAN)                   |
-| `tai`      | uint16        | TAI of eNB                                   |
-| `eci`      | uint32        | ECI of eNB                                   |
-| `mme_addr` | string        | IP/Port of MME to dial, for S1-MME interface |
+| config      | type of value | description                                  |
+|-------------|---------------|----------------------------------------------|
+| `mcc`       | string        | MCC of eNB                                   |
+| `mnc`       | string        | MNC of eNB                                   |
+| `rat_type`  | uint8         | RAT Type (`6` for E-UTRAN)                   |
+| `tai`       | uint16        | TAI of eNB                                   |
+| `eci`       | uint32        | ECI of eNB                                   |
+| `mme_addr`  | string        | IP/Port of MME to dial, for S1-MME interface |
+| `prom_addr` | string        | IP/Port of MME to serve Prometheus           |
 
 #### Local Addressess
 
@@ -137,11 +140,12 @@ These values are used to identify eNB. Some of them are just to set inside the p
 
 These values are used to identify MME. Some of them are just to set inside the packets, and not validated.
 
-| config | type of value | description                        |
-|--------|---------------|------------------------------------|
-| `mcc`  | string        | MCC of MME                         |
-| `mnc`  | string        | MNC of MME                         |
-| `apn`  | string        | APN assigned to all the subscriber |
+| config      | type of value | description                        |
+|-------------|---------------|------------------------------------|
+| `mcc`       | string        | MCC of MME                         |
+| `mnc`       | string        | MNC of MME                         |
+| `apn`       | string        | APN assigned to all the subscriber |
+| `prom_addr` | string        | IP/Port of MME to serve Prometheus |
 
 #### Local Addressess
 
@@ -167,12 +171,13 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 
 `local_addresses` are the IP addresses/ports to be bound on local machine.
 
-| config     | type of value | description                      |
-|------------|---------------|----------------------------------|
-| `s11_addr` | string        | local IP/Port for S11 interface  |
-| `s1u_addr` | string        | local IP/Port for S1-U interface |
-| `s5c_addr` | string        | local IP/Port for S5-C interface |
-| `s5u_addr` | string        | local IP/Port for S5-U interface |
+| config      | type of value | description                        |
+|-------------|---------------|------------------------------------|
+| `s11_addr`  | string        | local IP/Port for S11 interface    |
+| `s1u_addr`  | string        | local IP/Port for S1-U interface   |
+| `s5c_addr`  | string        | local IP/Port for S5-C interface   |
+| `s5u_addr`  | string        | local IP/Port for S5-U interface   |
+| `prom_addr` | string        | IP/Port of MME to serve Prometheus |
 
 ### P-GW
 
@@ -182,6 +187,7 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 |----------------|---------------|------------------------------------------------------------------------|
 | `sgi_if_name`  | string        | name of network interface on SGi side. Used to downlink route traffic. |
 | `route_subnet` | string        | IP subnet of UEs that should be routed properly.                       |
+| `prom_addr`    | string        | IP/Port of MME to serve Prometheus                                     |
 
 #### Local Addressess
 
@@ -199,6 +205,14 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 
 The programs can handle `SIGHUP` to reload config without deleting sessions. Update YAML file and send `SIGHUP` to the process.
 
-### (WIP) Instrumentation
+### Instrumentation
 
-_(Metrics exposure for Prometheus is work in progress... stay tuned!)_
+GW Tester nodes expose some metrics for Prometheus if `prom_addr` is given in each config. You can see the sample response from each node in [this Gist](https://gist.github.com/wmnsk/72f6d2d2450452090cd6351ffe63f660).  
+I'm planning to add some more metrics like "success rate of HTTP probe" etc.
+
+| Metrics           | Name                                  | Description                                   |
+|-------------------|---------------------------------------|-----------------------------------------------|
+| Active sessions   | `<node-name>_active_sessions`         | number of session established currently       |
+| Active bearers    | `<node-name>_active_bearers`          | number of GTP-U tunnels established currently |
+| Messages sent     | `<node-name>_messages_sent_total`     | number of messages sent by messagge type      |
+| Messages received | `<node-name>_messages_received_total` | number of messages received by messagge type  |
