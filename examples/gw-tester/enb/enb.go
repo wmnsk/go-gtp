@@ -47,6 +47,7 @@ type enb struct {
 	addedRules  []*netlink.Rule
 
 	promAddr string
+	mc       *metricsCollector
 
 	errCh chan error
 }
@@ -90,16 +91,6 @@ func newENB(cfg *Config) (*enb, error) {
 }
 
 func (e *enb) run(ctx context.Context) error {
-	// start serving Prometheus first, if address is given
-	if e.promAddr != "" {
-		http.Handle("/metrics", promhttp.Handler())
-		go func() {
-			if err := http.ListenAndServe(e.promAddr, nil); err != nil {
-				log.Println(err)
-			}
-		}()
-	}
-
 	// TODO: bind local address(cfg.LocalAddrs.S1CIP) with WithDialer option?
 	conn, err := grpc.Dial(e.cAddr.String(), grpc.WithInsecure())
 	if err != nil {
@@ -119,6 +110,20 @@ func (e *enb) run(ctx context.Context) error {
 		log.Println("uConn.ListenAndServe exitted")
 	}()
 
+	// start serving Prometheus, if address is given
+	if e.promAddr != "" {
+		if err := e.runMetricsCollector(); err != nil {
+			return err
+		}
+
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			if err := http.ListenAndServe(e.promAddr, nil); err != nil {
+				log.Println(err)
+			}
+		}()
+	}
+
 	for _, sub := range e.candidateSubs {
 		select {
 		case <-ctx.Done():
@@ -132,10 +137,9 @@ func (e *enb) run(ctx context.Context) error {
 		}
 	}
 
+	// wait for new subscribers to be attached
 	e.attachCh = make(chan *Subscriber)
 	defer close(e.attachCh)
-
-	// wait for new subscribers to be attached
 	for {
 		select {
 		case <-ctx.Done():
@@ -245,6 +249,10 @@ func (e *enb) attach(ctx context.Context, sub *Subscriber) error {
 	rsp, err := e.s1mmeClient.Attach(ctx, req)
 	if err != nil {
 		return err
+	}
+	if e.mc != nil {
+		e.mc.messagesSent.WithLabelValues(e.cAddr.String(), "Attach Request").Inc()
+		e.mc.messagesReceived.WithLabelValues(e.cAddr.String(), "Attach Response").Inc()
 	}
 
 	switch rsp.Cause {
