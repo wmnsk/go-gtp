@@ -18,6 +18,9 @@ import (
 
 func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	if s.mc != nil {
+		s.mc.messagesReceived.WithLabelValues(mmeAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	s11Session := v2.NewSession(mmeAddr, &v2.Subscriber{Location: &v2.Location{}})
 	s11Bearer := s11Session.GetDefaultBearer()
@@ -152,6 +155,9 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	s5Session.AddTEID(s5uFTEID.MustInterfaceType(), s5uFTEID.MustTEID())
 
 	log.Printf("Sent Create Session Request to %s for %s", pgwAddrString, s5Session.IMSI)
+	if s.mc != nil {
+		s.mc.messagesSent.WithLabelValues(mmeAddr.String(), "Create Session Request").Inc()
+	}
 
 	var csRspFromSGW *messages.CreateSessionResponse
 	s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
@@ -213,6 +219,9 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 		s11Conn.RemoveSession(s11Session)
 		return err
 	}
+	if s.mc != nil {
+		s.mc.messagesSent.WithLabelValues(mmeAddr.String(), csRspFromSGW.MessageTypeName()).Inc()
+	}
 
 	s11sgwTEID, err := s11Session.GetTEID(v2.IFTypeS11S4SGWGTPC)
 	if err != nil {
@@ -244,6 +253,9 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 
 func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	if s.mc != nil {
+		s.mc.messagesReceived.WithLabelValues(mmeAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID(), mmeAddr)
 	if err != nil {
@@ -318,6 +330,9 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg 
 	if err := s11Conn.RespondTo(mmeAddr, msg, mbRspFromSGW); err != nil {
 		return err
 	}
+	if s.mc != nil {
+		s.mc.messagesSent.WithLabelValues(mmeAddr.String(), mbRspFromSGW.MessageTypeName()).Inc()
+	}
 
 	log.Printf(
 		"Started listening on U-Plane for Subscriber: %s;\n\tS1-U: %s\n\tS5-U: %s",
@@ -328,6 +343,9 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg 
 
 func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	if s.mc != nil {
+		s.mc.messagesReceived.WithLabelValues(mmeAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
@@ -378,6 +396,9 @@ func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 			"Sent %s with failure code: %d, target subscriber: %s",
 			dsRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI,
 		)
+		if s.mc != nil {
+			s.mc.messagesSent.WithLabelValues(mmeAddr.String(), dsRspFromSGW.MessageTypeName()).Inc()
+		}
 		return err
 	}
 
@@ -396,13 +417,19 @@ func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	}
 
 	log.Printf("Session deleted for Subscriber: %s", s11Session.IMSI)
-	s11Conn.RemoveSession(s11Session)
+	if s.mc != nil {
+		s.mc.messagesSent.WithLabelValues(mmeAddr.String(), dsRspFromSGW.MessageTypeName()).Inc()
+	}
 
+	s11Conn.RemoveSession(s11Session)
 	return nil
 }
 
 func (s *sgw) handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
+	if s.mc != nil {
+		s.mc.messagesReceived.WithLabelValues(mmeAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID(), mmeAddr)
 	if err != nil {

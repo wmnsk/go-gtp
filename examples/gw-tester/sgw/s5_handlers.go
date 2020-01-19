@@ -19,6 +19,9 @@ import (
 
 func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
+	if s.mc != nil {
+		s.mc.messagesReceived.WithLabelValues(pgwAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID(), pgwAddr)
 	if err != nil {
@@ -138,6 +141,9 @@ func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 
 func (s *sgw) handleDeleteSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
+	if s.mc != nil {
+		s.mc.messagesReceived.WithLabelValues(pgwAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID(), pgwAddr)
 	if err != nil {
@@ -161,6 +167,9 @@ func (s *sgw) handleDeleteSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 
 func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg messages.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
+	if s.mc != nil {
+		s.mc.messagesReceived.WithLabelValues(pgwAddr.String(), msg.MessageTypeName()).Inc()
+	}
 
 	s5Session, err := s5cConn.GetSessionByTEID(msg.TEID(), pgwAddr)
 	if err != nil {
@@ -219,6 +228,9 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 		if err := s5cConn.RespondTo(pgwAddr, dbReqFromPGW, dbRspFromSGW); err != nil {
 			return err
 		}
+		if s.mc != nil {
+			s.mc.messagesSent.WithLabelValues(pgwAddr.String(), dbRspFromSGW.MessageTypeName()).Inc()
+		}
 		return err
 	}
 
@@ -231,6 +243,9 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 		)
 		if err := s5cConn.RespondTo(pgwAddr, dbReqFromPGW, dbRspFromSGW); err != nil {
 			return err
+		}
+		if s.mc != nil {
+			s.mc.messagesSent.WithLabelValues(pgwAddr.String(), dbRspFromSGW.MessageTypeName()).Inc()
 		}
 		return err
 	}
@@ -252,6 +267,10 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 		if err := s5cConn.RespondTo(pgwAddr, dbReqFromPGW, dbRspFromSGW); err != nil {
 			return err
 		}
+		if s.mc != nil {
+			s.mc.messagesSent.WithLabelValues(pgwAddr.String(), dbRspFromSGW.MessageTypeName()).Inc()
+		}
+
 		// remove anyway, as P-GW no longer keeps bearer locally
 		s5Session.RemoveBearerByEBI(ebi.MustEPSBearerID())
 		s11Session.RemoveBearerByEBI(ebi.MustEPSBearerID())
@@ -269,6 +288,9 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 	dbRspFromSGW.SetTEID(s5cpgwTEID)
 	if err := s5cConn.RespondTo(pgwAddr, msg, dbRspFromSGW); err != nil {
 		return err
+	}
+	if s.mc != nil {
+		s.mc.messagesSent.WithLabelValues(pgwAddr.String(), dbRspFromSGW.MessageTypeName()).Inc()
 	}
 
 	s5Session.RemoveBearerByEBI(ebi.MustEPSBearerID())

@@ -8,8 +8,10 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 
 	v1 "github.com/wmnsk/go-gtp/v1"
@@ -30,6 +32,9 @@ type sgw struct {
 
 	addedRoutes []*netlink.Route
 	addedRules  []*netlink.Rule
+
+	promAddr string
+	mc       *metricsCollector
 
 	errCh chan error
 }
@@ -74,6 +79,14 @@ func newSGW(cfg *Config) (*sgw, error) {
 	s.s5uIP, _, err = net.SplitHostPort(s.s5uAddr.String())
 	if err != nil {
 		return nil, err
+	}
+
+	if cfg.PromAddr != "" {
+		// validate if the address is valid or not.
+		if _, err = net.ResolveTCPAddr("tcp", cfg.PromAddr); err != nil {
+			return nil, err
+		}
+		s.promAddr = cfg.PromAddr
 	}
 
 	return s, nil
@@ -139,6 +152,20 @@ func (s *sgw) run(ctx context.Context) error {
 
 	if err := s.addRoutes(); err != nil {
 		return err
+	}
+
+	// start serving Prometheus, if address is given
+	if s.promAddr != "" {
+		if err := s.runMetricsCollector(); err != nil {
+			return err
+		}
+
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			if err := http.ListenAndServe(s.promAddr, nil); err != nil {
+				log.Println(err)
+			}
+		}()
 	}
 
 	for {

@@ -18,6 +18,8 @@ type Config struct {
 		S5CAddr string `yaml:"s5c_addr"`
 		S5UAddr string `yaml:"s5u_addr"`
 	} `yaml:"local_addresses"`
+
+	PromAddr string `yaml:"prom_addr"`
 }
 
 func loadConfig(path string) (*Config, error) {

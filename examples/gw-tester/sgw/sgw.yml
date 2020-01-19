@@ -3,3 +3,4 @@ local_addresses:
   s1u_addr: "127.0.0.13:2152"
   s5c_addr: "127.0.1.13:2123"
   s5u_addr: "127.0.0.13:2152"
+prom_addr: "127.0.10.4"
