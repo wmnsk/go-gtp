@@ -7,6 +7,7 @@ package v1
 import (
 	"context"
 	"encoding/binary"
+	"io"
 	"net"
 	"strings"
 	"sync"
@@ -157,7 +158,10 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 
 		n, raddr, err := u.pktConn.ReadFrom(buf)
 		if err != nil {
-			return errors.Errorf("error reading on UPlaneConn %s: %s", u.LocalAddr(), err)
+			if err == io.EOF {
+				return nil
+			}
+			return errors.Errorf("error reading from UPlaneConn %s: %s", u.LocalAddr(), err)
 		}
 
 		// just forward T-PDU instead of passing it to reader if relayer is
@@ -267,8 +271,8 @@ func (u *UPlaneConn) Close() error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	u.msgHandlerMap = defaultHandlerMap
-	close(u.closeCh)
 	u.relayMap = nil
+	close(u.closeCh)
 
 	if u.kernGTPEnabled {
 		if err := netlink.LinkDel(u.GTPLink); err != nil {
@@ -276,8 +280,10 @@ func (u *UPlaneConn) Close() error {
 		}
 	}
 
-	// triggers error in blocking Read() / Write() after 1ms.
-	return u.pktConn.SetDeadline(time.Now().Add(1 * time.Millisecond))
+	if err := u.pktConn.Close(); err != nil {
+		logf("error closing the underlying conn: %s", err)
+	}
+	return nil
 }
 
 // LocalAddr returns the local network address.
