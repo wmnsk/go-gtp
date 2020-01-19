@@ -18,7 +18,8 @@ type Config struct {
 		S1UAddr string `yaml:"s1u_addr"`
 	} `yaml:"local_addresses"`
 
-	MMEAddr string `yaml:"mme_addr"`
+	MMEAddr  string `yaml:"mme_addr"`
+	PromAddr string `yaml:"prom_addr"`
 
 	MCC         string        `yaml:"mcc"`
 	MNC         string        `yaml:"mnc"`

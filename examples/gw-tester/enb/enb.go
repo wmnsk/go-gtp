@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 	"google.golang.org/grpc"
 
@@ -44,6 +45,8 @@ type enb struct {
 	addedAddrs  map[netlink.Link]*netlink.Addr
 	addedRoutes []*netlink.Route
 	addedRules  []*netlink.Rule
+
+	promAddr string
 
 	errCh chan error
 }
@@ -75,10 +78,28 @@ func newENB(cfg *Config) (*enb, error) {
 		return nil, err
 	}
 
+	if cfg.PromAddr != "" {
+		// validate if the address is valid or not.
+		if _, err = net.ResolveTCPAddr("tcp", cfg.PromAddr); err != nil {
+			return nil, err
+		}
+		e.promAddr = cfg.PromAddr
+	}
+
 	return e, nil
 }
 
 func (e *enb) run(ctx context.Context) error {
+	// start serving Prometheus first, if address is given
+	if e.promAddr != "" {
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			if err := http.ListenAndServe(e.promAddr, nil); err != nil {
+				log.Println(err)
+			}
+		}()
+	}
+
 	// TODO: bind local address(cfg.LocalAddrs.S1CIP) with WithDialer option?
 	conn, err := grpc.Dial(e.cAddr.String(), grpc.WithInsecure())
 	if err != nil {
