@@ -10,27 +10,34 @@ import (
 )
 
 var testConn *v2.Conn
+var sessions []*v2.Session
 var dummyAddr net.Addr = &net.UDPAddr{IP: net.IP{0x00, 0x00, 0x00, 0x00}, Port: 2123}
 
 func init() {
-	testConn = &v2.Conn{
-		Sessions: []*v2.Session{
-			v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}),
-			v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567892"}),
-			v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567893"}),
-			v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567894"}),
-		},
+	testConn = v2.NewConn(dummyAddr, 0)
+	sessions = []*v2.Session{
+		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}),
+		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567892"}),
+		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567893"}),
+		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567894"}),
 	}
 
-	for i, sess := range testConn.Sessions {
+	for i, sess := range sessions {
 		_ = sess.Activate()
 		sess.AddTEID(v2.IFTypeS11MMEGTPC, uint32(i+1))
 		testConn.AddSession(sess)
+		testConn.AddTEID(uint32(i+1), sess)
+	}
+}
+
+func TestSessionCount(t *testing.T) {
+	if want, got := testConn.SessionCount(), len(sessions); want != got {
+		t.Errorf("SessionCount is invalid. want: %d, got: %d", want, got)
 	}
 }
 
 func TestGetSessionByIMSI_GetTEID(t *testing.T) {
-	for i := 1; i <= len(testConn.Sessions); i++ {
+	for i := 1; i <= testConn.SessionCount(); i++ {
 		lastDigit := strconv.Itoa(i)
 		sess, err := testConn.GetSessionByIMSI("00101123456789" + lastDigit)
 		if err != nil {
@@ -49,7 +56,7 @@ func TestGetSessionByIMSI_GetTEID(t *testing.T) {
 }
 
 func benchmarkAddSession(numExisitingSessions int, b *testing.B) {
-	benchConn := &v2.Conn{Sessions: []*v2.Session{}}
+	benchConn := v2.NewConn(dummyAddr, 0)
 	for i := 0; i < numExisitingSessions; i++ {
 		imsi := fmt.Sprintf("%015d", i)
 		benchConn.AddSession(v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: imsi}))
@@ -70,7 +77,7 @@ func BenchmarkAddSessionExist10K(b *testing.B) { benchmarkAddSession(1e4, b) }
 // func BenchmarkAddSessionExist1M(b *testing.B)   { benchmarkAddSession(1e6, b) }
 
 func TestGetSessionByTEID(t *testing.T) {
-	for i := 1; i <= len(testConn.Sessions); i++ {
+	for i := 1; i <= testConn.SessionCount(); i++ {
 		sess, err := testConn.GetSessionByTEID(uint32(i), dummyAddr)
 		if err != nil {
 			t.Fatal(err)
@@ -84,7 +91,7 @@ func TestGetSessionByTEID(t *testing.T) {
 }
 
 func TestGetIMSIByTEID(t *testing.T) {
-	for i := 1; i <= len(testConn.Sessions); i++ {
+	for i := 1; i <= testConn.SessionCount(); i++ {
 		imsi, err := testConn.GetIMSIByTEID(uint32(i), dummyAddr)
 		if err != nil {
 			t.Fatal(err)
@@ -99,13 +106,13 @@ func TestGetIMSIByTEID(t *testing.T) {
 
 func TestRemoveSession(t *testing.T) {
 	conn := *testConn // copy testConn
-	conn.RemoveSession(testConn.Sessions[0])
+	conn.RemoveSession(sessions[0])
 
-	if conn.SessionCount() != len(testConn.Sessions)-1 {
-		t.Errorf("Session not removed expectedly: %d, %v", conn.SessionCount(), conn.Sessions)
+	if conn.SessionCount() != len(sessions)-1 {
+		t.Errorf("Session not removed expectedly: %d, %v", conn.SessionCount(), conn.Sessions())
 	}
 
-	for i := 1; i <= len(testConn.Sessions); i++ {
+	for i := 2; i <= testConn.SessionCount(); i++ {
 		sess, err := testConn.GetSessionByTEID(uint32(i), dummyAddr)
 		if err != nil {
 			t.Fatal(err)
@@ -122,11 +129,11 @@ func TestRemoveSessionByIMSI(t *testing.T) {
 	conn := *testConn // copy testConn
 	conn.RemoveSessionByIMSI("001011234567891")
 
-	if conn.SessionCount() != len(testConn.Sessions)-1 {
-		t.Errorf("Session not removed expectedly: %d, %v", conn.SessionCount(), conn.Sessions)
+	if conn.SessionCount() != len(sessions)-1 {
+		t.Errorf("Session not removed expectedly: %d, %v", conn.SessionCount(), conn.Sessions())
 	}
 
-	for i := 1; i <= len(testConn.Sessions); i++ {
+	for i := 2; i <= testConn.SessionCount(); i++ {
 		sess, err := testConn.GetSessionByTEID(uint32(i), dummyAddr)
 		if err != nil {
 			t.Fatal(err)
@@ -136,11 +143,5 @@ func TestRemoveSessionByIMSI(t *testing.T) {
 		if string(sess.IMSI[14]) != lastDigit {
 			t.Errorf("Got wrong session at %d, %s", i, sess.IMSI)
 		}
-	}
-}
-
-func TestSessionCount(t *testing.T) {
-	if want, got := testConn.SessionCount(), len(testConn.Sessions); want != got {
-		t.Errorf("SessionCount is invalid. want: %d, got: %d", want, got)
 	}
 }

@@ -203,7 +203,7 @@ func main() {
 			}()
 		// delete all the sessions after 30 seconds
 		case <-time.After(30 * time.Second):
-			for _, sess := range s11Conn.Sessions {
+			for _, sess := range s11Conn.Sessions() {
 				teid, err := sess.GetTEID(v2.IFTypeS11S4SGWGTPC)
 				if err != nil {
 					errCh <- v2.ErrTEIDNotFound
