@@ -60,12 +60,14 @@ func benchmarkAddSession(numExisitingSessions int, b *testing.B) {
 	}
 }
 
-func BenchmarkAddSessionExist0(b *testing.B)    { benchmarkAddSession(0, b) }
-func BenchmarkAddSessionExist100(b *testing.B)  { benchmarkAddSession(1e2, b) }
-func BenchmarkAddSessionExist1K(b *testing.B)   { benchmarkAddSession(1e3, b) }
-func BenchmarkAddSessionExist10K(b *testing.B)  { benchmarkAddSession(1e4, b) }
-func BenchmarkAddSessionExist100K(b *testing.B) { benchmarkAddSession(1e5, b) }
-func BenchmarkAddSessionExist1M(b *testing.B)   { benchmarkAddSession(1e6, b) }
+func BenchmarkAddSessionExist0(b *testing.B)   { benchmarkAddSession(0, b) }
+func BenchmarkAddSessionExist100(b *testing.B) { benchmarkAddSession(1e2, b) }
+func BenchmarkAddSessionExist1K(b *testing.B)  { benchmarkAddSession(1e3, b) }
+func BenchmarkAddSessionExist10K(b *testing.B) { benchmarkAddSession(1e4, b) }
+
+// TODO: Uncomment after session lookup is changed as currently it takes too long
+// func BenchmarkAddSessionExist100K(b *testing.B) { benchmarkAddSession(1e5, b) }
+// func BenchmarkAddSessionExist1M(b *testing.B)   { benchmarkAddSession(1e6, b) }
 
 func TestGetSessionByTEID(t *testing.T) {
 	for i := 1; i <= len(testConn.Sessions); i++ {
