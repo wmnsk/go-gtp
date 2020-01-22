@@ -1,6 +1,7 @@
 package v2_test
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"testing"
@@ -46,6 +47,27 @@ func TestGetSessionByIMSI_GetTEID(t *testing.T) {
 		}
 	}
 }
+
+func benchmarkAddSession(numExisitingSessions int, b *testing.B) {
+	benchConn := &v2.Conn{Sessions: []*v2.Session{}}
+	for i := 0; i < numExisitingSessions; i++ {
+		imsi := fmt.Sprintf("%015d", i)
+		benchConn.AddSession(v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: imsi}))
+	}
+	b.ResetTimer()
+	for i := 1; i <= b.N; i++ {
+		benchConn.AddSession(v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}))
+	}
+}
+
+func BenchmarkAddSessionExist0(b *testing.B)   { benchmarkAddSession(0, b) }
+func BenchmarkAddSessionExist100(b *testing.B) { benchmarkAddSession(1e2, b) }
+func BenchmarkAddSessionExist1K(b *testing.B)  { benchmarkAddSession(1e3, b) }
+func BenchmarkAddSessionExist10K(b *testing.B) { benchmarkAddSession(1e4, b) }
+
+// TODO: Uncomment after session lookup is changed as currently it takes too long
+// func BenchmarkAddSessionExist100K(b *testing.B) { benchmarkAddSession(1e5, b) }
+// func BenchmarkAddSessionExist1M(b *testing.B)   { benchmarkAddSession(1e6, b) }
 
 func TestGetSessionByTEID(t *testing.T) {
 	for i := 1; i <= len(testConn.Sessions); i++ {
