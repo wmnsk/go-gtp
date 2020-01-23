@@ -811,11 +811,10 @@ func (i *imsiSessionMap) store(imsi string, session *Session) {
 
 func (i *imsiSessionMap) load(imsi string) (*Session, bool) {
 	session, ok := i.syncMap.Load(imsi)
-	if !ok {
-		return nil, false
+	if ok && session != nil {
+		return session.(*Session), true
 	}
-
-	return session.(*Session), true
+	return nil, ok
 }
 
 func (i *imsiSessionMap) delete(imsi string) {
@@ -845,11 +844,10 @@ func (t *teidSessionMap) tryStore(teid uint32, session *Session) bool {
 
 func (t *teidSessionMap) load(teid uint32) (*Session, bool) {
 	session, ok := t.syncMap.Load(teid)
-	if !ok {
-		return nil, false
+	if ok && session != nil {
+		return session.(*Session), true
 	}
-
-	return session.(*Session), true
+	return nil, ok
 }
 
 func (t *teidSessionMap) delete(teid uint32) {
