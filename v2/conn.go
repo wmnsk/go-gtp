@@ -730,10 +730,13 @@ func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
 			continue
 		}
 
-		if _, ok := c.teidSessionMap.load(t); !ok {
-			teid = t
-			break
+		// Try to mark TEID as taken. Fails if something exists
+		if ok := c.teidSessionMap.tryStore(t, nil); !ok {
+			continue
 		}
+
+		teid = t
+		break
 	}
 
 	if teid == 0 {
@@ -834,6 +837,14 @@ func newteidSessionMap() *teidSessionMap {
 
 func (t *teidSessionMap) store(teid uint32, session *Session) {
 	t.syncMap.Store(teid, session)
+}
+
+func (t *teidSessionMap) tryStore(teid uint32, session *Session) bool {
+	_, loaded := t.syncMap.LoadOrStore(teid, session)
+	if loaded {
+		return false
+	}
+	return true
 }
 
 func (t *teidSessionMap) load(teid uint32) (*Session, bool) {
