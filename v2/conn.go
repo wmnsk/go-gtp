@@ -840,10 +840,7 @@ func (t *teidSessionMap) store(teid uint32, session *Session) {
 
 func (t *teidSessionMap) tryStore(teid uint32, session *Session) bool {
 	_, loaded := t.syncMap.LoadOrStore(teid, session)
-	if loaded {
-		return false
-	}
-	return true
+	return !loaded
 }
 
 func (t *teidSessionMap) load(teid uint32) (*Session, bool) {
@@ -857,8 +854,4 @@ func (t *teidSessionMap) load(teid uint32) (*Session, bool) {
 
 func (t *teidSessionMap) delete(teid uint32) {
 	t.syncMap.Delete(teid)
-}
-
-func (t *teidSessionMap) rangeWithFunc(fn func(teid, session interface{}) bool) {
-	t.syncMap.Range(fn)
 }
