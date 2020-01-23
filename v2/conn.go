@@ -756,9 +756,8 @@ func generateRandomUint32() uint32 {
 
 // Bearers returns all the bearers registered in Session.
 func (c *Conn) Sessions() []*Session {
-
 	var ss []*Session
-	c.teidSessionMap.rangeWithFunc(func(k, v interface{}) bool {
+	c.imsiSessionMap.rangeWithFunc(func(k, v interface{}) bool {
 		ss = append(ss, v.(*Session))
 		return true
 	})
