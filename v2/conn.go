@@ -31,6 +31,8 @@ type Conn struct {
 	mu      sync.Mutex
 	laddr   net.Addr
 	pktConn net.PacketConn
+	*imsiSessionMap
+	*teidSessionMap
 
 	validationEnabled bool
 
@@ -47,9 +49,6 @@ type Conn struct {
 	// RestartCounter is the RestartCounter value in Recovery IE, which represents how many
 	// times the GTPv2-C endpoint is restarted.
 	RestartCounter uint8
-
-	// Sessions is a set of sessions exists on the Conn with automatically-assigned IDs.
-	Sessions []*Session
 }
 
 // NewConn creates a new Conn used for server. On client side, use Dial instead.
@@ -57,6 +56,8 @@ func NewConn(laddr net.Addr, counter uint8) *Conn {
 	return &Conn{
 		mu:                sync.Mutex{},
 		laddr:             laddr,
+		imsiSessionMap:    newimsiSessionMap(),
+		teidSessionMap:    newteidSessionMap(),
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		msgHandlerMap:     defaultHandlerMap,
@@ -74,6 +75,8 @@ func NewConn(laddr net.Addr, counter uint8) *Conn {
 func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
+		imsiSessionMap:    newimsiSessionMap(),
+		teidSessionMap:    newteidSessionMap(),
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		msgHandlerMap:     defaultHandlerMap,
@@ -509,6 +512,7 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 				return nil, 0, err
 			}
 			sess.AddTEID(it, teid)
+			c.AddTEID(teid, sess)
 		case ies.BearerContext:
 			switch i.Instance() {
 			case 0:
@@ -648,41 +652,21 @@ func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) er
 
 // GetSessionByTEID returns Session looked up by TEID and sender of the message.
 func (c *Conn) GetSessionByTEID(teid uint32, peer net.Addr) (*Session, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	var session *Session
-	for _, sess := range c.Sessions {
-		if peer.String() != sess.peerAddrString {
-			continue
-		}
-
-		sess.teidMap.rangeWithFunc(func(i, t interface{}) bool {
-			if teid == t {
-				session = sess
-				return false
-			}
-			return true
-		})
-		if session != nil {
-			return session, nil
-		}
+	session, ok := c.teidSessionMap.load(teid)
+	if !ok {
+		return nil, &InvalidTEIDError{TEID: teid}
 	}
-
-	return nil, &InvalidTEIDError{TEID: teid}
+	if peer.String() != session.peerAddrString {
+		return nil, &InvalidTEIDError{TEID: teid}
+	}
+	return session, nil
 }
 
 // GetSessionByIMSI returns Session looked up by IMSI.
 func (c *Conn) GetSessionByIMSI(imsi string) (*Session, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	for _, sess := range c.Sessions {
-		if imsi == sess.IMSI {
-			return sess, nil
-		}
+	if session, ok := c.imsiSessionMap.load(imsi); ok {
+		return session, nil
 	}
-
 	return nil, &UnknownIMSIError{IMSI: imsi}
 }
 
@@ -696,68 +680,34 @@ func (c *Conn) GetIMSIByTEID(teid uint32, peer net.Addr) (string, error) {
 	return sess.IMSI, nil
 }
 
-// AddSession adds a session to c.Sessions.
-// If Session with the same IMSI already exists, it removes the old one and stores the given one.
+// AddTEID adds a session teidSessionMap
+func (c *Conn) AddTEID(teid uint32, session *Session) {
+	c.teidSessionMap.store(teid, session)
+}
+
+// AddSession adds a session imsiSessionMap
 func (c *Conn) AddSession(session *Session) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// TODO: any smarter way?
-	if len(c.Sessions) == 0 {
-		c.Sessions = []*Session{session}
-		return
-	}
-
-	var (
-		newSessions []*Session
-		exists      bool
-	)
-	for _, oldSession := range c.Sessions {
-		if session.IMSI == oldSession.IMSI {
-			exists = true
-			newSessions = append(newSessions, session)
-			continue
-		}
-		newSessions = append(newSessions, oldSession)
-	}
-	if !exists {
-		newSessions = append(newSessions, session)
-	}
-
-	c.Sessions = newSessions
+	c.imsiSessionMap.store(session.IMSI, session)
 }
 
 // RemoveSession removes a session from c.Session.
 // The Session is identified by IMSI.
 func (c *Conn) RemoveSession(session *Session) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	var newSessions []*Session
-	for _, sess := range c.Sessions {
-		if session.IMSI == sess.IMSI {
-			continue
-		}
-		newSessions = append(newSessions, sess)
-	}
-
-	c.Sessions = newSessions
+	c.imsiSessionMap.delete(session.IMSI)
+	session.teidMap.rangeWithFunc(func(k, v interface{}) bool {
+		teid := v.(uint32)
+		c.teidSessionMap.delete(teid)
+		return true
+	})
 }
 
 // RemoveSessionByIMSI removes a session looked up by IMSI.
 func (c *Conn) RemoveSessionByIMSI(imsi string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	var newSessions []*Session
-	for _, sess := range c.Sessions {
-		if imsi == sess.IMSI {
-			continue
-		}
-		newSessions = append(newSessions, sess)
+	sess, ok := c.imsiSessionMap.load(imsi)
+	if !ok {
+		return
 	}
-
-	c.Sessions = newSessions
+	c.RemoveSession(sess)
 }
 
 // NewFTEID creates a new F-TEID with random TEID value that is unique within Conn.
@@ -768,48 +718,66 @@ func (c *Conn) RemoveSessionByIMSI(imsi string) {
 //
 // TODO: optimize performance...
 func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	var teids []uint32
-	for _, sess := range c.Sessions {
-		if teid, ok := sess.teidMap.load(ifType); ok {
-			teids = append(teids, teid)
+	var teid uint32
+	for try := uint32(0); try < 0xffff; try++ {
+		const logEvery = 0xff
+		if try&logEvery == logEvery {
+			logf("Generating NewFTEID crossed tries:%d", try)
 		}
+
+		t := generateRandomUint32()
+		if t == 0 {
+			continue
+		}
+
+		// Try to mark TEID as taken. Fails if something exists
+		if ok := c.teidSessionMap.tryStore(t, nil); !ok {
+			continue
+		}
+
+		teid = t
+		break
 	}
 
-	return ies.NewFullyQualifiedTEID(ifType, generateUniqueUint32(teids), v4, v6)
+	if teid == 0 {
+		return nil
+	}
+	return ies.NewFullyQualifiedTEID(ifType, teid, v4, v6)
 }
 
-func generateUniqueUint32(vals []uint32) uint32 {
+func generateRandomUint32() uint32 {
 	b := make([]byte, 4)
 	if _, err := rand.Read(b); err != nil {
 		return 0
 	}
 
-	generated := binary.BigEndian.Uint32(b)
-	for _, existing := range vals {
-		if generated == existing {
-			return generateUniqueUint32(vals)
-		}
-	}
+	return binary.BigEndian.Uint32(b)
+}
 
-	return generated
+// Bearers returns all the bearers registered in Session.
+func (c *Conn) Sessions() []*Session {
+	var ss []*Session
+	c.imsiSessionMap.rangeWithFunc(func(k, v interface{}) bool {
+		ss = append(ss, v.(*Session))
+		return true
+	})
+
+	return ss
 }
 
 // SessionCount returns the number of sessions registered in Conn.
 //
 // This may have some impact on performance in case of large number of Session exists.
 func (c *Conn) SessionCount() int {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	var count int
-	for _, sess := range c.Sessions {
+	c.imsiSessionMap.rangeWithFunc(func(k, v interface{}) bool {
+		sess := v.(*Session)
 		if sess.IsActive() {
 			count++
 		}
-	}
+		return true
+	})
+
 	return count
 }
 
@@ -817,14 +785,71 @@ func (c *Conn) SessionCount() int {
 //
 // This may have some impact on performance in case of large number of Session and Bearer exist.
 func (c *Conn) BearerCount() int {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	var count int
-	for _, sess := range c.Sessions {
+	c.imsiSessionMap.rangeWithFunc(func(k, v interface{}) bool {
+		sess := v.(*Session)
 		if sess.IsActive() {
 			count += sess.BearerCount()
 		}
-	}
+		return true
+	})
+
 	return count
+}
+
+type imsiSessionMap struct {
+	syncMap sync.Map
+}
+
+func newimsiSessionMap() *imsiSessionMap {
+	return &imsiSessionMap{}
+}
+
+func (i *imsiSessionMap) store(imsi string, session *Session) {
+	i.syncMap.Store(imsi, session)
+}
+
+func (i *imsiSessionMap) load(imsi string) (*Session, bool) {
+	session, ok := i.syncMap.Load(imsi)
+	if ok && session != nil {
+		return session.(*Session), true
+	}
+	return nil, ok
+}
+
+func (i *imsiSessionMap) delete(imsi string) {
+	i.syncMap.Delete(imsi)
+}
+
+func (i *imsiSessionMap) rangeWithFunc(fn func(imsi, session interface{}) bool) {
+	i.syncMap.Range(fn)
+}
+
+type teidSessionMap struct {
+	syncMap sync.Map
+}
+
+func newteidSessionMap() *teidSessionMap {
+	return &teidSessionMap{}
+}
+
+func (t *teidSessionMap) store(teid uint32, session *Session) {
+	t.syncMap.Store(teid, session)
+}
+
+func (t *teidSessionMap) tryStore(teid uint32, session *Session) bool {
+	_, loaded := t.syncMap.LoadOrStore(teid, session)
+	return !loaded
+}
+
+func (t *teidSessionMap) load(teid uint32) (*Session, bool) {
+	session, ok := t.syncMap.Load(teid)
+	if ok && session != nil {
+		return session.(*Session), true
+	}
+	return nil, ok
+}
+
+func (t *teidSessionMap) delete(teid uint32) {
+	t.syncMap.Delete(teid)
 }

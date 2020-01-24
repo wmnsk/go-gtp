@@ -118,7 +118,7 @@ func (s *sGateway) run() error {
 			log.Printf("Warning: %s", errors.WithStack(err))
 		case <-time.After(10 * time.Second):
 			var activeIMSIs []string
-			for _, sess := range s.s11Conn.Sessions {
+			for _, sess := range s.s11Conn.Sessions() {
 				if !sess.IsActive() {
 					continue
 				}

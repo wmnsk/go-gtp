@@ -17,7 +17,7 @@ import (
 	"github.com/wmnsk/go-gtp/v2/messages"
 )
 
-func setup(ctx context.Context) (cliConn, srvConn *v2.Conn, err error) {
+func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn, err error) {
 	cliAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:2123")
 	if err != nil {
 		return nil, nil, err
@@ -27,7 +27,6 @@ func setup(ctx context.Context) (cliConn, srvConn *v2.Conn, err error) {
 		return nil, nil, err
 	}
 
-	doneCh := make(chan struct{})
 	go func() {
 		srvConn = v2.NewConn(srvAddr, 0)
 		srvConn.AddHandler(
@@ -82,12 +81,14 @@ func TestCreateSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	cliConn, srvConn, err := setup(ctx)
+	doneCh := make(chan struct{})
+	rspOK := make(chan struct{})
+
+	cliConn, srvConn, err := setup(ctx, doneCh)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rspOK := make(chan struct{})
 	cliConn.AddHandler(
 		messages.MsgTypeCreateSessionResponse,
 		func(c *v2.Conn, srvAddr net.Addr, msg messages.Message) error {
@@ -144,6 +145,7 @@ func TestCreateSession(t *testing.T) {
 		if count := cliConn.BearerCount(); count != 1 {
 			t.Errorf("wrong BearerCount in cliConn. want %d, got: %d", 1, count)
 		}
+		<-doneCh
 		if count := srvConn.SessionCount(); count != 1 {
 			t.Errorf("wrong SessionCount in srvConn. want %d, got: %d", 1, count)
 		}
