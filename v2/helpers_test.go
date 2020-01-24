@@ -2,6 +2,7 @@ package v2_test
 
 import (
 	"fmt"
+	"math"
 	"net"
 	"strconv"
 	"testing"
@@ -55,23 +56,21 @@ func TestGetSessionByIMSI_GetTEID(t *testing.T) {
 	}
 }
 
-func benchmarkAddSession(numExisitingSessions int, b *testing.B) {
-	benchConn := v2.NewConn(dummyAddr, 0)
-	for i := 0; i < numExisitingSessions; i++ {
-		imsi := fmt.Sprintf("%015d", i)
-		benchConn.AddSession(v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: imsi}))
-	}
-	b.ResetTimer()
-	for i := 1; i <= b.N; i++ {
-		benchConn.AddSession(v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}))
+func BenchmarkAddSession(b *testing.B) {
+	for k := 0.; k < 6; k++ {
+		existingSessions := int(math.Pow(10, k))
+		benchConn := v2.NewConn(dummyAddr, 0)
+		for i := 0; i < existingSessions; i++ {
+			imsi := fmt.Sprintf("%015d", i)
+			benchConn.AddSession(v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: imsi}))
+		}
+		b.Run(fmt.Sprintf("%d", existingSessions), func(b *testing.B) {
+			for i := 1; i <= b.N; i++ {
+				benchConn.AddSession(v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}))
+			}
+		})
 	}
 }
-
-func BenchmarkAddSessionExist0(b *testing.B)    { benchmarkAddSession(0, b) }
-func BenchmarkAddSessionExist100(b *testing.B)  { benchmarkAddSession(1e2, b) }
-func BenchmarkAddSessionExist1K(b *testing.B)   { benchmarkAddSession(1e3, b) }
-func BenchmarkAddSessionExist10K(b *testing.B)  { benchmarkAddSession(1e4, b) }
-func BenchmarkAddSessionExist100K(b *testing.B) { benchmarkAddSession(1e5, b) }
 
 func TestGetSessionByTEID(t *testing.T) {
 	for i := 1; i <= testConn.SessionCount(); i++ {
