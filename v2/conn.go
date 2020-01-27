@@ -696,7 +696,9 @@ func (c *Conn) RemoveSession(session *Session) {
 	c.imsiSessionMap.delete(session.IMSI)
 	session.teidMap.rangeWithFunc(func(k, v interface{}) bool {
 		teid := v.(uint32)
-		c.teidSessionMap.delete(teid)
+		if s, ok := c.teidSessionMap.load(teid); ok && s == session {
+			c.teidSessionMap.delete(teid)
+		}
 		return true
 	})
 }
