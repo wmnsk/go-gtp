@@ -78,7 +78,7 @@ func main() {
 	defer cancel()
 
 	// setup *Conn first to check if the remote endpoint is awaken.
-	s11Conn, err := v2.Dial(ctx, laddr, raddr, 0)
+	s11Conn, err := v2.Dial(ctx, laddr, raddr, 0, []uint8{v2.IFTypeS1UeNodeBGTPU, v2.IFTypeS11MMEGTPC, v2.IFTypeS5S8PGWGTPC})
 	if err != nil {
 		log.Println(err)
 		return

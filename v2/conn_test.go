@@ -28,7 +28,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 	}
 
 	go func() {
-		srvConn = v2.NewConn(srvAddr, 0)
+		srvConn = v2.NewConn(srvAddr, 0, []uint8{})
 		srvConn.AddHandler(
 			messages.MsgTypeCreateSessionRequest,
 			func(c *v2.Conn, cliAddr net.Addr, msg messages.Message) error {
@@ -69,7 +69,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 
 	// XXX - waiting for server to be well-prepared, should consider better way.
 	time.Sleep(1 * time.Second)
-	cliConn, err = v2.Dial(ctx, cliAddr, srvAddr, 0)
+	cliConn, err = v2.Dial(ctx, cliAddr, srvAddr, 0, []uint8{})
 	if err != nil {
 		return nil, nil, err
 	}

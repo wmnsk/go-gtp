@@ -31,6 +31,7 @@ type Conn struct {
 	mu      sync.Mutex
 	laddr   net.Addr
 	pktConn net.PacketConn
+	ifTypes []uint8
 	*imsiSessionMap
 	*teidSessionMap
 
@@ -52,10 +53,11 @@ type Conn struct {
 }
 
 // NewConn creates a new Conn used for server. On client side, use Dial instead.
-func NewConn(laddr net.Addr, counter uint8) *Conn {
+func NewConn(laddr net.Addr, counter uint8, ifTypes []uint8) *Conn {
 	return &Conn{
 		mu:                sync.Mutex{},
 		laddr:             laddr,
+		ifTypes:           ifTypes,
 		imsiSessionMap:    newimsiSessionMap(),
 		teidSessionMap:    newteidSessionMap(),
 		validationEnabled: true,
@@ -72,9 +74,10 @@ func NewConn(laddr net.Addr, counter uint8) *Conn {
 // send to/receive from multiple peers with single laddr.
 //
 // If Echo exchange is unnecessary, use NewConn and ListenAndServe instead.
-func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*Conn, error) {
+func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8, ifTypes []uint8) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
+		ifTypes:           ifTypes,
 		imsiSessionMap:    newimsiSessionMap(),
 		teidSessionMap:    newteidSessionMap(),
 		validationEnabled: true,
@@ -512,7 +515,6 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 				return nil, 0, err
 			}
 			sess.AddTEID(it, teid)
-			c.AddTEID(teid, sess)
 		case ies.BearerContext:
 			switch i.Instance() {
 			case 0:
@@ -680,27 +682,33 @@ func (c *Conn) GetIMSIByTEID(teid uint32, peer net.Addr) (string, error) {
 	return sess.IMSI, nil
 }
 
-// AddTEID adds a session teidSessionMap
-func (c *Conn) AddTEID(teid uint32, session *Session) {
-	c.teidSessionMap.store(teid, session)
-}
-
 // AddSession adds a session imsiSessionMap
 func (c *Conn) AddSession(session *Session) {
 	c.imsiSessionMap.store(session.IMSI, session)
+	for _, ifType := range c.ifTypes {
+		teid, ok := session.teidMap.load(ifType)
+		if !ok {
+			logf("Error: Missing TEID %d for IFType %d in session for IMSI %s",
+				teid, ifType, session.IMSI)
+			continue
+		}
+		c.teidSessionMap.store(teid, session)
+	}
 }
 
 // RemoveSession removes a session from c.Session.
 // The Session is identified by IMSI.
 func (c *Conn) RemoveSession(session *Session) {
 	c.imsiSessionMap.delete(session.IMSI)
-	session.teidMap.rangeWithFunc(func(k, v interface{}) bool {
-		teid := v.(uint32)
-		if s, ok := c.teidSessionMap.load(teid); ok && s == session {
-			c.teidSessionMap.delete(teid)
+	for _, ifType := range c.ifTypes {
+		teid, ok := session.teidMap.load(ifType)
+		if !ok {
+			logf("Error: Missing TEID %d for IFType %d in session for IMSI %s",
+				teid, ifType, session.IMSI)
+			continue
 		}
-		return true
-	})
+		c.teidSessionMap.delete(teid)
+	}
 }
 
 // RemoveSessionByIMSI removes a session looked up by IMSI.
