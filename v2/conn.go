@@ -53,7 +53,7 @@ type Conn struct {
 }
 
 // NewConn creates a new Conn used for server. On client side, use Dial instead.
-func NewConn(laddr net.Addr, counter uint8, ifTypes []uint8) *Conn {
+func NewConn(laddr net.Addr, counter uint8, ifTypes ...uint8) *Conn {
 	return &Conn{
 		mu:                sync.Mutex{},
 		laddr:             laddr,
@@ -74,7 +74,7 @@ func NewConn(laddr net.Addr, counter uint8, ifTypes []uint8) *Conn {
 // send to/receive from multiple peers with single laddr.
 //
 // If Echo exchange is unnecessary, use NewConn and ListenAndServe instead.
-func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8, ifTypes []uint8) (*Conn, error) {
+func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8, ifTypes ...uint8) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
 		ifTypes:           ifTypes,

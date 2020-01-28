@@ -66,7 +66,7 @@ func newSGW(s11, s5c, s1u, s5u net.Addr) (*sGateway, error) {
 	defer cancel()
 
 	var err error
-	s.s11Conn = v2.NewConn(s11, 0, []uint8{v2.IFTypeS11S4SGWGTPC, v2.IFTypeS1USGWGTPU})
+	s.s11Conn = v2.NewConn(s11, 0, v2.IFTypeS11S4SGWGTPC, v2.IFTypeS1USGWGTPU)
 	go func() {
 		if err = s.s11Conn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
@@ -75,7 +75,7 @@ func newSGW(s11, s5c, s1u, s5u net.Addr) (*sGateway, error) {
 	}()
 	log.Printf("Started serving on %s", s11)
 
-	s.s5cConn = v2.NewConn(s5c, 0, []uint8{v2.IFTypeS5S8SGWGTPC, v2.IFTypeS5S8SGWGTPU})
+	s.s5cConn = v2.NewConn(s5c, 0, v2.IFTypeS5S8SGWGTPC, v2.IFTypeS5S8SGWGTPU)
 	go func() {
 		if err = s.s5cConn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
