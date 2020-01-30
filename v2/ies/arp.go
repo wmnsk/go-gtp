@@ -21,7 +21,7 @@ func (i *IE) PreemptionCapability() bool {
 
 	switch i.Type {
 	case AllocationRetensionPriority, BearerQoS:
-		return (i.Payload[0] & 0x40) == 1
+		return (i.Payload[0] & 0x40) != 1
 	default:
 		return false
 	}
@@ -35,7 +35,7 @@ func (i *IE) PriorityLevel() (uint8, error) {
 
 	switch i.Type {
 	case AllocationRetensionPriority, BearerQoS:
-		return i.Payload[0] & 0x3c, nil
+		return (i.Payload[0] & 0x3c) >> 2, nil
 	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
@@ -49,7 +49,7 @@ func (i *IE) PreemptionVulnerability() bool {
 
 	switch i.Type {
 	case AllocationRetensionPriority, BearerQoS:
-		return (i.Payload[0] & 0x01) == 1
+		return (i.Payload[0] & 0x01) != 1
 	default:
 		return false
 	}

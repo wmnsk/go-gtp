@@ -47,7 +47,7 @@ func (i *IE) MBRForUplink() (uint64, error) {
 		if len(i.Payload) < 7 {
 			return 0, io.ErrUnexpectedEOF
 		}
-		return utils.Uint40To64(i.Payload[3:7]), nil
+		return utils.Uint40To64(i.Payload[2:7]), nil
 	case FlowQoS:
 		if len(i.Payload) < 6 {
 			return 0, io.ErrUnexpectedEOF
