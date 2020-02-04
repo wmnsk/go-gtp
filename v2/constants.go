@@ -4,6 +4,12 @@
 
 package v2
 
+// Registered UDP ports
+const (
+	GTPCPort = ":2123"
+	GTPUPort = ":2152"
+)
+
 // InterfaceType definitions.
 const (
 	IFTypeS1UeNodeBGTPU uint8 = iota

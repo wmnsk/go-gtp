@@ -4,6 +4,12 @@
 
 package v1
 
+// Registered UDP ports
+const (
+	GTPCPort = ":2123"
+	GTPUPort = ":2152"
+)
+
 // Cause definitions.
 const (
 	ReqCauseRequestIMSI uint8 = iota
