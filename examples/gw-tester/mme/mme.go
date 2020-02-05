@@ -83,14 +83,11 @@ func newMME(cfg *Config) (*mme, error) {
 
 	// setup S11 conn
 	var err error
-	m.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11Addr)
+	m.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11IP+v2.GTPCPort)
 	if err != nil {
 		return nil, err
 	}
-	m.s11IP, _, err = net.SplitHostPort(cfg.LocalAddrs.S11Addr)
-	if err != nil {
-		return nil, err
-	}
+	m.s11IP = cfg.LocalAddrs.S11IP
 
 	// setup gRPC server
 	m.s1mmeListener, err = net.Listen("tcp", cfg.LocalAddrs.S1CAddr)
@@ -230,7 +227,7 @@ func (m *mme) Attach(ctx context.Context, req *s1mme.AttachRequest) (*s1mme.Atta
 
 		rspCh <- &s1mme.AttachResponse{
 			Cause:   s1mme.Cause_SUCCESS,
-			SgwAddr: m.sgw.s1uIP + ":2152",
+			SgwAddr: m.sgw.s1uIP + v2.GTPUPort,
 			OTei:    s1teid,
 		}
 	}()
@@ -261,7 +258,7 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 		pvi = 1
 	}
 
-	raddr, err := net.ResolveUDPAddr("udp", m.sgw.s11IP+":2123")
+	raddr, err := net.ResolveUDPAddr("udp", m.sgw.s11IP+v2.GTPCPort)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +309,7 @@ func (m *mme) ModifyBearer(sess *v2.Session, sub *Session) (*v2.Bearer, error) {
 	fteid := ies.NewFullyQualifiedTEID(v2.IFTypeS1UeNodeBGTPU, sub.itei, m.enb.s1uIP, "")
 	if _, err = m.s11Conn.ModifyBearer(
 		teid, sess.PeerAddr(), ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
-		ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), fteid, ies.NewPortNumber(2152)),
+		ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), fteid, ies.NewPortNumber(2125)),
 	); err != nil {
 		return nil, err
 	}

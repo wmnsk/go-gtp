@@ -43,9 +43,9 @@ import (
 
 // command-line flags.
 var (
-	s11mme = flag.String("s11mme", "127.0.0.111:2123", "local IP:Port on S11 interface.")
-	s11sgw = flag.String("s11sgw", "127.0.0.112:2123", "S-GW's IP:Port on S11 interface.")
-	s1enb  = flag.String("s1enb", "127.0.0.1:2152", "local IP:Port on S1-U of pseudo eNB.")
+	s11mme = flag.String("s11mme", "127.0.0.111", "local IP on S11 interface.")
+	s11sgw = flag.String("s11sgw", "127.0.0.112", "S-GW's IP on S11 interface.")
+	s1enb  = flag.String("s1enb", "127.0.0.1", "local IP on S1-U of pseudo eNB.")
 )
 
 // variables globally shared.
@@ -63,12 +63,12 @@ func main() {
 	flag.Parse()
 	log.SetPrefix("[MME] ")
 
-	laddr, err := net.ResolveUDPAddr("udp", *s11mme)
+	laddr, err := net.ResolveUDPAddr("udp", *s11mme+v2.GTPCPort)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	raddr, err := net.ResolveUDPAddr("udp", *s11sgw)
+	raddr, err := net.ResolveUDPAddr("udp", *s11sgw+v2.GTPCPort)
 	if err != nil {
 		log.Println(err)
 		return
@@ -95,7 +95,7 @@ func main() {
 	})
 
 	// Listen on eNB S1-U interface.
-	enbUPlaneAddr, err := net.ResolveUDPAddr("udp", *s1enb)
+	enbUPlaneAddr, err := net.ResolveUDPAddr("udp", *s1enb+v2.GTPUPort)
 	if err != nil {
 		log.Println(err)
 		return

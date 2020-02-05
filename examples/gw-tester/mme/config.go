@@ -14,7 +14,7 @@ import (
 type Config struct {
 	LocalAddrs struct {
 		S1CAddr string `yaml:"s1c_addr"`
-		S11Addr string `yaml:"s11_addr"`
+		S11IP   string `yaml:"s11_ip"`
 	} `yaml:"local_addresses"`
 
 	PromAddr string `yaml:"prom_addr"`
