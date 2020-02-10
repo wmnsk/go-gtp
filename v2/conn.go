@@ -32,7 +32,8 @@ type Conn struct {
 	laddr   net.Addr
 	pktConn net.PacketConn
 	*imsiSessionMap
-	*teidSessionMap
+	*iteiSessionMap
+	localIfType uint8
 
 	validationEnabled bool
 
@@ -52,12 +53,13 @@ type Conn struct {
 }
 
 // NewConn creates a new Conn used for server. On client side, use Dial instead.
-func NewConn(laddr net.Addr, counter uint8) *Conn {
+func NewConn(laddr net.Addr, localIfType, counter uint8) *Conn {
 	return &Conn{
 		mu:                sync.Mutex{},
 		laddr:             laddr,
 		imsiSessionMap:    newimsiSessionMap(),
-		teidSessionMap:    newteidSessionMap(),
+		iteiSessionMap:    newiteiSessionMap(),
+		localIfType:       localIfType,
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		msgHandlerMap:     defaultHandlerMap,
@@ -72,11 +74,12 @@ func NewConn(laddr net.Addr, counter uint8) *Conn {
 // send to/receive from multiple peers with single laddr.
 //
 // If Echo exchange is unnecessary, use NewConn and ListenAndServe instead.
-func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*Conn, error) {
+func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
 		imsiSessionMap:    newimsiSessionMap(),
-		teidSessionMap:    newteidSessionMap(),
+		iteiSessionMap:    newiteiSessionMap(),
+		localIfType:       localIfType,
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		msgHandlerMap:     defaultHandlerMap,
@@ -444,7 +447,7 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Messag
 // CreateSession sends a CreateSessionRequest and stores information given with IE
 // in the Session returned.
 //
-// After using this method, users don't need to call AddSession with the session
+// After using this method, users don't need to call RegisterSession with the session
 // returned.
 //
 // By creating a Session with this method, the values in IEs given, such as TEID in F-TEID
@@ -512,7 +515,9 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 				return nil, 0, err
 			}
 			sess.AddTEID(it, teid)
-			c.AddTEID(teid, sess)
+			if it == c.localIfType {
+				c.RegisterSession(teid, sess)
+			}
 		case ies.BearerContext:
 			switch i.Instance() {
 			case 0:
@@ -570,9 +575,6 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 			}
 		}
 	}
-
-	// add session here to registry in case of the response comes super fast.
-	c.AddSession(sess)
 
 	// set IEs into CreateSessionRequest.
 	msg := messages.NewCreateSessionRequest(0, 0, ie...)
@@ -652,7 +654,7 @@ func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) er
 
 // GetSessionByTEID returns Session looked up by TEID and sender of the message.
 func (c *Conn) GetSessionByTEID(teid uint32, peer net.Addr) (*Session, error) {
-	session, ok := c.teidSessionMap.load(teid)
+	session, ok := c.iteiSessionMap.load(teid)
 	if !ok {
 		return nil, &InvalidTEIDError{TEID: teid}
 	}
@@ -680,15 +682,35 @@ func (c *Conn) GetIMSIByTEID(teid uint32, peer net.Addr) (string, error) {
 	return sess.IMSI, nil
 }
 
-// AddTEID adds a session teidSessionMap
+// RegisterSession registers session to Conn with its incoming TEID to
+// distinguish which session the incoming messages are for.
+//
+// Incoming TEID(itei) should be the one with it's local interface type.
+// e.g., if the Conn is used for S-GW on S11 I/F, itei should be the one
+// with interface type=IFTypeS11S4SGWGTPC.
+func (c *Conn) RegisterSession(itei uint32, session *Session) {
+	c.iteiSessionMap.store(itei, session)
+	c.imsiSessionMap.store(session.IMSI, session)
+}
+
+/*
+// AddTEID adds a session with incoming TEID to distinguish which session
+// the incoming messages are for.
+//
+// DEPRECATED: use (*Conn).RegisterSession instead.
 func (c *Conn) AddTEID(teid uint32, session *Session) {
-	c.teidSessionMap.store(teid, session)
+	logf("AddTEID is deprecated. use RegisterSession instead.")
+	c.iteiSessionMap.store(teid, session)
 }
 
 // AddSession adds a session imsiSessionMap
+//
+// DEPRECATED: use (*Conn).RegisterSession instead.
 func (c *Conn) AddSession(session *Session) {
+	logf("AddSession is deprecated. use RegisterSession instead.")
 	c.imsiSessionMap.store(session.IMSI, session)
 }
+*/
 
 // RemoveSession removes a session from c.Session.
 // The Session is identified by IMSI.
@@ -696,8 +718,8 @@ func (c *Conn) RemoveSession(session *Session) {
 	c.imsiSessionMap.delete(session.IMSI)
 	session.teidMap.rangeWithFunc(func(k, v interface{}) bool {
 		teid := v.(uint32)
-		if s, ok := c.teidSessionMap.load(teid); ok && s == session {
-			c.teidSessionMap.delete(teid)
+		if s, ok := c.iteiSessionMap.load(teid); ok && s == session {
+			c.iteiSessionMap.delete(teid)
 		}
 		return true
 	})
@@ -733,7 +755,7 @@ func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
 		}
 
 		// Try to mark TEID as taken. Fails if something exists
-		if ok := c.teidSessionMap.tryStore(t, nil); !ok {
+		if ok := c.iteiSessionMap.tryStore(t, nil); !ok {
 			continue
 		}
 
@@ -827,24 +849,24 @@ func (i *imsiSessionMap) rangeWithFunc(fn func(imsi, session interface{}) bool) 
 	i.syncMap.Range(fn)
 }
 
-type teidSessionMap struct {
+type iteiSessionMap struct {
 	syncMap sync.Map
 }
 
-func newteidSessionMap() *teidSessionMap {
-	return &teidSessionMap{}
+func newiteiSessionMap() *iteiSessionMap {
+	return &iteiSessionMap{}
 }
 
-func (t *teidSessionMap) store(teid uint32, session *Session) {
+func (t *iteiSessionMap) store(teid uint32, session *Session) {
 	t.syncMap.Store(teid, session)
 }
 
-func (t *teidSessionMap) tryStore(teid uint32, session *Session) bool {
+func (t *iteiSessionMap) tryStore(teid uint32, session *Session) bool {
 	_, loaded := t.syncMap.LoadOrStore(teid, session)
 	return !loaded
 }
 
-func (t *teidSessionMap) load(teid uint32) (*Session, bool) {
+func (t *iteiSessionMap) load(teid uint32) (*Session, bool) {
 	session, ok := t.syncMap.Load(teid)
 	if ok && session != nil {
 		return session.(*Session), true
@@ -852,6 +874,6 @@ func (t *teidSessionMap) load(teid uint32) (*Session, bool) {
 	return nil, ok
 }
 
-func (t *teidSessionMap) delete(teid uint32) {
+func (t *iteiSessionMap) delete(teid uint32) {
 	t.syncMap.Delete(teid)
 }

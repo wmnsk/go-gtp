@@ -15,7 +15,7 @@ var sessions []*v2.Session
 var dummyAddr net.Addr = &net.UDPAddr{IP: net.IP{0x00, 0x00, 0x00, 0x00}, Port: 2123}
 
 func init() {
-	testConn = v2.NewConn(dummyAddr, 0)
+	testConn = v2.NewConn(dummyAddr, v2.IFTypeS11MMEGTPC, 0)
 	sessions = []*v2.Session{
 		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}),
 		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567892"}),
@@ -26,8 +26,7 @@ func init() {
 	for i, sess := range sessions {
 		_ = sess.Activate()
 		sess.AddTEID(v2.IFTypeS11MMEGTPC, uint32(i+1))
-		testConn.AddSession(sess)
-		testConn.AddTEID(uint32(i+1), sess)
+		testConn.RegisterSession(uint32(i+1), sess)
 	}
 }
 
@@ -59,14 +58,14 @@ func TestGetSessionByIMSI_GetTEID(t *testing.T) {
 func BenchmarkAddSession(b *testing.B) {
 	for k := 0.; k < 6; k++ {
 		existingSessions := int(math.Pow(10, k))
-		benchConn := v2.NewConn(dummyAddr, 0)
+		benchConn := v2.NewConn(dummyAddr, v2.IFTypeS11MMEGTPC, 0)
 		for i := 0; i < existingSessions; i++ {
 			imsi := fmt.Sprintf("%015d", i)
-			benchConn.AddSession(v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: imsi}))
+			benchConn.RegisterSession(0, v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: imsi}))
 		}
 		b.Run(fmt.Sprintf("%d", existingSessions), func(b *testing.B) {
 			for i := 1; i <= b.N; i++ {
-				benchConn.AddSession(v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}))
+				benchConn.RegisterSession(0, v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}))
 			}
 		})
 	}
