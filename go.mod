@@ -1,14 +1,16 @@
 module github.com/wmnsk/go-gtp
 
-require (
-	github.com/golang/protobuf v1.3.2
-	github.com/google/go-cmp v0.2.0
-	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c
-	github.com/pkg/errors v0.8.1
-	github.com/vishvananda/netlink v1.0.0
-	github.com/vishvananda/netns v0.0.0-20190625233234-7109fa855b0f // indirect
-	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
-	google.golang.org/grpc v1.26.0
-)
-
 go 1.13
+
+require (
+	github.com/golang/protobuf v1.3.3
+	github.com/google/go-cmp v0.2.0
+	github.com/pascaldekloe/goe v0.1.0
+	github.com/pkg/errors v0.9.1
+	github.com/vishvananda/netlink v1.1.0
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
+	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
+	golang.org/x/text v0.3.2 // indirect
+	google.golang.org/genproto v0.0.0-20200210034751-acff78025515 // indirect
+	google.golang.org/grpc v1.27.1
+)
