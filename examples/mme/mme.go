@@ -164,7 +164,7 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 				if err != nil {
 					return err
 				}
-				sgwUAddr, err := net.ResolveUDPAddr("udp", ip+":2152")
+				sgwUAddr, err := net.ResolveUDPAddr("udp", ip+v2.GTPUPort)
 				if err != nil {
 					return err
 				}

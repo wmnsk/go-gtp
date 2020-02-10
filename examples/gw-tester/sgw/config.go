@@ -13,10 +13,10 @@ import (
 // Config is a configurations loaded from yaml.
 type Config struct {
 	LocalAddrs struct {
-		S11Addr string `yaml:"s11_addr"`
-		S1UAddr string `yaml:"s1u_addr"`
-		S5CAddr string `yaml:"s5c_addr"`
-		S5UAddr string `yaml:"s5u_addr"`
+		S11IP string `yaml:"s11_ip"`
+		S1UIP string `yaml:"s1u_ip"`
+		S5CIP string `yaml:"s5c_ip"`
+		S5UIP string `yaml:"s5u_ip"`
 	} `yaml:"local_addresses"`
 
 	PromAddr string `yaml:"prom_addr"`

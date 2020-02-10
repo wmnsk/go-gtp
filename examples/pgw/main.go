@@ -34,15 +34,15 @@ import (
 
 // command-line arguments
 var (
-	s5c = flag.String("s5c", "127.0.0.52:2123", "IP Address:Port for S5-C interface.")
-	s5u = flag.String("s5u", "127.0.0.4:2152", "IP Address:Port for S5-U interface.")
+	s5c = flag.String("s5c", "127.0.0.52", "IP for S5-C interface.")
+	s5u = flag.String("s5u", "127.0.0.4", "IP for S5-U interface.")
 )
 
 func main() {
 	flag.Parse()
 	log.SetPrefix("[P-GW] ")
 
-	s5cAddr, err := net.ResolveUDPAddr("udp", *s5c)
+	s5cAddr, err := net.ResolveUDPAddr("udp", *s5c+v2.GTPCPort)
 	if err != nil {
 		log.Println(err)
 		return
@@ -67,7 +67,7 @@ func main() {
 		messages.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
 	})
 
-	s5uAddr, err := net.ResolveUDPAddr("udp", *s5u)
+	s5uAddr, err := net.ResolveUDPAddr("udp", *s5u+v2.GTPUPort)
 	if err != nil {
 		log.Println(err)
 		return

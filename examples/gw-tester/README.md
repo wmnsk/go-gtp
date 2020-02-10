@@ -115,8 +115,8 @@ These values are used to identify eNB. Some of them are just to set inside the p
 
 | config     | type of value | description                        |
 |------------|---------------|------------------------------------|
-| `s1c_ip`   | string        | local IP/Port for S1-MME interface |
-| `s1u_addr` | string        | local IP/Port for S1-U interface   |
+| `s1c_ip`   | string        | local IP for S1-MME interface      |
+| `s1u_ip`   | string        | local IP for S1-U interface        |
 
 #### Subscribers
 
@@ -154,7 +154,7 @@ These values are used to identify MME. Some of them are just to set inside the p
 | config     | type of value | description                        |
 |------------|---------------|------------------------------------|
 | `s1c_addr` | string        | local IP/Port for S1-MME interface |
-| `s11_addr` | string        | local IP/Port for S11 interface    |
+| `s11_ip`   | string        | local IP for S11 interface         |
 
 #### Gateway IPs
 
@@ -173,10 +173,10 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 
 | config      | type of value | description                        |
 |-------------|---------------|------------------------------------|
-| `s11_addr`  | string        | local IP/Port for S11 interface    |
-| `s1u_addr`  | string        | local IP/Port for S1-U interface   |
-| `s5c_addr`  | string        | local IP/Port for S5-C interface   |
-| `s5u_addr`  | string        | local IP/Port for S5-U interface   |
+| `s11_ip`    | string        | local IP for S11 interface         |
+| `s1u_ip`    | string        | local IP for S1-U interface        |
+| `s5c_ip`    | string        | local IP for S5-C interface        |
+| `s5u_ip`    | string        | local IP for S5-U interface        |
 | `prom_addr` | string        | IP/Port of MME to serve Prometheus |
 
 ### P-GW
@@ -195,8 +195,8 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 
 | config     | type of value | description                      |
 |------------|---------------|----------------------------------|
-| `s5c_addr` | string        | local IP/Port for S5-C interface |
-| `s5u_addr` | string        | local IP/Port for S5-U interface |
+| `s5c_ip`   | string        | local IP for S5-C interface      |
+| `s5u_ip`   | string        | local IP for S5-U interface      |
 | `sgi_ip`   | string        | local IP for SGi interface       |
 
 ## Other Features

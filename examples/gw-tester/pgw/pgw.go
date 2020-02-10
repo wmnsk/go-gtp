@@ -38,8 +38,8 @@ type pgw struct {
 
 func newPGW(cfg *Config) (*pgw, error) {
 	p := &pgw{
-		s5c:   cfg.LocalAddrs.S5CAddr,
-		s5u:   cfg.LocalAddrs.S5UAddr,
+		s5c:   cfg.LocalAddrs.S5CIP + v2.GTPCPort,
+		s5u:   cfg.LocalAddrs.S5UIP + v2.GTPUPort,
 		sgiIF: cfg.SGiIFName,
 
 		errCh: make(chan error, 1),

@@ -46,7 +46,7 @@ Examples works as it is by `go build` and executing commands in the following wa
 ./pgw
 
 // on terminal #2
-./pgw -s5c 127.0.0.53:2123 -s5u 127.0.0.5:2152
+./pgw -s5c 127.0.0.53 -s5u 127.0.0.5
 ```
 
 3. Start S-GW on terminal #3

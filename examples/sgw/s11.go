@@ -33,7 +33,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		if err != nil {
 			return err
 		}
-		pgwAddrString = ip + ":2123"
+		pgwAddrString = ip + v2.GTPCPort
 
 		teid, err := ie.TEID()
 		if err != nil {
@@ -441,7 +441,7 @@ func handleFTEIDU(ie *ies.IE, session *v2.Session, bearer *v2.Bearer) error {
 	if err != nil {
 		return err
 	}
-	addr, err := net.ResolveUDPAddr("udp", ip+":2152")
+	addr, err := net.ResolveUDPAddr("udp", ip+v2.GTPUPort)
 	if err != nil {
 		return err
 	}

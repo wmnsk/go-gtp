@@ -3,7 +3,7 @@ mnc: "01"
 apn: "gw-tester.go-gtp.example"
 local_addresses:
   s1c_addr: "127.0.1.12:36412"
-  s11_addr: "127.0.1.12:2123"
+  s11_ip: "127.0.1.12"
 sgw_s11_ip: "127.0.1.13"
 pgw_s5c_ip: "127.0.1.14"
 prom_addr: "127.0.10.2:58080"

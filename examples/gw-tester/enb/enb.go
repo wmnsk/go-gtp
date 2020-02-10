@@ -69,7 +69,7 @@ func newENB(cfg *Config) (*enb, error) {
 	}
 
 	var err error
-	e.uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UAddr)
+	e.uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UIP+v1.GTPUPort)
 	if err != nil {
 		return nil, err
 	}

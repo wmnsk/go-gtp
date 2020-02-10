@@ -18,11 +18,11 @@ import (
 )
 
 func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn, err error) {
-	cliAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:2123")
+	cliAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1"+v2.GTPCPort)
 	if err != nil {
 		return nil, nil, err
 	}
-	srvAddr, err := net.ResolveUDPAddr("udp", "127.0.0.2:2123")
+	srvAddr, err := net.ResolveUDPAddr("udp", "127.0.0.2"+v2.GTPCPort)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -92,7 +92,7 @@ func TestCreateSession(t *testing.T) {
 	cliConn.AddHandler(
 		messages.MsgTypeCreateSessionResponse,
 		func(c *v2.Conn, srvAddr net.Addr, msg messages.Message) error {
-			if srvAddr.String() != "127.0.0.2:2123" {
+			if srvAddr.String() != "127.0.0.2"+v2.GTPCPort {
 				t.Errorf("invalid server address: %s", srvAddr)
 			}
 			if msg.Sequence() != cliConn.SequenceNumber() {

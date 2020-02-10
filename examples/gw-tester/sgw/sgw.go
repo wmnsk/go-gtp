@@ -45,7 +45,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 	}
 
 	var err error
-	s.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11Addr)
+	s.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11IP+v2.GTPCPort)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 		return nil, err
 	}
 
-	s.s5cAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5CAddr)
+	s.s5cAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5CIP+v2.GTPCPort)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 		return nil, err
 	}
 
-	s.s1uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UAddr)
+	s.s1uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UIP+v2.GTPUPort)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 		return nil, err
 	}
 
-	s.s5uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5UAddr)
+	s.s5uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5UIP+v2.GTPUPort)
 	if err != nil {
 		return nil, err
 	}
