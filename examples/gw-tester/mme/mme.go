@@ -119,7 +119,7 @@ func (m *mme) run(ctx context.Context) error {
 	}()
 	log.Printf("Started serving S1-MME on: %s", m.s1mmeListener.Addr())
 
-	m.s11Conn = v2.NewConn(m.s11Addr, 0)
+	m.s11Conn = v2.NewConn(m.s11Addr, v2.IFTypeS11MMEGTPC, 0)
 	go func() {
 		if err := m.s11Conn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
@@ -234,6 +234,7 @@ func (m *mme) Attach(ctx context.Context, req *s1mme.AttachRequest) (*s1mme.Atta
 
 	select {
 	case err := <-errCh:
+		log.Println(err)
 		return nil, err
 	case rsp := <-rspCh:
 		return rsp, nil
@@ -262,6 +263,8 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	iFTEID := m.s11Conn.NewFTEID(v2.IFTypeS11MMEGTPC, m.s11IP, "")
 	session, _, err := m.s11Conn.CreateSession(
 		raddr,
 		ies.NewIMSI(sess.IMSI),
@@ -273,7 +276,7 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 		),
 		ies.NewRATType(v2.RATTypeEUTRAN),
 		ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
-		m.s11Conn.NewFTEID(v2.IFTypeS11MMEGTPC, m.s11IP, ""),
+		iFTEID,
 		m.s11Conn.NewFTEID(v2.IFTypeS5S8PGWGTPC, m.pgw.s5cIP, "").WithInstance(1),
 		ies.NewAccessPointName(m.apn),
 		ies.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
@@ -296,7 +299,7 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 		m.mc.messagesSent.WithLabelValues(raddr.String(), "Create Session Request").Inc()
 	}
 
-	m.s11Conn.AddSession(session)
+	//m.s11Conn.RegisterSession(iFTEID.MustTEID(), session)
 	return session, nil
 }
 
@@ -308,7 +311,7 @@ func (m *mme) ModifyBearer(sess *v2.Session, sub *Session) (*v2.Bearer, error) {
 
 	fteid := ies.NewFullyQualifiedTEID(v2.IFTypeS1UeNodeBGTPU, sub.itei, m.enb.s1uIP, "")
 	if _, err = m.s11Conn.ModifyBearer(
-		teid, sess.PeerAddr(), ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
+		teid, sess, ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 		ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), fteid, ies.NewPortNumber(2125)),
 	); err != nil {
 		return nil, err
@@ -316,6 +319,7 @@ func (m *mme) ModifyBearer(sess *v2.Session, sub *Session) (*v2.Bearer, error) {
 	if m.mc != nil {
 		m.mc.messagesSent.WithLabelValues(sess.PeerAddr().String(), "Modify Bearer Request").Inc()
 	}
+	log.Println("WOW")
 
 	return nil, nil
 }

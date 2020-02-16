@@ -189,7 +189,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	if err := session.Activate(); err != nil {
 		return err
 	}
-	c.AddSession(session)
+	c.RegisterSession(s5pgwTEID, session)
 
 	if err := p.setupUPlane(net.ParseIP(s5sgwuIP), net.ParseIP(bearer.SubscriberIP), oteiU, s5uFTEID.MustTEID()); err != nil {
 		return err

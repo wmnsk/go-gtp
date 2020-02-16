@@ -130,7 +130,9 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	} else {
 		return &v2.RequiredIEMissingError{Type: ies.RATType}
 	}
-	s11Conn.AddSession(s11Session)
+	s11sgwFTEID := s11Conn.NewFTEID(v2.IFTypeS11S4SGWGTPC, s.s11IP, "")
+	s11sgwTEID := s11sgwFTEID.MustTEID()
+	s11Conn.RegisterSession(s11sgwTEID, s11Session)
 
 	s5cFTEID := s.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPC, s.s5cIP, "")
 	s5uFTEID := s.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s.s5uIP, "").WithInstance(2)
@@ -203,17 +205,16 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	}
 
 	// if everything in CreateSessionResponse seems OK, relay it to MME.
-	senderFTEID := s11Conn.NewFTEID(v2.IFTypeS11S4SGWGTPC, s.s11IP, "")
 	s1usgwFTEID := s11Conn.NewFTEID(v2.IFTypeS1USGWGTPU, s.s1uIP, "")
 	csRspFromSGW = csRspFromPGW
-	csRspFromSGW.SenderFTEIDC = senderFTEID
+	csRspFromSGW.SenderFTEIDC = s11sgwFTEID
 	csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedCSID(s.s1uIP, 1).WithInstance(1)
 	csRspFromSGW.BearerContextsCreated.Add(s1usgwFTEID)
 	csRspFromSGW.BearerContextsCreated.Remove(ies.ChargingID, 0)
 	csRspFromSGW.SetTEID(s11mmeTEID)
 	csRspFromSGW.SetLength()
 
-	s11Session.AddTEID(senderFTEID.MustInterfaceType(), senderFTEID.MustTEID())
+	s11Session.AddTEID(s11sgwFTEID.MustInterfaceType(), s11sgwTEID)
 	s11Session.AddTEID(s1usgwFTEID.MustInterfaceType(), s1usgwFTEID.MustTEID())
 	if err := s11Conn.RespondTo(mmeAddr, csReqFromMME, csRspFromSGW); err != nil {
 		s11Conn.RemoveSession(s11Session)
@@ -223,11 +224,6 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 		s.mc.messagesSent.WithLabelValues(mmeAddr.String(), csRspFromSGW.MessageTypeName()).Inc()
 	}
 
-	s11sgwTEID, err := s11Session.GetTEID(v2.IFTypeS11S4SGWGTPC)
-	if err != nil {
-		s11Conn.RemoveSession(s11Session)
-		return err
-	}
 	s5cpgwTEID, err := s5Session.GetTEID(v2.IFTypeS5S8PGWGTPC)
 	if err != nil {
 		s11Conn.RemoveSession(s11Session)
@@ -368,8 +364,7 @@ func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	}
 
 	seq, err := s.s5cConn.DeleteSession(
-		s5cpgwTEID,
-		s5Session.PeerAddr(),
+		s5cpgwTEID, s5Session,
 		ies.NewEPSBearerID(s5Session.GetDefaultBearer().EBI),
 	)
 	if err != nil {

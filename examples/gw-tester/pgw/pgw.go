@@ -67,7 +67,7 @@ func (p *pgw) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	p.cConn = v2.NewConn(cAddr, 0)
+	p.cConn = v2.NewConn(cAddr, v2.IFTypeS5S8PGWGTPC, 0)
 	go func() {
 		if err := p.cConn.ListenAndServe(ctx); err != nil {
 			log.Println(err)

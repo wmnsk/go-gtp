@@ -251,7 +251,7 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 	}
 
 	// forward to MME
-	seq, err := s.s11Conn.DeleteBearer(s11mmeTEID, s11Session.PeerAddr(), ebi)
+	seq, err := s.s11Conn.DeleteBearer(s11mmeTEID, s11Session, ebi)
 	if err != nil {
 		return err
 	}

@@ -93,7 +93,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 }
 
 func (s *sgw) run(ctx context.Context) error {
-	s.s11Conn = v2.NewConn(s.s11Addr, 0)
+	s.s11Conn = v2.NewConn(s.s11Addr, v2.IFTypeS11S4SGWGTPC, 0)
 	go func() {
 		if err := s.s11Conn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
@@ -102,7 +102,7 @@ func (s *sgw) run(ctx context.Context) error {
 	}()
 	log.Printf("Started serving S11 on %s", s.s11Addr)
 
-	s.s5cConn = v2.NewConn(s.s5cAddr, 0)
+	s.s5cConn = v2.NewConn(s.s5cAddr, v2.IFTypeS5S8SGWGTPC, 0)
 	go func() {
 		if err := s.s5cConn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
