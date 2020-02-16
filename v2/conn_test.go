@@ -67,13 +67,14 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 						return err
 					}
 					session.AddTEID(ifType, otei)
-					c.RegisterSession(otei, session)
 				} else {
 					return &v2.RequiredIEMissingError{Type: ies.IMSI}
 				}
 
+				fTEID := srvConn.NewFTEID(v2.IFTypeS11S4SGWGTPC, "127.0.0.2", "")
+				srvConn.RegisterSession(fTEID.MustTEID(), session)
 				csRsp := messages.NewCreateSessionResponse(
-					otei, msg.Sequence(), ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+					otei, msg.Sequence(), ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil), fTEID,
 				)
 				if err := c.RespondTo(cliAddr, csReq, csRsp); err != nil {
 					return err
@@ -143,15 +144,39 @@ func TestCreateSession(t *testing.T) {
 						Msg:     "something went wrong",
 					}
 				}
-
-				if err := session.Activate(); err != nil {
-					return err
-				}
-				rspOK <- struct{}{}
 			} else {
 				return &v2.RequiredIEMissingError{Type: ies.Cause}
 			}
 
+			if fteidIE := csRsp.SenderFTEIDC; fteidIE != nil {
+				it, err := fteidIE.InterfaceType()
+				if err != nil {
+					return err
+				}
+				if it != v2.IFTypeS11S4SGWGTPC {
+					return errors.Errorf("invalid InterfaceType: %v", it)
+				}
+				otei, err := fteidIE.TEID()
+				if err != nil {
+					return err
+				}
+				session.AddTEID(it, otei)
+
+				ip, err := fteidIE.IPAddress()
+				if err != nil {
+					return err
+				}
+				if ip != "127.0.0.2" {
+					return errors.Errorf("unexpected IP in F-TEID: %s", ip)
+				}
+			} else {
+				return &v2.RequiredIEMissingError{Type: ies.Cause}
+			}
+
+			if err := session.Activate(); err != nil {
+				return err
+			}
+			rspOK <- struct{}{}
 			return nil
 		},
 	)
