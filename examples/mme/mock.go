@@ -66,7 +66,7 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 			return v2.ErrTEIDNotFound
 		}
 		// send Delete Session Request to cleanup sessions in S/P-GW.
-		if _, err := c.DeleteSession(teid, sess.PeerAddr()); err != nil {
+		if _, err := c.DeleteSession(teid, sess); err != nil {
 			return errors.Wrap(err, "got something unexpected")
 		}
 		c.RemoveSession(sess)
@@ -85,7 +85,7 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 		pvi = 1
 	}
 	localIP := strings.Split(c.LocalAddr().String(), ":")[0]
-	session, _, err := c.CreateSession(
+	_, _, err = c.CreateSession(
 		raddr,
 		ies.NewIMSI(sub.IMSI),
 		ies.NewMSISDN(sub.MSISDN),
@@ -116,7 +116,6 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 		return err
 	}
 
-	c.AddSession(session)
 	return nil
 }
 

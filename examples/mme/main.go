@@ -78,7 +78,7 @@ func main() {
 	defer cancel()
 
 	// setup *Conn first to check if the remote endpoint is awaken.
-	s11Conn, err := v2.Dial(ctx, laddr, raddr, 0)
+	s11Conn, err := v2.Dial(ctx, laddr, raddr, v2.IFTypeS11MMEGTPC, 0)
 	if err != nil {
 		log.Println(err)
 		return
@@ -179,8 +179,7 @@ func main() {
 				}
 
 				if _, err := s11Conn.ModifyBearer(
-					teid,
-					sess.PeerAddr(),
+					teid, sess,
 					ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 					ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), enbFTEID),
 				); err != nil {
@@ -209,7 +208,7 @@ func main() {
 					errCh <- v2.ErrTEIDNotFound
 					return
 				}
-				if _, err := s11Conn.DeleteSession(teid, sess.PeerAddr()); err != nil {
+				if _, err := s11Conn.DeleteSession(teid, sess); err != nil {
 					log.Printf("Warning: %s", err)
 				}
 				delWG.Add(1)

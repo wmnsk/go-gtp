@@ -197,12 +197,12 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 	if err != nil {
 		return err
 	}
+	c.RegisterSession(s5pgwTEID, session)
 
 	// don't forget to activate and add session created to the session list
 	if err := session.Activate(); err != nil {
 		return err
 	}
-	c.AddSession(session)
 
 	go func() {
 		buf := make([]byte, 1500)

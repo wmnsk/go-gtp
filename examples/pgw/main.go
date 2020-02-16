@@ -52,7 +52,7 @@ func main() {
 	defer cancel()
 
 	// start listening on the specified IP:Port.
-	s5cConn := v2.NewConn(s5cAddr, 0)
+	s5cConn := v2.NewConn(s5cAddr, v2.IFTypeS5S8PGWGTPC, 0)
 	go func() {
 		if err := s5cConn.ListenAndServe(ctx); err != nil {
 			log.Println(err)

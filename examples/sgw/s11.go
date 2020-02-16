@@ -131,7 +131,14 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	} else {
 		return &v2.RequiredIEMissingError{Type: ies.RATType}
 	}
-	s11Conn.AddSession(s11Session)
+
+	s11IP, _, err := net.SplitHostPort(*s11)
+	if err != nil {
+		return errors.Wrap(err, "failed to get IP for S11")
+	}
+	senderFTEID := s11Conn.NewFTEID(v2.IFTypeS11S4SGWGTPC, s11IP, "")
+	s11sgwTEID := senderFTEID.MustTEID()
+	s11Conn.RegisterSession(s11sgwTEID, s11Session)
 
 	s5cIP := laddr.IP.String()
 	s5uIP, _, err := net.SplitHostPort(*s5u)
@@ -159,7 +166,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return err
 	}
 	s5Session.AddTEID(s5uFTEID.MustInterfaceType(), s5uFTEID.MustTEID())
-	sgw.s5cConn.AddSession(s5Session)
+	sgw.s5cConn.RegisterSession(s5cFTEID.MustTEID(), s5Session)
 
 	sgw.loggerCh <- fmt.Sprintf("Sent Create Session Request to %s for %s", pgwAddrString, s5Session.IMSI)
 
@@ -198,16 +205,10 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return &v2.UnexpectedTypeError{Msg: message}
 	}
 	// if everything in CreateSessionResponse seems OK, relay it to MME.
-	s11IP, _, err := net.SplitHostPort(*s11)
-	if err != nil {
-		s11Conn.RemoveSession(s11Session)
-		return errors.Wrap(err, "failed to get IP for S11")
-	}
 	s1uIP, _, err := net.SplitHostPort(*s1u)
 	if err != nil {
 		return errors.Wrap(err, "failed to get IP for S1-U")
 	}
-	senderFTEID := s11Conn.NewFTEID(v2.IFTypeS11S4SGWGTPC, s11IP, "")
 	s1usgwFTEID := s11Conn.NewFTEID(v2.IFTypeS1USGWGTPU, s1uIP, "")
 	csRspFromSGW = csRspFromPGW
 	csRspFromSGW.SenderFTEIDC = senderFTEID
@@ -221,14 +222,9 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		s11Conn.RemoveSession(s11Session)
 		return err
 	}
-	s11Session.AddTEID(senderFTEID.MustInterfaceType(), senderFTEID.MustTEID())
+	s11Session.AddTEID(senderFTEID.MustInterfaceType(), s11sgwTEID)
 	s11Session.AddTEID(s1usgwFTEID.MustInterfaceType(), s1usgwFTEID.MustTEID())
 
-	s11sgwTEID, err := s11Session.GetTEID(v2.IFTypeS11S4SGWGTPC)
-	if err != nil {
-		s11Conn.RemoveSession(s11Session)
-		return err
-	}
 	s5cpgwTEID, err := s5Session.GetTEID(v2.IFTypeS5S8PGWGTPC)
 	if err != nil {
 		s11Conn.RemoveSession(s11Session)
@@ -359,8 +355,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	}
 
 	seq, err := sgw.s5cConn.DeleteSession(
-		s5cpgwTEID,
-		s5Session.PeerAddr(),
+		s5cpgwTEID, s5Session,
 		ies.NewEPSBearerID(s5Session.GetDefaultBearer().EBI),
 	)
 	if err != nil {
