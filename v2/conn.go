@@ -587,12 +587,7 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 }
 
 // DeleteSession sends a DeleteSessionRequest with TEID and IEs given.
-func (c *Conn) DeleteSession(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
-	sess, err := c.GetSessionByTEID(teid, raddr)
-	if err != nil {
-		return 0, err
-	}
-
+func (c *Conn) DeleteSession(teid uint32, sess *Session, ie ...*ies.IE) (uint32, error) {
 	msg := messages.NewDeleteSessionRequest(teid, 0, ie...)
 
 	seq, err := c.SendMessageTo(msg, sess.peerAddr)
@@ -603,12 +598,7 @@ func (c *Conn) DeleteSession(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32
 }
 
 // ModifyBearer sends a ModifyBearerRequest with TEID and IEs given..
-func (c *Conn) ModifyBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
-	sess, err := c.GetSessionByTEID(teid, raddr)
-	if err != nil {
-		return 0, err
-	}
-
+func (c *Conn) ModifyBearer(teid uint32, sess *Session, ie ...*ies.IE) (uint32, error) {
 	msg := messages.NewModifyBearerRequest(teid, 0, ie...)
 
 	seq, err := c.SendMessageTo(msg, sess.peerAddr)
@@ -619,12 +609,7 @@ func (c *Conn) ModifyBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32,
 }
 
 // DeleteBearer sends a DeleteBearerRequest TEID and with IEs given.
-func (c *Conn) DeleteBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
-	sess, err := c.GetSessionByTEID(teid, raddr)
-	if err != nil {
-		return 0, err
-	}
-
+func (c *Conn) DeleteBearer(teid uint32, sess *Session, ie ...*ies.IE) (uint32, error) {
 	msg := messages.NewDeleteBearerRequest(teid, 0, ie...)
 
 	seq, err := c.SendMessageTo(msg, sess.peerAddr)
