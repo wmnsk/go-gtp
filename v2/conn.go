@@ -691,6 +691,8 @@ func (c *Conn) GetIMSIByTEID(teid uint32, peer net.Addr) (string, error) {
 func (c *Conn) RegisterSession(itei uint32, session *Session) {
 	c.iteiSessionMap.store(itei, session)
 	c.imsiSessionMap.store(session.IMSI, session)
+
+	session.AddTEID(c.localIfType, itei)
 }
 
 /*

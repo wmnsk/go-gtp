@@ -106,6 +106,12 @@ func (s *Session) UpdatePeerAddr(peer net.Addr) {
 }
 
 // AddTEID adds TEID to session with InterfaceType.
+//
+// This is used to keep TEIDs of any interface types that may be used later,
+// including the ones that are assigned to U-Plane.
+//
+// For incoming TEID of local interface type, (*Conn).RegisterSession does that
+// instead of users but it is safe to call it.
 func (s *Session) AddTEID(ifType uint8, teid uint32) {
 	s.teidMap.store(ifType, teid)
 }
