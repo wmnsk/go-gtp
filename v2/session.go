@@ -296,12 +296,6 @@ func (t *teidMap) load(ifType uint8) (uint32, bool) {
 	return teid.(uint32), true
 }
 
-/*
-func (t *teidMap) rangeWithFunc(fn func(ifType, teid interface{}) bool) {
-	t.syncMap.Range(fn)
-}
-*/
-
 type bearerMap struct {
 	syncMap sync.Map
 }

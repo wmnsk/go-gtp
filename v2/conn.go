@@ -680,25 +680,6 @@ func (c *Conn) RegisterSession(itei uint32, session *Session) {
 	session.AddTEID(c.localIfType, itei)
 }
 
-/*
-// AddTEID adds a session with incoming TEID to distinguish which session
-// the incoming messages are for.
-//
-// DEPRECATED: use (*Conn).RegisterSession instead.
-func (c *Conn) AddTEID(teid uint32, session *Session) {
-	logf("AddTEID is deprecated. use RegisterSession instead.")
-	c.iteiSessionMap.store(teid, session)
-}
-
-// AddSession adds a session imsiSessionMap
-//
-// DEPRECATED: use (*Conn).RegisterSession instead.
-func (c *Conn) AddSession(session *Session) {
-	logf("AddSession is deprecated. use RegisterSession instead.")
-	c.imsiSessionMap.store(session.IMSI, session)
-}
-*/
-
 // RemoveSession removes a session registered in a Conn.
 func (c *Conn) RemoveSession(session *Session) {
 	c.imsiSessionMap.delete(session.IMSI)

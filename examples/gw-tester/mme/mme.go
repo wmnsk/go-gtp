@@ -234,7 +234,6 @@ func (m *mme) Attach(ctx context.Context, req *s1mme.AttachRequest) (*s1mme.Atta
 
 	select {
 	case err := <-errCh:
-		log.Println(err)
 		return nil, err
 	case rsp := <-rspCh:
 		return rsp, nil
@@ -299,7 +298,6 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 		m.mc.messagesSent.WithLabelValues(raddr.String(), "Create Session Request").Inc()
 	}
 
-	//m.s11Conn.RegisterSession(iFTEID.MustTEID(), session)
 	return session, nil
 }
 
@@ -319,7 +317,6 @@ func (m *mme) ModifyBearer(sess *v2.Session, sub *Session) (*v2.Bearer, error) {
 	if m.mc != nil {
 		m.mc.messagesSent.WithLabelValues(sess.PeerAddr().String(), "Modify Bearer Request").Inc()
 	}
-	log.Println("WOW")
 
 	return nil, nil
 }
