@@ -712,23 +712,34 @@ func (c *Conn) AddSession(session *Session) {
 }
 */
 
-// RemoveSession removes a session from c.Session.
-// The Session is identified by IMSI.
+// RemoveSession removes a session registered in a Conn.
 func (c *Conn) RemoveSession(session *Session) {
 	c.imsiSessionMap.delete(session.IMSI)
-	session.teidMap.rangeWithFunc(func(k, v interface{}) bool {
-		teid := v.(uint32)
-		if s, ok := c.iteiSessionMap.load(teid); ok && s == session {
-			c.iteiSessionMap.delete(teid)
-		}
-		return true
-	})
+
+	itei, err := session.GetTEID(c.localIfType)
+	if err != nil { // if incoming TEID could not be found for some reason
+		logf("failed to find incoming TEID in session: %+v", err)
+
+		c.iteiSessionMap.rangeWithFunc(func(k, v interface{}) bool {
+			s := v.(*Session)
+			if s.IMSI == session.IMSI {
+				c.iteiSessionMap.delete(k.(uint32))
+			}
+			return true
+		})
+
+		return
+	}
+	c.iteiSessionMap.delete(itei)
 }
 
 // RemoveSessionByIMSI removes a session looked up by IMSI.
+//
+// Use RemoveSession instead if you already have the Session in your hand.
 func (c *Conn) RemoveSessionByIMSI(imsi string) {
 	sess, ok := c.imsiSessionMap.load(imsi)
 	if !ok {
+		logf("Session not found by IMSI: %s", imsi)
 		return
 	}
 	c.RemoveSession(sess)
@@ -876,4 +887,8 @@ func (t *iteiSessionMap) load(teid uint32) (*Session, bool) {
 
 func (t *iteiSessionMap) delete(teid uint32) {
 	t.syncMap.Delete(teid)
+}
+
+func (t *iteiSessionMap) rangeWithFunc(fn func(imsi, session interface{}) bool) {
+	t.syncMap.Range(fn)
 }
