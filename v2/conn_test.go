@@ -71,7 +71,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 					return &v2.RequiredIEMissingError{Type: ies.IMSI}
 				}
 
-				fTEID := srvConn.NewFTEID(v2.IFTypeS11S4SGWGTPC, "127.0.0.2", "")
+				fTEID := srvConn.NewSenderFTEID("127.0.0.2", "")
 				srvConn.RegisterSession(fTEID.MustTEID(), session)
 				csRsp := messages.NewCreateSessionResponse(
 					otei, msg.Sequence(), ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil), fTEID,
@@ -181,7 +181,7 @@ func TestCreateSession(t *testing.T) {
 		},
 	)
 
-	fTEID := cliConn.NewFTEID(v2.IFTypeS11MMEGTPC, "127.0.0.1", "")
+	fTEID := cliConn.NewSenderFTEID("127.0.0.1", "")
 	_, _, err = cliConn.CreateSession(srvConn.LocalAddr(), ies.NewIMSI("123451234567890"), fTEID)
 	if err != nil {
 		t.Fatal(err)

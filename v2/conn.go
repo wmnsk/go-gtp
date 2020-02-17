@@ -713,19 +713,21 @@ func (c *Conn) RemoveSessionByIMSI(imsi string) {
 	c.RemoveSession(sess)
 }
 
-// NewFTEID creates a new F-TEID with random TEID value that is unique within Conn.
+// NewSenderFTEID creates a new F-TEID with random TEID value that is unique within Conn.
 // To ensure the uniqueness, don't create in the other way if you once use this method.
+// This is meant to be used for creating F-TEID IE only for local interface type that is
+// specified at the creation of Conn.
 //
 // Note that in the case there's a lot of Session on the Conn, it may take a long
 // time to find a new unique value.
 //
 // TODO: optimize performance...
-func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
+func (c *Conn) NewSenderFTEID(v4, v6 string) (fteidIE *ies.IE) {
 	var teid uint32
 	for try := uint32(0); try < 0xffff; try++ {
 		const logEvery = 0xff
 		if try&logEvery == logEvery {
-			logf("Generating NewFTEID crossed tries:%d", try)
+			logf("Generating NewSenderFTEID crossed tries:%d", try)
 		}
 
 		t := generateRandomUint32()
@@ -745,7 +747,7 @@ func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
 	if teid == 0 {
 		return nil
 	}
-	return ies.NewFullyQualifiedTEID(ifType, teid, v4, v6)
+	return ies.NewFullyQualifiedTEID(c.localIfType, teid, v4, v6)
 }
 
 func generateRandomUint32() uint32 {
