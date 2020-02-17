@@ -136,7 +136,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	if err != nil {
 		return errors.Wrap(err, "failed to get IP for S11")
 	}
-	senderFTEID := s11Conn.NewFTEID(v2.IFTypeS11S4SGWGTPC, s11IP, "")
+	senderFTEID := s11Conn.NewSenderFTEID(s11IP, "")
 	s11sgwTEID := senderFTEID.MustTEID()
 	s11Conn.RegisterSession(s11sgwTEID, s11Session)
 
@@ -145,8 +145,8 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	if err != nil {
 		return err
 	}
-	s5cFTEID := sgw.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPC, s5cIP, "")
-	s5uFTEID := sgw.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s5uIP, "").WithInstance(2)
+	s5cFTEID := sgw.s5cConn.NewSenderFTEID(s5cIP, "")
+	s5uFTEID := sgw.s5uConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s5uIP, "").WithInstance(2)
 
 	s5Session, seq, err := sgw.s5cConn.CreateSession(
 		raddr,
@@ -209,7 +209,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	if err != nil {
 		return errors.Wrap(err, "failed to get IP for S1-U")
 	}
-	s1usgwFTEID := s11Conn.NewFTEID(v2.IFTypeS1USGWGTPU, s1uIP, "")
+	s1usgwFTEID := sgw.s1uConn.NewFTEID(v2.IFTypeS1USGWGTPU, s1uIP, "")
 	csRspFromSGW = csRspFromPGW
 	csRspFromSGW.SenderFTEIDC = senderFTEID
 	csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedCSID(s1uIP, 1).WithInstance(1)

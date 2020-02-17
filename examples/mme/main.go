@@ -172,7 +172,7 @@ func main() {
 				}
 
 				enbIP := strings.Split(*s1enb, ":")[0]
-				enbFTEID := s11Conn.NewFTEID(v2.IFTypeS1UeNodeBGTPU, enbIP, "")
+				enbFTEID := uConn.NewFTEID(v2.IFTypeS1UeNodeBGTPU, enbIP, "")
 				teid, err := sess.GetTEID(v2.IFTypeS11S4SGWGTPC)
 				if err != nil {
 					errCh <- err

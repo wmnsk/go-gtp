@@ -130,12 +130,12 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	} else {
 		return &v2.RequiredIEMissingError{Type: ies.RATType}
 	}
-	s11sgwFTEID := s11Conn.NewFTEID(v2.IFTypeS11S4SGWGTPC, s.s11IP, "")
+	s11sgwFTEID := s11Conn.NewSenderFTEID(s.s11IP, "")
 	s11sgwTEID := s11sgwFTEID.MustTEID()
 	s11Conn.RegisterSession(s11sgwTEID, s11Session)
 
-	s5cFTEID := s.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPC, s.s5cIP, "")
-	s5uFTEID := s.s5cConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s.s5uIP, "").WithInstance(2)
+	s5cFTEID := s.s5cConn.NewSenderFTEID(s.s5cIP, "")
+	s5uFTEID := s.s5uConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s.s5uIP, "").WithInstance(2)
 
 	s5Session, seq, err := s.s5cConn.CreateSession(
 		raddr,
@@ -205,7 +205,7 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	}
 
 	// if everything in CreateSessionResponse seems OK, relay it to MME.
-	s1usgwFTEID := s11Conn.NewFTEID(v2.IFTypeS1USGWGTPU, s.s1uIP, "")
+	s1usgwFTEID := s.s1uConn.NewFTEID(v2.IFTypeS1USGWGTPU, s.s1uIP, "")
 	csRspFromSGW = csRspFromPGW
 	csRspFromSGW.SenderFTEIDC = s11sgwFTEID
 	csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedCSID(s.s1uIP, 1).WithInstance(1)
@@ -216,6 +216,7 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 
 	s11Session.AddTEID(s11sgwFTEID.MustInterfaceType(), s11sgwTEID)
 	s11Session.AddTEID(s1usgwFTEID.MustInterfaceType(), s1usgwFTEID.MustTEID())
+
 	if err := s11Conn.RespondTo(mmeAddr, csReqFromMME, csRspFromSGW); err != nil {
 		s11Conn.RemoveSession(s11Session)
 		return err

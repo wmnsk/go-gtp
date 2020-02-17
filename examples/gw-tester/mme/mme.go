@@ -263,7 +263,6 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 		return nil, err
 	}
 
-	iFTEID := m.s11Conn.NewFTEID(v2.IFTypeS11MMEGTPC, m.s11IP, "")
 	session, _, err := m.s11Conn.CreateSession(
 		raddr,
 		ies.NewIMSI(sess.IMSI),
@@ -275,8 +274,8 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 		),
 		ies.NewRATType(v2.RATTypeEUTRAN),
 		ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
-		iFTEID,
-		m.s11Conn.NewFTEID(v2.IFTypeS5S8PGWGTPC, m.pgw.s5cIP, "").WithInstance(1),
+		m.s11Conn.NewSenderFTEID(m.s11IP, ""),
+		ies.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0, m.pgw.s5cIP, "").WithInstance(1),
 		ies.NewAccessPointName(m.apn),
 		ies.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
 		ies.NewPDNType(v2.PDNTypeIPv4),
