@@ -41,5 +41,7 @@ func (u *UPlaneConn) CloseRelay(teidIn uint32) error {
 	u.mu.Lock()
 	delete(u.relayMap, teidIn)
 	u.mu.Unlock()
+
+	u.iteiMap.delete(teidIn)
 	return nil
 }

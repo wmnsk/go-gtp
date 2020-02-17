@@ -132,6 +132,8 @@ func (u *UPlaneConn) DelTunnelByITEI(itei uint32) error {
 	if err := netlink.GTPPDPDel(u.GTPLink, pdp); err != nil {
 		return errors.Wrapf(err, "failed to delete tunnel for %s", pdp)
 	}
+
+	u.iteiMap.delete(itei)
 	return nil
 }
 
@@ -145,9 +147,12 @@ func (u *UPlaneConn) DelTunnelByMSAddress(msIP net.IP) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to delete tunnel with %s", msIP)
 	}
+	itei := pdp.ITEI
 
 	if err := netlink.GTPPDPDel(u.GTPLink, pdp); err != nil {
 		return errors.Wrapf(err, "failed to delete tunnel for %s", pdp)
 	}
+
+	u.iteiMap.delete(itei)
 	return nil
 }
