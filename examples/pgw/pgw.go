@@ -164,8 +164,8 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 
 	cIP := strings.Split(c.LocalAddr().String(), ":")[0]
 	uIP := strings.Split(*s5u, ":")[0]
-	s5cFTEID := c.NewFTEID(v2.IFTypeS5S8PGWGTPC, cIP, "").WithInstance(1)
-	s5uFTEID := c.NewFTEID(v2.IFTypeS5S8PGWGTPU, uIP, "").WithInstance(2)
+	s5cFTEID := c.NewSenderFTEID(cIP, "").WithInstance(1)
+	s5uFTEID := uConn.NewFTEID(v2.IFTypeS5S8PGWGTPU, uIP, "").WithInstance(2)
 	s5sgwTEID, err := session.GetTEID(v2.IFTypeS5S8SGWGTPC)
 	if err != nil {
 		return err
@@ -197,12 +197,12 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Messa
 	if err != nil {
 		return err
 	}
+	c.RegisterSession(s5pgwTEID, session)
 
 	// don't forget to activate and add session created to the session list
 	if err := session.Activate(); err != nil {
 		return err
 	}
-	c.AddSession(session)
 
 	go func() {
 		buf := make([]byte, 1500)

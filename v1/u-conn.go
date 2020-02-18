@@ -6,6 +6,7 @@ package v1
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/binary"
 	"io"
 	"net"
@@ -17,6 +18,7 @@ import (
 	"github.com/vishvananda/netlink"
 	"github.com/wmnsk/go-gtp/v1/ies"
 	"github.com/wmnsk/go-gtp/v1/messages"
+	v2ies "github.com/wmnsk/go-gtp/v2/ies"
 )
 
 type tpduSet struct {
@@ -32,6 +34,7 @@ type UPlaneConn struct {
 	laddr   net.Addr
 	pktConn net.PacketConn
 	*msgHandlerMap
+	*iteiMap
 
 	tpduCh  chan *tpduSet
 	closeCh chan struct{}
@@ -48,6 +51,7 @@ func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
 	return &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
+		iteiMap:       newiteiMap(),
 		laddr:         laddr,
 
 		tpduCh:  make(chan *tpduSet),
@@ -60,6 +64,7 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
 		msgHandlerMap: defaultHandlerMap,
+		iteiMap:       newiteiMap(),
 		laddr:         laddr,
 
 		tpduCh:  make(chan *tpduSet),
@@ -431,4 +436,68 @@ func (u *UPlaneConn) RespondTo(raddr net.Addr, received, toBeSent messages.Messa
 // Restarts returns the number of restarts in uint8.
 func (u *UPlaneConn) Restarts() uint8 {
 	return 0
+}
+
+// NewFTEID creates a new GTPv2 F-TEID with random TEID value that is unique within UPlaneConn.
+// To ensure the uniqueness, don't create in the other way if you once use this method.
+// This is meant to be used for creating F-TEID IE for non-local interface type, such as
+// the ones that are used in U-Plane. For local interface, use (*Conn).NewSenderFTEID instead.
+//
+// Note that in the case there's a lot of Session on the Conn, it may take a long
+// time to find a new unique value.
+//
+// TODO: optimize performance...
+func (u *UPlaneConn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *v2ies.IE) {
+	var teid uint32
+	for try := uint32(0); try < 0xffff; try++ {
+		const logEvery = 0xff
+		if try&logEvery == logEvery {
+			logf("Generating NewSenderFTEID crossed tries:%d", try)
+		}
+
+		t := generateRandomUint32()
+		if t == 0 {
+			continue
+		}
+
+		// Try to mark TEID as taken. Fails if something exists
+		if ok := u.iteiMap.tryStore(t, time.Now()); !ok {
+			logf("TEID-U: %#08x has already been taken, trying to generate another one...", t)
+			continue
+		}
+
+		teid = t
+		break
+	}
+
+	if teid == 0 {
+		return nil
+	}
+	return v2ies.NewFullyQualifiedTEID(ifType, teid, v4, v6)
+}
+
+func generateRandomUint32() uint32 {
+	b := make([]byte, 4)
+	if _, err := rand.Read(b); err != nil {
+		return 0
+	}
+
+	return binary.BigEndian.Uint32(b)
+}
+
+type iteiMap struct {
+	syncMap sync.Map
+}
+
+func newiteiMap() *iteiMap {
+	return &iteiMap{}
+}
+
+func (t *iteiMap) tryStore(itei uint32, ts time.Time) bool {
+	_, loaded := t.syncMap.LoadOrStore(itei, ts)
+	return !loaded
+}
+
+func (t *iteiMap) delete(itei uint32) {
+	t.syncMap.Delete(itei)
 }

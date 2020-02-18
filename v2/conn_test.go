@@ -28,7 +28,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 	}
 
 	go func() {
-		srvConn = v2.NewConn(srvAddr, 0)
+		srvConn = v2.NewConn(srvAddr, v2.IFTypeS11S4SGWGTPC, 0)
 		srvConn.AddHandler(
 			messages.MsgTypeCreateSessionRequest,
 			func(c *v2.Conn, cliAddr net.Addr, msg messages.Message) error {
@@ -36,6 +36,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 				csReq := msg.(*messages.CreateSessionRequest)
 				session := v2.NewSession(cliAddr, &v2.Subscriber{Location: &v2.Location{}})
 
+				var otei uint32
 				if ie := csReq.IMSI; ie != nil {
 					imsi, err := ie.IMSI()
 					if err != nil {
@@ -45,10 +46,36 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 						return errors.Errorf("unexpected IMSI: %s", imsi)
 					}
 					session.IMSI = imsi
+				} else {
+					return &v2.RequiredIEMissingError{Type: ies.IMSI}
 				}
-				c.AddSession(session)
+				if ie := csReq.SenderFTEIDC; ie != nil {
+					ip, err := ie.IPAddress()
+					if err != nil {
+						return err
+					}
+					if ip != "127.0.0.1" {
+						return errors.Errorf("unexpected IP in F-TEID: %s", ip)
+					}
 
-				csRsp := messages.NewCreateSessionResponse(0, 0, ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil))
+					ifType, err := ie.InterfaceType()
+					if err != nil {
+						return err
+					}
+					otei, err = ie.TEID()
+					if err != nil {
+						return err
+					}
+					session.AddTEID(ifType, otei)
+				} else {
+					return &v2.RequiredIEMissingError{Type: ies.IMSI}
+				}
+
+				fTEID := srvConn.NewSenderFTEID("127.0.0.2", "")
+				srvConn.RegisterSession(fTEID.MustTEID(), session)
+				csRsp := messages.NewCreateSessionResponse(
+					otei, msg.Sequence(), ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil), fTEID,
+				)
 				if err := c.RespondTo(cliAddr, csReq, csRsp); err != nil {
 					return err
 				}
@@ -69,7 +96,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 
 	// XXX - waiting for server to be well-prepared, should consider better way.
 	time.Sleep(1 * time.Second)
-	cliConn, err = v2.Dial(ctx, cliAddr, srvAddr, 0)
+	cliConn, err = v2.Dial(ctx, cliAddr, srvAddr, v2.IFTypeS11MMEGTPC, 0)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -99,8 +126,7 @@ func TestCreateSession(t *testing.T) {
 				t.Errorf("invalid sequence number. got: %d, want: %d", msg.Sequence(), cliConn.SequenceNumber())
 			}
 
-			// session should be retrieved by msg.TEID() in the real case.
-			session, err := c.GetSessionByIMSI("123451234567890")
+			session, err := c.GetSessionByTEID(msg.TEID(), srvAddr)
 			if err != nil {
 				return err
 			}
@@ -118,24 +144,48 @@ func TestCreateSession(t *testing.T) {
 						Msg:     "something went wrong",
 					}
 				}
-
-				if err := session.Activate(); err != nil {
-					return err
-				}
-				rspOK <- struct{}{}
 			} else {
 				return &v2.RequiredIEMissingError{Type: ies.Cause}
 			}
 
+			if fteidIE := csRsp.SenderFTEIDC; fteidIE != nil {
+				it, err := fteidIE.InterfaceType()
+				if err != nil {
+					return err
+				}
+				if it != v2.IFTypeS11S4SGWGTPC {
+					return errors.Errorf("invalid InterfaceType: %v", it)
+				}
+				otei, err := fteidIE.TEID()
+				if err != nil {
+					return err
+				}
+				session.AddTEID(it, otei)
+
+				ip, err := fteidIE.IPAddress()
+				if err != nil {
+					return err
+				}
+				if ip != "127.0.0.2" {
+					return errors.Errorf("unexpected IP in F-TEID: %s", ip)
+				}
+			} else {
+				return &v2.RequiredIEMissingError{Type: ies.Cause}
+			}
+
+			if err := session.Activate(); err != nil {
+				return err
+			}
+			rspOK <- struct{}{}
 			return nil
 		},
 	)
 
-	session, _, err := cliConn.CreateSession(srvConn.LocalAddr(), ies.NewIMSI("123451234567890"))
+	fTEID := cliConn.NewSenderFTEID("127.0.0.1", "")
+	_, _, err = cliConn.CreateSession(srvConn.LocalAddr(), ies.NewIMSI("123451234567890"), fTEID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	cliConn.AddSession(session)
 
 	select {
 	case <-rspOK:
@@ -145,6 +195,7 @@ func TestCreateSession(t *testing.T) {
 		if count := cliConn.BearerCount(); count != 1 {
 			t.Errorf("wrong BearerCount in cliConn. want %d, got: %d", 1, count)
 		}
+
 		<-doneCh
 		if count := srvConn.SessionCount(); count != 1 {
 			t.Errorf("wrong SessionCount in srvConn. want %d, got: %d", 1, count)
@@ -152,7 +203,6 @@ func TestCreateSession(t *testing.T) {
 		if count := srvConn.BearerCount(); count != 1 {
 			t.Errorf("wrong BearerCount in srvConn. want %d, got: %d", 1, count)
 		}
-		return
 	case <-time.After(5 * time.Second):
 		t.Fatal("timed out while waiting for validating Create Session Response")
 	}

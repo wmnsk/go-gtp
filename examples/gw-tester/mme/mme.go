@@ -119,7 +119,7 @@ func (m *mme) run(ctx context.Context) error {
 	}()
 	log.Printf("Started serving S1-MME on: %s", m.s1mmeListener.Addr())
 
-	m.s11Conn = v2.NewConn(m.s11Addr, 0)
+	m.s11Conn = v2.NewConn(m.s11Addr, v2.IFTypeS11MMEGTPC, 0)
 	go func() {
 		if err := m.s11Conn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
@@ -262,6 +262,7 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	session, _, err := m.s11Conn.CreateSession(
 		raddr,
 		ies.NewIMSI(sess.IMSI),
@@ -273,8 +274,8 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 		),
 		ies.NewRATType(v2.RATTypeEUTRAN),
 		ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
-		m.s11Conn.NewFTEID(v2.IFTypeS11MMEGTPC, m.s11IP, ""),
-		m.s11Conn.NewFTEID(v2.IFTypeS5S8PGWGTPC, m.pgw.s5cIP, "").WithInstance(1),
+		m.s11Conn.NewSenderFTEID(m.s11IP, ""),
+		ies.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0, m.pgw.s5cIP, "").WithInstance(1),
 		ies.NewAccessPointName(m.apn),
 		ies.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
 		ies.NewPDNType(v2.PDNTypeIPv4),
@@ -296,7 +297,6 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 		m.mc.messagesSent.WithLabelValues(raddr.String(), "Create Session Request").Inc()
 	}
 
-	m.s11Conn.AddSession(session)
 	return session, nil
 }
 
@@ -308,7 +308,7 @@ func (m *mme) ModifyBearer(sess *v2.Session, sub *Session) (*v2.Bearer, error) {
 
 	fteid := ies.NewFullyQualifiedTEID(v2.IFTypeS1UeNodeBGTPU, sub.itei, m.enb.s1uIP, "")
 	if _, err = m.s11Conn.ModifyBearer(
-		teid, sess.PeerAddr(), ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
+		teid, sess, ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 		ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), fteid, ies.NewPortNumber(2125)),
 	); err != nil {
 		return nil, err

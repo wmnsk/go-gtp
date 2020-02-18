@@ -14,7 +14,8 @@ _Working examples are available in [example](../examples) directory, which might
 
 ```go
 // Note that the conn is not bound to raddr. to let a Conn to be able to communicate with multiple peers.
-conn, err := v2.Dial(ctx, laddr, raddr, 0)
+// Interface type is required here to let Conn know which is the local interface type.
+conn, err := v2.Dial(ctx, laddr, raddr, v2.IFTypeS11MMEGTPC, 0)
 if err != nil {
     // ...
 }
@@ -25,7 +26,8 @@ if err != nil {
 Retrieve `Conn` with `NewConn`, and `ListenAndServe` to start listening.
 
 ```go
-srvConn := v2.NewConn(srvAddr, 0)
+// Interface type is required here to let Conn know which is the local interface type.
+srvConn := v2.NewConn(srvAddr, v2.IFTypeS11MMEGTPC, 0)
 if err := srvConn.ListenAndServe(ctx); err != nil {
     // ...
 }
@@ -66,22 +68,25 @@ session, err := c.CreateSession(
     // put IEs required for your implementation here.
     // it is easier to use constructors in ies package.
     ies.NewIMSI("123451234567890"),
+    
     // or, you can use ies.New() to create an IE without type-specific constructor.
     // put the type of IE, flags/instance, and payload as the parameters.
     ies.New(ies.ExtendedTraceInformation, 0x00, []byte{0xde, 0xad, 0xbe, 0xef}),
+    
     // to set the instance to IE created with message-specific constructor, WithInstance()
     // may be your help.
     ies.NewIMSI("123451234567890").WithInstance(1), // no one wants to set instance to IMSI, though.
+
+    // don't forget to contain the Sender F-TEID, as it is used to distinguish the incoming
+    // messages by Conn.
+    //
     // to be secure, TEID should be generated with random values, without conflicts in a Conn.
     // to achieve that, v2 provides NewFTEID() which returns F-TEID in *ies.IE.
-    s11Conn.NewFTEID(v2.IFTypeS1UeNodeBGTPU, enbIP, ""),
+    s11Conn.NewFTEID(v2.IFTypeS11MMEGTPC, mmeIP, ""),
 )
 if err != nil {
     // ...
 }
-// do not forget to add session to *Conn.
-// do not Activate() it before you confirm the remote endpoint accepted the request.
-c.AddSession(session)
 ```
 
 #### Session deletion / Bearer modification

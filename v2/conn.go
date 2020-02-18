@@ -32,7 +32,8 @@ type Conn struct {
 	laddr   net.Addr
 	pktConn net.PacketConn
 	*imsiSessionMap
-	*teidSessionMap
+	*iteiSessionMap
+	localIfType uint8
 
 	validationEnabled bool
 
@@ -52,12 +53,13 @@ type Conn struct {
 }
 
 // NewConn creates a new Conn used for server. On client side, use Dial instead.
-func NewConn(laddr net.Addr, counter uint8) *Conn {
+func NewConn(laddr net.Addr, localIfType, counter uint8) *Conn {
 	return &Conn{
 		mu:                sync.Mutex{},
 		laddr:             laddr,
 		imsiSessionMap:    newimsiSessionMap(),
-		teidSessionMap:    newteidSessionMap(),
+		iteiSessionMap:    newiteiSessionMap(),
+		localIfType:       localIfType,
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		msgHandlerMap:     defaultHandlerMap,
@@ -72,11 +74,12 @@ func NewConn(laddr net.Addr, counter uint8) *Conn {
 // send to/receive from multiple peers with single laddr.
 //
 // If Echo exchange is unnecessary, use NewConn and ListenAndServe instead.
-func Dial(ctx context.Context, laddr, raddr net.Addr, counter uint8) (*Conn, error) {
+func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
 		imsiSessionMap:    newimsiSessionMap(),
-		teidSessionMap:    newteidSessionMap(),
+		iteiSessionMap:    newiteiSessionMap(),
+		localIfType:       localIfType,
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
 		msgHandlerMap:     defaultHandlerMap,
@@ -444,7 +447,7 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Messag
 // CreateSession sends a CreateSessionRequest and stores information given with IE
 // in the Session returned.
 //
-// After using this method, users don't need to call AddSession with the session
+// After using this method, users don't need to call RegisterSession with the session
 // returned.
 //
 // By creating a Session with this method, the values in IEs given, such as TEID in F-TEID
@@ -512,7 +515,9 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 				return nil, 0, err
 			}
 			sess.AddTEID(it, teid)
-			c.AddTEID(teid, sess)
+			if it == c.localIfType {
+				c.RegisterSession(teid, sess)
+			}
 		case ies.BearerContext:
 			switch i.Instance() {
 			case 0:
@@ -571,9 +576,6 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 		}
 	}
 
-	// add session here to registry in case of the response comes super fast.
-	c.AddSession(sess)
-
 	// set IEs into CreateSessionRequest.
 	msg := messages.NewCreateSessionRequest(0, 0, ie...)
 
@@ -585,12 +587,7 @@ func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, e
 }
 
 // DeleteSession sends a DeleteSessionRequest with TEID and IEs given.
-func (c *Conn) DeleteSession(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
-	sess, err := c.GetSessionByTEID(teid, raddr)
-	if err != nil {
-		return 0, err
-	}
-
+func (c *Conn) DeleteSession(teid uint32, sess *Session, ie ...*ies.IE) (uint32, error) {
 	msg := messages.NewDeleteSessionRequest(teid, 0, ie...)
 
 	seq, err := c.SendMessageTo(msg, sess.peerAddr)
@@ -601,12 +598,7 @@ func (c *Conn) DeleteSession(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32
 }
 
 // ModifyBearer sends a ModifyBearerRequest with TEID and IEs given..
-func (c *Conn) ModifyBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
-	sess, err := c.GetSessionByTEID(teid, raddr)
-	if err != nil {
-		return 0, err
-	}
-
+func (c *Conn) ModifyBearer(teid uint32, sess *Session, ie ...*ies.IE) (uint32, error) {
 	msg := messages.NewModifyBearerRequest(teid, 0, ie...)
 
 	seq, err := c.SendMessageTo(msg, sess.peerAddr)
@@ -617,12 +609,7 @@ func (c *Conn) ModifyBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32,
 }
 
 // DeleteBearer sends a DeleteBearerRequest TEID and with IEs given.
-func (c *Conn) DeleteBearer(teid uint32, raddr net.Addr, ie ...*ies.IE) (uint32, error) {
-	sess, err := c.GetSessionByTEID(teid, raddr)
-	if err != nil {
-		return 0, err
-	}
-
+func (c *Conn) DeleteBearer(teid uint32, sess *Session, ie ...*ies.IE) (uint32, error) {
 	msg := messages.NewDeleteBearerRequest(teid, 0, ie...)
 
 	seq, err := c.SendMessageTo(msg, sess.peerAddr)
@@ -652,7 +639,7 @@ func (c *Conn) RespondTo(raddr net.Addr, received, toBeSent messages.Message) er
 
 // GetSessionByTEID returns Session looked up by TEID and sender of the message.
 func (c *Conn) GetSessionByTEID(teid uint32, peer net.Addr) (*Session, error) {
-	session, ok := c.teidSessionMap.load(teid)
+	session, ok := c.iteiSessionMap.load(teid)
 	if !ok {
 		return nil, &InvalidTEIDError{TEID: teid}
 	}
@@ -680,51 +667,67 @@ func (c *Conn) GetIMSIByTEID(teid uint32, peer net.Addr) (string, error) {
 	return sess.IMSI, nil
 }
 
-// AddTEID adds a session teidSessionMap
-func (c *Conn) AddTEID(teid uint32, session *Session) {
-	c.teidSessionMap.store(teid, session)
-}
-
-// AddSession adds a session imsiSessionMap
-func (c *Conn) AddSession(session *Session) {
+// RegisterSession registers session to Conn with its incoming TEID to
+// distinguish which session the incoming messages are for.
+//
+// Incoming TEID(itei) should be the one with it's local interface type.
+// e.g., if the Conn is used for S-GW on S11 I/F, itei should be the one
+// with interface type=IFTypeS11S4SGWGTPC.
+func (c *Conn) RegisterSession(itei uint32, session *Session) {
+	c.iteiSessionMap.store(itei, session)
 	c.imsiSessionMap.store(session.IMSI, session)
+
+	session.AddTEID(c.localIfType, itei)
 }
 
-// RemoveSession removes a session from c.Session.
-// The Session is identified by IMSI.
+// RemoveSession removes a session registered in a Conn.
 func (c *Conn) RemoveSession(session *Session) {
 	c.imsiSessionMap.delete(session.IMSI)
-	session.teidMap.rangeWithFunc(func(k, v interface{}) bool {
-		teid := v.(uint32)
-		if s, ok := c.teidSessionMap.load(teid); ok && s == session {
-			c.teidSessionMap.delete(teid)
-		}
-		return true
-	})
+
+	itei, err := session.GetTEID(c.localIfType)
+	if err != nil { // if incoming TEID could not be found for some reason
+		logf("failed to find incoming TEID in session: %+v", err)
+
+		c.iteiSessionMap.rangeWithFunc(func(k, v interface{}) bool {
+			s := v.(*Session)
+			if s.IMSI == session.IMSI {
+				c.iteiSessionMap.delete(k.(uint32))
+			}
+			return true
+		})
+
+		return
+	}
+	c.iteiSessionMap.delete(itei)
 }
 
 // RemoveSessionByIMSI removes a session looked up by IMSI.
+//
+// Use RemoveSession instead if you already have the Session in your hand.
 func (c *Conn) RemoveSessionByIMSI(imsi string) {
 	sess, ok := c.imsiSessionMap.load(imsi)
 	if !ok {
+		logf("Session not found by IMSI: %s", imsi)
 		return
 	}
 	c.RemoveSession(sess)
 }
 
-// NewFTEID creates a new F-TEID with random TEID value that is unique within Conn.
+// NewSenderFTEID creates a new F-TEID with random TEID value that is unique within Conn.
 // To ensure the uniqueness, don't create in the other way if you once use this method.
+// This is meant to be used for creating F-TEID IE only for local interface type that is
+// specified at the creation of Conn.
 //
 // Note that in the case there's a lot of Session on the Conn, it may take a long
 // time to find a new unique value.
 //
 // TODO: optimize performance...
-func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
+func (c *Conn) NewSenderFTEID(v4, v6 string) (fteidIE *ies.IE) {
 	var teid uint32
 	for try := uint32(0); try < 0xffff; try++ {
 		const logEvery = 0xff
 		if try&logEvery == logEvery {
-			logf("Generating NewFTEID crossed tries:%d", try)
+			logf("Generating NewSenderFTEID crossed tries:%d", try)
 		}
 
 		t := generateRandomUint32()
@@ -733,7 +736,7 @@ func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
 		}
 
 		// Try to mark TEID as taken. Fails if something exists
-		if ok := c.teidSessionMap.tryStore(t, nil); !ok {
+		if ok := c.iteiSessionMap.tryStore(t, nil); !ok {
 			continue
 		}
 
@@ -744,7 +747,7 @@ func (c *Conn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *ies.IE) {
 	if teid == 0 {
 		return nil
 	}
-	return ies.NewFullyQualifiedTEID(ifType, teid, v4, v6)
+	return ies.NewFullyQualifiedTEID(c.localIfType, teid, v4, v6)
 }
 
 func generateRandomUint32() uint32 {
@@ -827,24 +830,24 @@ func (i *imsiSessionMap) rangeWithFunc(fn func(imsi, session interface{}) bool) 
 	i.syncMap.Range(fn)
 }
 
-type teidSessionMap struct {
+type iteiSessionMap struct {
 	syncMap sync.Map
 }
 
-func newteidSessionMap() *teidSessionMap {
-	return &teidSessionMap{}
+func newiteiSessionMap() *iteiSessionMap {
+	return &iteiSessionMap{}
 }
 
-func (t *teidSessionMap) store(teid uint32, session *Session) {
+func (t *iteiSessionMap) store(teid uint32, session *Session) {
 	t.syncMap.Store(teid, session)
 }
 
-func (t *teidSessionMap) tryStore(teid uint32, session *Session) bool {
+func (t *iteiSessionMap) tryStore(teid uint32, session *Session) bool {
 	_, loaded := t.syncMap.LoadOrStore(teid, session)
 	return !loaded
 }
 
-func (t *teidSessionMap) load(teid uint32) (*Session, bool) {
+func (t *iteiSessionMap) load(teid uint32) (*Session, bool) {
 	session, ok := t.syncMap.Load(teid)
 	if ok && session != nil {
 		return session.(*Session), true
@@ -852,6 +855,10 @@ func (t *teidSessionMap) load(teid uint32) (*Session, bool) {
 	return nil, ok
 }
 
-func (t *teidSessionMap) delete(teid uint32) {
+func (t *iteiSessionMap) delete(teid uint32) {
 	t.syncMap.Delete(teid)
+}
+
+func (t *iteiSessionMap) rangeWithFunc(fn func(imsi, session interface{}) bool) {
+	t.syncMap.Range(fn)
 }

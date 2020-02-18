@@ -148,8 +148,8 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 
 	cIP := strings.Split(c.LocalAddr().String(), ":")[0]
 	uIP := strings.Split(p.s5u, ":")[0]
-	s5cFTEID := c.NewFTEID(v2.IFTypeS5S8PGWGTPC, cIP, "").WithInstance(1)
-	s5uFTEID := c.NewFTEID(v2.IFTypeS5S8PGWGTPU, uIP, "").WithInstance(2)
+	s5cFTEID := c.NewSenderFTEID(cIP, "").WithInstance(1)
+	s5uFTEID := p.uConn.NewFTEID(v2.IFTypeS5S8PGWGTPU, uIP, "").WithInstance(2)
 	s5sgwTEID, err := session.GetTEID(v2.IFTypeS5S8SGWGTPC)
 	if err != nil {
 		return err
@@ -189,7 +189,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	if err := session.Activate(); err != nil {
 		return err
 	}
-	c.AddSession(session)
+	c.RegisterSession(s5pgwTEID, session)
 
 	if err := p.setupUPlane(net.ParseIP(s5sgwuIP), net.ParseIP(bearer.SubscriberIP), oteiU, s5uFTEID.MustTEID()); err != nil {
 		return err
