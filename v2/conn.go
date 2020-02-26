@@ -444,10 +444,128 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Messag
 	return nil
 }
 
+// ParseCreateSession iterates through the ies and returns a session
+func (c *Conn) ParseCreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, error) {
+	// retrieve values from IEs given.
+	sess := NewSession(raddr, &Subscriber{Location: &Location{}})
+	br := sess.GetDefaultBearer()
+	var err error
+	for _, i := range ie {
+		if i == nil {
+			continue
+		}
+		switch i.Type {
+		case ies.IMSI:
+			sess.IMSI, err = i.IMSI()
+			if err != nil {
+				return nil, err
+			}
+		case ies.MSISDN:
+			sess.MSISDN, err = i.MSISDN()
+			if err != nil {
+				return nil, err
+			}
+		case ies.MobileEquipmentIdentity:
+			sess.IMEI, err = i.MobileEquipmentIdentity()
+			if err != nil {
+				return nil, err
+			}
+		case ies.ServingNetwork:
+			sess.MCC, err = i.MCC()
+			if err != nil {
+				return nil, err
+			}
+			sess.MNC, err = i.MNC()
+			if err != nil {
+				return nil, err
+			}
+		case ies.AccessPointName:
+			br.APN, err = i.AccessPointName()
+			if err != nil {
+				return nil, err
+			}
+		case ies.RATType:
+			sess.RATType, err = i.RATType()
+			if err != nil {
+				return nil, err
+			}
+		case ies.FullyQualifiedTEID:
+			it, err := i.InterfaceType()
+			if err != nil {
+				return nil, err
+			}
+			teid, err := i.TEID()
+			if err != nil {
+				return nil, err
+			}
+			sess.AddTEID(it, teid)
+			if it == c.localIfType {
+				c.RegisterSession(teid, sess)
+			}
+		case ies.BearerContext:
+			switch i.Instance() {
+			case 0:
+				for _, child := range i.ChildIEs {
+					switch child.Type {
+					case ies.EPSBearerID:
+						br.EBI, err = child.EPSBearerID()
+						if err != nil {
+							return nil, err
+						}
+					case ies.BearerQoS:
+						br.PL, err = child.PriorityLevel()
+						if err != nil {
+							return nil, err
+						}
+						br.QCI, err = child.QCILabel()
+						if err != nil {
+							return nil, err
+						}
+						br.PCI = child.PreemptionCapability()
+						br.PVI = child.PreemptionVulnerability()
+
+						br.MBRUL, err = child.MBRForUplink()
+						if err != nil {
+							return nil, err
+						}
+						br.MBRDL, err = child.MBRForDownlink()
+						if err != nil {
+							return nil, err
+						}
+						br.GBRUL, err = child.GBRForUplink()
+						if err != nil {
+							return nil, err
+						}
+						br.GBRDL, err = child.GBRForUplink()
+						if err != nil {
+							return nil, err
+						}
+					case ies.FullyQualifiedTEID:
+						it, err := child.InterfaceType()
+						if err != nil {
+							return nil, err
+						}
+						teid, err := child.TEID()
+						if err != nil {
+							return nil, err
+						}
+						sess.AddTEID(it, teid)
+					case ies.BearerTFT:
+						// XXX - do nothing for BearerTFT?
+					}
+				}
+			case 1:
+				// XXX - do nothing for BearerContextsToBeRemoved?
+			}
+		}
+	}
+	return sess, nil
+}
+
 // CreateSession sends a CreateSessionRequest and stores information given with IE
 // in the Session returned.
 //
-// After using this method, users don't need to call RegisterSession with the session
+// After using this method, users don't need to call AddSession with the session
 // returned.
 //
 // By creating a Session with this method, the values in IEs given, such as TEID in F-TEID
@@ -462,118 +580,10 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req messages.Messag
 // In other words, any kind of IE can be put on the Create Session Request message using
 // this method.
 func (c *Conn) CreateSession(raddr net.Addr, ie ...*ies.IE) (*Session, uint32, error) {
-	// retrieve values from IEs given.
-	sess := NewSession(raddr, &Subscriber{Location: &Location{}})
-	br := sess.GetDefaultBearer()
-	var err error
-	for _, i := range ie {
-		if i == nil {
-			continue
-		}
-		switch i.Type {
-		case ies.IMSI:
-			sess.IMSI, err = i.IMSI()
-			if err != nil {
-				return nil, 0, err
-			}
-		case ies.MSISDN:
-			sess.MSISDN, err = i.MSISDN()
-			if err != nil {
-				return nil, 0, err
-			}
-		case ies.MobileEquipmentIdentity:
-			sess.IMEI, err = i.MobileEquipmentIdentity()
-			if err != nil {
-				return nil, 0, err
-			}
-		case ies.ServingNetwork:
-			sess.MCC, err = i.MCC()
-			if err != nil {
-				return nil, 0, err
-			}
-			sess.MNC, err = i.MNC()
-			if err != nil {
-				return nil, 0, err
-			}
-		case ies.AccessPointName:
-			br.APN, err = i.AccessPointName()
-			if err != nil {
-				return nil, 0, err
-			}
-		case ies.RATType:
-			sess.RATType, err = i.RATType()
-			if err != nil {
-				return nil, 0, err
-			}
-		case ies.FullyQualifiedTEID:
-			it, err := i.InterfaceType()
-			if err != nil {
-				return nil, 0, err
-			}
-			teid, err := i.TEID()
-			if err != nil {
-				return nil, 0, err
-			}
-			sess.AddTEID(it, teid)
-			if it == c.localIfType {
-				c.RegisterSession(teid, sess)
-			}
-		case ies.BearerContext:
-			switch i.Instance() {
-			case 0:
-				for _, child := range i.ChildIEs {
-					switch child.Type {
-					case ies.EPSBearerID:
-						br.EBI, err = child.EPSBearerID()
-						if err != nil {
-							return nil, 0, err
-						}
-					case ies.BearerQoS:
-						br.PL, err = child.PriorityLevel()
-						if err != nil {
-							return nil, 0, err
-						}
-						br.QCI, err = child.QCILabel()
-						if err != nil {
-							return nil, 0, err
-						}
-						br.PCI = child.PreemptionCapability()
-						br.PVI = child.PreemptionVulnerability()
 
-						br.MBRUL, err = child.MBRForUplink()
-						if err != nil {
-							return nil, 0, err
-						}
-						br.MBRDL, err = child.MBRForDownlink()
-						if err != nil {
-							return nil, 0, err
-						}
-						br.GBRUL, err = child.GBRForUplink()
-						if err != nil {
-							return nil, 0, err
-						}
-						br.GBRDL, err = child.GBRForUplink()
-						if err != nil {
-							return nil, 0, err
-						}
-					case ies.FullyQualifiedTEID:
-						it, err := child.InterfaceType()
-						if err != nil {
-							return nil, 0, err
-						}
-						teid, err := child.TEID()
-						if err != nil {
-							return nil, 0, err
-						}
-						sess.AddTEID(it, teid)
-					case ies.BearerTFT:
-						// XXX - do nothing for BearerTFT?
-					}
-				}
-			case 1:
-				// XXX - do nothing for BearerContextsToBeRemoved?
-			}
-		}
+	sess, err := c.ParseCreateSession(raddr, ie...)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	// set IEs into CreateSessionRequest.
