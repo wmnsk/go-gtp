@@ -275,19 +275,29 @@ func (u *UPlaneConn) closed() <-chan struct{} {
 func (u *UPlaneConn) Close() error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
+
 	u.msgHandlerMap = defaultHandlerMap
 	u.relayMap = nil
 	close(u.closeCh)
 
+	// u.pktConn.Close() may block for some reason in case kernel GTP-U is enabled...
 	if u.kernGTPEnabled {
 		if err := netlink.LinkDel(u.GTPLink); err != nil {
 			logf("error deleting GTPLink: %s", err)
 		}
+		go func() {
+			if err := u.pktConn.Close(); err != nil {
+				logf("error closing the underlying conn: %s", err)
+			}
+		}()
+
+		return nil
 	}
 
 	if err := u.pktConn.Close(); err != nil {
 		logf("error closing the underlying conn: %s", err)
 	}
+
 	return nil
 }
 
