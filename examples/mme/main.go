@@ -110,7 +110,7 @@ func main() {
 			return
 		}
 	}()
-	log.Printf("Started listening on %s", uConn.LocalAddr())
+	log.Printf("Started listening on %s", enbUPlaneAddr)
 
 	// here you should wait for UEs to come attaching to your network.
 	// in this example, the following five subscribers are to be attached.
