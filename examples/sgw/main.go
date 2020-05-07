@@ -62,8 +62,7 @@ func newSGW(s11, s5c, s1u, s5u net.Addr) (*sGateway, error) {
 		errCh:    make(chan error),
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := context.Background()
 
 	var err error
 	s.s11Conn = v2.NewConn(s11, v2.IFTypeS11S4SGWGTPC, 0)
