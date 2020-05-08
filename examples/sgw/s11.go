@@ -53,7 +53,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return &v2.RequiredIEMissingError{Type: ies.FullyQualifiedTEID}
 	}
 
-	laddr, err := net.ResolveUDPAddr("udp", *s5c)
+	laddr, err := net.ResolveUDPAddr("udp", *s5c+v2.GTPCPort)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return &v2.RequiredIEMissingError{Type: ies.RATType}
 	}
 
-	s11IP, _, err := net.SplitHostPort(*s11)
+	s11IP, _, err := net.SplitHostPort(*s11 + v2.GTPCPort)
 	if err != nil {
 		return errors.Wrap(err, "failed to get IP for S11")
 	}
@@ -141,7 +141,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 	s11Conn.RegisterSession(s11sgwTEID, s11Session)
 
 	s5cIP := laddr.IP.String()
-	s5uIP, _, err := net.SplitHostPort(*s5u)
+	s5uIP, _, err := net.SplitHostPort(*s5u + v2.GTPCPort)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages
 		return &v2.UnexpectedTypeError{Msg: message}
 	}
 	// if everything in CreateSessionResponse seems OK, relay it to MME.
-	s1uIP, _, err := net.SplitHostPort(*s1u)
+	s1uIP, _, err := net.SplitHostPort(*s1u + v2.GTPCPort)
 	if err != nil {
 		return errors.Wrap(err, "failed to get IP for S1-U")
 	}
@@ -306,7 +306,7 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.
 		return err
 	}
 
-	s1uIP, _, err := net.SplitHostPort(*s1u)
+	s1uIP, _, err := net.SplitHostPort(*s1u + v2.GTPCPort)
 	if err != nil {
 		return err
 	}
