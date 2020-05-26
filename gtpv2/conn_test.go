@@ -37,8 +37,8 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 				session := v2.NewSession(cliAddr, &v2.Subscriber{Location: &v2.Location{}})
 
 				var otei uint32
-				if ie := csReq.IMSI; ie != nil {
-					imsi, err := ie.IMSI()
+				if imsiIE := csReq.IMSI; imsiIE != nil {
+					imsi, err := imsiIE.IMSI()
 					if err != nil {
 						return err
 					}
@@ -49,8 +49,9 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 				} else {
 					return &v2.RequiredIEMissingError{Type: ie.IMSI}
 				}
-				if ie := csReq.SenderFTEIDC; ie != nil {
-					ip, err := ie.IPAddress()
+
+				if fteidcIE := csReq.SenderFTEIDC; fteidcIE != nil {
+					ip, err := fteidcIE.IPAddress()
 					if err != nil {
 						return err
 					}
@@ -58,11 +59,11 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 						return errors.Errorf("unexpected IP in F-TEID: %s", ip)
 					}
 
-					ifType, err := ie.InterfaceType()
+					ifType, err := fteidcIE.InterfaceType()
 					if err != nil {
 						return err
 					}
-					otei, err = ie.TEID()
+					otei, err = fteidcIE.TEID()
 					if err != nil {
 						return err
 					}
