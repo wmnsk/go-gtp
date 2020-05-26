@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@gtpv1
         with:
           go-version: ${{ matrix.go-version }}
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@gtpv1
       - name: Test
         run: go test ./...
       - name: Bench
@@ -24,11 +24,11 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@gtpv1
         with:
           go-version: ${{ matrix.go-version }}
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@gtpv1
       - name: Setup loopback interface for tests
         run: |
           sudo ifconfig lo0 alias 127.0.0.2
@@ -45,11 +45,11 @@ jobs:
   #   runs-on: windows-latest
   #   steps:
   #   - name: Install Go
-  #     uses: actions/setup-go@v1
+  #     uses: actions/setup-go@gtpv1
   #     with:
   #       go-version: ${{ matrix.go-version }}
   #   - name: Checkout code
-  #     uses: actions/checkout@v1
+  #     uses: actions/checkout@gtpv1
   #   - name: Test
   #     run: go test ./...
   #   - name: Bench

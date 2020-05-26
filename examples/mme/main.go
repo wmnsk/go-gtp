@@ -35,10 +35,10 @@ import (
 	"sync"
 	"time"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/ies"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/ie"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
 // command-line flags.
@@ -86,12 +86,12 @@ func main() {
 	defer s11Conn.Close()
 	log.Printf("Connection established with %s", raddr.String())
 
-	// register handlers for ALL the messages you expect remote endpoint to send.
+	// register handlers for ALL the message you expect remote endpoint to send.
 	// by default, Echo and VersionNotsupported is handled without explicit declaration.
 	s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionResponse: handleCreateSessionResponse,
-		messages.MsgTypeModifyBearerResponse:  handleModifyBearerResponse,
-		messages.MsgTypeDeleteSessionResponse: handleDeleteSessionResponse,
+		message.MsgTypeCreateSessionResponse: handleCreateSessionResponse,
+		message.MsgTypeModifyBearerResponse:  handleModifyBearerResponse,
+		message.MsgTypeDeleteSessionResponse: handleDeleteSessionResponse,
 	})
 
 	// Listen on eNB S1-U interface.
@@ -180,8 +180,8 @@ func main() {
 
 				if _, err := s11Conn.ModifyBearer(
 					teid, sess,
-					ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
-					ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), enbFTEID),
+					ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
+					ie.NewBearerContext(ie.NewEPSBearerID(sess.GetDefaultBearer().EBI), enbFTEID),
 				); err != nil {
 					errCh <- err
 					return

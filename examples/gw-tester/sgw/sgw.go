@@ -14,9 +14,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
 type sgw struct {
@@ -111,17 +111,17 @@ func (s *sgw) run(ctx context.Context) error {
 	}()
 	log.Printf("Started serving S5-C on %s", s.s5cAddr)
 
-	// register handlers for ALL the messages you expect remote endpoint to send.
+	// register handlers for ALL the message you expect remote endpoint to send.
 	s.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionRequest: s.handleCreateSessionRequest,
-		messages.MsgTypeModifyBearerRequest:  s.handleModifyBearerRequest,
-		messages.MsgTypeDeleteSessionRequest: s.handleDeleteSessionRequest,
-		messages.MsgTypeDeleteBearerResponse: s.handleDeleteBearerResponse,
+		message.MsgTypeCreateSessionRequest: s.handleCreateSessionRequest,
+		message.MsgTypeModifyBearerRequest:  s.handleModifyBearerRequest,
+		message.MsgTypeDeleteSessionRequest: s.handleDeleteSessionRequest,
+		message.MsgTypeDeleteBearerResponse: s.handleDeleteBearerResponse,
 	})
 	s.s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionResponse: s.handleCreateSessionResponse,
-		messages.MsgTypeDeleteSessionResponse: s.handleDeleteSessionResponse,
-		messages.MsgTypeDeleteBearerRequest:   s.handleDeleteBearerRequest,
+		message.MsgTypeCreateSessionResponse: s.handleCreateSessionResponse,
+		message.MsgTypeDeleteSessionResponse: s.handleDeleteSessionResponse,
+		message.MsgTypeDeleteBearerRequest:   s.handleDeleteBearerRequest,
 	})
 
 	s.s1uConn = v1.NewUPlaneConn(s.s1uAddr)

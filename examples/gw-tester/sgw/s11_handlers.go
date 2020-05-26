@@ -11,12 +11,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/ies"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/ie"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
-func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
+func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 	if s.mc != nil {
 		s.mc.messagesReceived.WithLabelValues(mmeAddr.String(), msg.MessageTypeName()).Inc()
@@ -28,32 +28,33 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
 	// specified correctly in AddHandler().
-	csReqFromMME := msg.(*messages.CreateSessionRequest)
+	csReqFromMME := msg.(*message.CreateSessionRequest)
 
 	var pgwAddrString string
-	if ie := csReqFromMME.PGWS5S8FTEIDC; ie != nil {
-		ip, err := ie.IPAddress()
+	if fteidcIE := csReqFromMME.PGWS5S8FTEIDC; fteidcIE != nil {
+		ip, err := fteidcIE.IPAddress()
 		if err != nil {
 			return err
 		}
 		pgwAddrString = ip + v2.GTPCPort
 
-		teid, err := ie.TEID()
+		teid, err := fteidcIE.TEID()
 		if err != nil {
 			return err
 		}
 		s11Session.AddTEID(v2.IFTypeS5S8PGWGTPC, teid)
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.FullyQualifiedTEID}
+		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
-	if ie := csReqFromMME.SenderFTEIDC; ie != nil {
-		teid, err := ie.TEID()
+
+	if fteidcIE := csReqFromMME.SenderFTEIDC; fteidcIE != nil {
+		teid, err := fteidcIE.TEID()
 		if err != nil {
 			return err
 		}
 		s11Session.AddTEID(v2.IFTypeS11MMEGTPC, teid)
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.FullyQualifiedTEID}
+		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
 
 	raddr, err := net.ResolveUDPAddr("udp", pgwAddrString)
@@ -63,8 +64,8 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 
 	// keep session information retrieved from the message.
 	// XXX - should return error if required IE is missing.
-	if ie := csReqFromMME.IMSI; ie != nil {
-		imsi, err := ie.IMSI()
+	if imsiIE := csReqFromMME.IMSI; imsiIE != nil {
+		imsi, err := imsiIE.IMSI()
 		if err != nil {
 			return err
 		}
@@ -84,51 +85,56 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 
 		s11Session.IMSI = imsi
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.IMSI}
+		return &v2.RequiredIEMissingError{Type: ie.IMSI}
 	}
-	if ie := csReqFromMME.MSISDN; ie != nil {
-		s11Session.MSISDN, err = ie.MSISDN()
+
+	if msisdnIE := csReqFromMME.MSISDN; msisdnIE != nil {
+		s11Session.MSISDN, err = msisdnIE.MSISDN()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.MSISDN}
+		return &v2.RequiredIEMissingError{Type: ie.MSISDN}
 	}
-	if ie := csReqFromMME.MEI; ie != nil {
-		s11Session.IMEI, err = ie.MobileEquipmentIdentity()
+
+	if meiIE := csReqFromMME.MEI; meiIE != nil {
+		s11Session.IMEI, err = meiIE.MobileEquipmentIdentity()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.MobileEquipmentIdentity}
+		return &v2.RequiredIEMissingError{Type: ie.MobileEquipmentIdentity}
 	}
-	if ie := csReqFromMME.APN; ie != nil {
-		s11Bearer.APN, err = ie.AccessPointName()
+
+	if apnIE := csReqFromMME.APN; apnIE != nil {
+		s11Bearer.APN, err = apnIE.AccessPointName()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.AccessPointName}
+		return &v2.RequiredIEMissingError{Type: ie.AccessPointName}
 	}
-	if ie := csReqFromMME.ServingNetwork; ie != nil {
-		s11Session.MCC, err = ie.MCC()
+
+	if netIE := csReqFromMME.ServingNetwork; netIE != nil {
+		s11Session.MCC, err = netIE.MCC()
 		if err != nil {
 			return err
 		}
-		s11Session.MNC, err = ie.MNC()
+		s11Session.MNC, err = netIE.MNC()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.ServingNetwork}
+		return &v2.RequiredIEMissingError{Type: ie.ServingNetwork}
 	}
-	if ie := csReqFromMME.RATType; ie != nil {
-		s11Session.RATType, err = ie.RATType()
+
+	if ratIE := csReqFromMME.RATType; ratIE != nil {
+		s11Session.RATType, err = ratIE.RATType()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.RATType}
+		return &v2.RequiredIEMissingError{Type: ie.RATType}
 	}
 	s11sgwFTEID := s11Conn.NewSenderFTEID(s.s11IP, "")
 	s11sgwTEID := s11sgwFTEID.MustTEID()
@@ -143,13 +149,13 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 		csReqFromMME.RATType, csReqFromMME.IndicationFlags, s5cFTEID, csReqFromMME.PGWS5S8FTEIDC,
 		csReqFromMME.APN, csReqFromMME.SelectionMode, csReqFromMME.PDNType, csReqFromMME.PAA,
 		csReqFromMME.APNRestriction, csReqFromMME.AMBR, csReqFromMME.ULI,
-		ies.NewBearerContext(
-			ies.NewEPSBearerID(5),
+		ie.NewBearerContext(
+			ie.NewEPSBearerID(5),
 			s5uFTEID,
-			ies.NewBearerQoS(1, 2, 1, 0xff, 0, 0, 0, 0),
+			ie.NewBearerQoS(1, 2, 1, 0xff, 0, 0, 0, 0),
 		),
 		csReqFromMME.MMEFQCSID,
-		ies.NewFullyQualifiedCSID(s.s5uIP, 1).WithInstance(1),
+		ie.NewFullyQualifiedCSID(s.s5uIP, 1).WithInstance(1),
 	)
 	if err != nil {
 		return err
@@ -161,17 +167,18 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 		s.mc.messagesSent.WithLabelValues(mmeAddr.String(), "Create Session Request").Inc()
 	}
 
-	var csRspFromSGW *messages.CreateSessionResponse
+	var csRspFromSGW *message.CreateSessionResponse
 	s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
 	if err != nil {
 		s11Conn.RemoveSession(s11Session)
 		return err
 	}
-	message, err := s11Session.WaitMessage(seq, 5*time.Second)
+
+	incomingMsg, err := s11Session.WaitMessage(seq, 5*time.Second)
 	if err != nil {
-		csRspFromSGW = messages.NewCreateSessionResponse(
+		csRspFromSGW = message.NewCreateSessionResponse(
 			s11mmeTEID, 0,
-			ies.NewCause(v2.CauseNoResourcesAvailable, 0, 0, 0, nil),
+			ie.NewCause(v2.CauseNoResourcesAvailable, 0, 0, 0, nil),
 		)
 
 		if err := s11Conn.RespondTo(mmeAddr, csReqFromMME, csRspFromSGW); err != nil {
@@ -186,9 +193,9 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 		return err
 	}
 
-	var csRspFromPGW *messages.CreateSessionResponse
-	switch m := message.(type) {
-	case *messages.CreateSessionResponse:
+	var csRspFromPGW *message.CreateSessionResponse
+	switch m := incomingMsg.(type) {
+	case *message.CreateSessionResponse:
 		// move forward
 		csRspFromPGW = m
 
@@ -201,16 +208,16 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 		}
 	default:
 		s11Conn.RemoveSession(s11Session)
-		return &v2.UnexpectedTypeError{Msg: message}
+		return &v2.UnexpectedTypeError{Msg: incomingMsg}
 	}
 
 	// if everything in CreateSessionResponse seems OK, relay it to MME.
 	s1usgwFTEID := s.s1uConn.NewFTEID(v2.IFTypeS1USGWGTPU, s.s1uIP, "")
 	csRspFromSGW = csRspFromPGW
 	csRspFromSGW.SenderFTEIDC = s11sgwFTEID
-	csRspFromSGW.SGWFQCSID = ies.NewFullyQualifiedCSID(s.s1uIP, 1).WithInstance(1)
+	csRspFromSGW.SGWFQCSID = ie.NewFullyQualifiedCSID(s.s1uIP, 1).WithInstance(1)
 	csRspFromSGW.BearerContextsCreated.Add(s1usgwFTEID)
-	csRspFromSGW.BearerContextsCreated.Remove(ies.ChargingID, 0)
+	csRspFromSGW.BearerContextsCreated.Remove(ie.ChargingID, 0)
 	csRspFromSGW.SetTEID(s11mmeTEID)
 	csRspFromSGW.SetLength()
 
@@ -248,7 +255,7 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	return nil
 }
 
-func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
+func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 	if s.mc != nil {
 		s.mc.messagesReceived.WithLabelValues(mmeAddr.String(), msg.MessageTypeName()).Inc()
@@ -266,24 +273,24 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg 
 	s5uBearer := s5cSession.GetDefaultBearer()
 
 	var enbIP string
-	mbReqFromMME := msg.(*messages.ModifyBearerRequest)
+	mbReqFromMME := msg.(*message.ModifyBearerRequest)
 	if brCtxIE := mbReqFromMME.BearerContextsToBeModified; brCtxIE != nil {
-		for _, ie := range brCtxIE.ChildIEs {
-			switch ie.Type {
-			case ies.Indication:
+		for _, childIE := range brCtxIE.ChildIEs {
+			switch childIE.Type {
+			case ie.Indication:
 				// do nothing in this implementation.
-			case ies.FullyQualifiedTEID:
-				if err := s.handleFTEIDU(ie, s11Session, s1uBearer); err != nil {
+			case ie.FullyQualifiedTEID:
+				if err := s.handleFTEIDU(childIE, s11Session, s1uBearer); err != nil {
 					return err
 				}
-				enbIP, err = ie.IPAddress()
+				enbIP, err = childIE.IPAddress()
 				if err != nil {
 					return err
 				}
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.BearerContext}
+		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
 	s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
@@ -314,13 +321,13 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg 
 		return err
 	}
 
-	mbRspFromSGW := messages.NewModifyBearerResponse(
+	mbRspFromSGW := message.NewModifyBearerResponse(
 		s11mmeTEID, 0,
-		ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
-		ies.NewBearerContext(
-			ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
-			ies.NewEPSBearerID(s1uBearer.EBI),
-			ies.NewFullyQualifiedTEID(v2.IFTypeS1USGWGTPU, s1usgwTEID, s.s1uIP, ""),
+		ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+		ie.NewBearerContext(
+			ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+			ie.NewEPSBearerID(s1uBearer.EBI),
+			ie.NewFullyQualifiedTEID(v2.IFTypeS1USGWGTPU, s1usgwTEID, s.s1uIP, ""),
 		),
 	)
 
@@ -338,7 +345,7 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg 
 	return nil
 }
 
-func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
+func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 	if s.mc != nil {
 		s.mc.messagesReceived.WithLabelValues(mmeAddr.String(), msg.MessageTypeName()).Inc()
@@ -347,7 +354,7 @@ func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
 	// specified correctly in AddHandler().
-	dsReqFromMME := msg.(*messages.DeleteSessionRequest)
+	dsReqFromMME := msg.(*message.DeleteSessionRequest)
 
 	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID(), mmeAddr)
 	if err != nil {
@@ -366,23 +373,23 @@ func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 
 	seq, err := s.s5cConn.DeleteSession(
 		s5cpgwTEID, s5Session,
-		ies.NewEPSBearerID(s5Session.GetDefaultBearer().EBI),
+		ie.NewEPSBearerID(s5Session.GetDefaultBearer().EBI),
 	)
 	if err != nil {
 		return err
 	}
 
-	var dsRspFromSGW *messages.DeleteSessionResponse
+	var dsRspFromSGW *message.DeleteSessionResponse
 	s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
 	if err != nil {
 		return err
 	}
 
-	message, err := s11Session.WaitMessage(seq, 5*time.Second)
+	incomingMessage, err := s11Session.WaitMessage(seq, 5*time.Second)
 	if err != nil {
-		dsRspFromSGW = messages.NewDeleteSessionResponse(
+		dsRspFromSGW = message.NewDeleteSessionResponse(
 			s11mmeTEID, 0,
-			ies.NewCause(v2.CausePGWNotResponding, 0, 0, 0, nil),
+			ie.NewCause(v2.CausePGWNotResponding, 0, 0, 0, nil),
 		)
 
 		if err := s11Conn.RespondTo(mmeAddr, dsReqFromMME, dsRspFromSGW); err != nil {
@@ -399,12 +406,12 @@ func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	}
 
 	// use the cause as it is.
-	switch m := message.(type) {
-	case *messages.DeleteSessionResponse:
+	switch m := incomingMessage.(type) {
+	case *message.DeleteSessionResponse:
 		// move forward
 		dsRspFromSGW = m
 	default:
-		return &v2.UnexpectedTypeError{Msg: message}
+		return &v2.UnexpectedTypeError{Msg: incomingMessage}
 	}
 
 	dsRspFromSGW.SetTEID(s11mmeTEID)
@@ -421,7 +428,7 @@ func (s *sgw) handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	return nil
 }
 
-func (s *sgw) handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg messages.Message) error {
+func (s *sgw) handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 	if s.mc != nil {
 		s.mc.messagesReceived.WithLabelValues(mmeAddr.String(), msg.MessageTypeName()).Inc()
@@ -446,12 +453,12 @@ func (s *sgw) handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 	return nil
 }
 
-func (s *sgw) handleFTEIDU(ie *ies.IE, session *v2.Session, bearer *v2.Bearer) error {
-	if ie.Type != ies.FullyQualifiedTEID {
-		return &v2.UnexpectedIEError{IEType: ie.Type}
+func (s *sgw) handleFTEIDU(fteiduIE *ie.IE, session *v2.Session, bearer *v2.Bearer) error {
+	if fteiduIE.Type != ie.FullyQualifiedTEID {
+		return &v2.UnexpectedIEError{IEType: fteiduIE.Type}
 	}
 
-	ip, err := ie.IPAddress()
+	ip, err := fteiduIE.IPAddress()
 	if err != nil {
 		return err
 	}
@@ -461,13 +468,13 @@ func (s *sgw) handleFTEIDU(ie *ies.IE, session *v2.Session, bearer *v2.Bearer) e
 	}
 	bearer.SetRemoteAddress(addr)
 
-	teid, err := ie.TEID()
+	teid, err := fteiduIE.TEID()
 	if err != nil {
 		return err
 	}
 	bearer.SetOutgoingTEID(teid)
 
-	it, err := ie.InterfaceType()
+	it, err := fteiduIE.InterfaceType()
 	if err != nil {
 		return err
 	}
