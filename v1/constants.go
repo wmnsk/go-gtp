@@ -61,6 +61,23 @@ const (
 	ResCauseSemanticErrorInTheTFTOperation
 	ResCauseSyntacticErrorInTheTFTOperation
 	ResCauseSemanticErrorsInPacketFilter
+	ResCauseSyntacticErrorsInPacketFilter
+	ResCauseMissingOrUnknownAPN
+	ResCauseUnknownPDPAddressOrPDPType
+	ResCausePDPContextWithoutTFTAlreadyActivated
+	ResCauseAPNAccessDeniedNoSubscription
+	ResCauseAPNRestrictionTypeIncompatibilityWithCurrentlyActivePDPContexts
+	ResCauseMSMBMSCapabilitiesInsufficient
+	ResCauseInvalidCorrelationID
+	ResCauseMBMSBearerContextSuperseded
+	ResCauseBearerControlModeViolation
+	ResCauseCollisionWithNetworkInitiatedRequest
+	ResCauseAPNCongestion
+	ResCauseBearerHandlingNotSupported
+	ResCauseTargetAccessRestrictedForTheSubscriber
+	ResCauseUEIsTemporarilyNotReachableDueToPowerSaving
+	ResCauseRelocationFailureDueToNASMessageRedirection
+	// 234-255: for future use / reserved for prime.
 )
 
 // SelectionMode definitions.
