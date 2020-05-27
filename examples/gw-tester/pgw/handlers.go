@@ -10,12 +10,12 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/ies"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/ie"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
-func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
+func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if p.mc != nil {
 		p.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -24,14 +24,14 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
 	// specified correctly in AddHandler().
-	csReqFromSGW := msg.(*messages.CreateSessionRequest)
+	csReqFromSGW := msg.(*message.CreateSessionRequest)
 
 	// keep session information retrieved from the message.
 	session := v2.NewSession(sgwAddr, &v2.Subscriber{Location: &v2.Location{}})
 	bearer := session.GetDefaultBearer()
 	var err error
-	if ie := csReqFromSGW.IMSI; ie != nil {
-		imsi, err := ie.IMSI()
+	if imsiIE := csReqFromSGW.IMSI; imsiIE != nil {
+		imsi, err := imsiIE.IMSI()
 		if err != nil {
 			return err
 		}
@@ -50,100 +50,100 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 			c.RemoveSession(sess)
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.IMSI}
+		return &v2.RequiredIEMissingError{Type: ie.IMSI}
 	}
-	if ie := csReqFromSGW.MSISDN; ie != nil {
-		session.MSISDN, err = ie.MSISDN()
+	if msisdnIE := csReqFromSGW.MSISDN; msisdnIE != nil {
+		session.MSISDN, err = msisdnIE.MSISDN()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.MSISDN}
+		return &v2.RequiredIEMissingError{Type: ie.MSISDN}
 	}
-	if ie := csReqFromSGW.MEI; ie != nil {
-		session.IMEI, err = ie.MobileEquipmentIdentity()
+	if meiIE := csReqFromSGW.MEI; meiIE != nil {
+		session.IMEI, err = meiIE.MobileEquipmentIdentity()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.MobileEquipmentIdentity}
+		return &v2.RequiredIEMissingError{Type: ie.MobileEquipmentIdentity}
 	}
-	if ie := csReqFromSGW.APN; ie != nil {
-		bearer.APN, err = ie.AccessPointName()
+	if apnIE := csReqFromSGW.APN; apnIE != nil {
+		bearer.APN, err = apnIE.AccessPointName()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.AccessPointName}
+		return &v2.RequiredIEMissingError{Type: ie.AccessPointName}
 	}
-	if ie := csReqFromSGW.ServingNetwork; ie != nil {
-		session.MCC, err = ie.MCC()
+	if netIE := csReqFromSGW.ServingNetwork; netIE != nil {
+		session.MCC, err = netIE.MCC()
 		if err != nil {
 			return err
 		}
-		session.MNC, err = ie.MNC()
-		if err != nil {
-			return err
-		}
-	} else {
-		return &v2.RequiredIEMissingError{Type: ies.ServingNetwork}
-	}
-	if ie := csReqFromSGW.RATType; ie != nil {
-		session.RATType, err = ie.RATType()
+		session.MNC, err = netIE.MNC()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.RATType}
+		return &v2.RequiredIEMissingError{Type: ie.ServingNetwork}
 	}
-	if ie := csReqFromSGW.SenderFTEIDC; ie != nil {
-		teid, err := ie.TEID()
+	if ratIE := csReqFromSGW.RATType; ratIE != nil {
+		session.RATType, err = ratIE.RATType()
+		if err != nil {
+			return err
+		}
+	} else {
+		return &v2.RequiredIEMissingError{Type: ie.RATType}
+	}
+	if fteidcIE := csReqFromSGW.SenderFTEIDC; fteidcIE != nil {
+		teid, err := fteidcIE.TEID()
 		if err != nil {
 			return err
 		}
 		session.AddTEID(v2.IFTypeS5S8SGWGTPC, teid)
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.FullyQualifiedTEID}
+		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
 
 	var s5sgwuIP string
 	var oteiU uint32
 	if brCtxIE := csReqFromSGW.BearerContextsToBeCreated; brCtxIE != nil {
-		for _, ie := range brCtxIE.ChildIEs {
-			switch ie.Type {
-			case ies.EPSBearerID:
-				bearer.EBI, err = ie.EPSBearerID()
+		for _, childIE := range brCtxIE.ChildIEs {
+			switch childIE.Type {
+			case ie.EPSBearerID:
+				bearer.EBI, err = childIE.EPSBearerID()
 				if err != nil {
 					return err
 				}
-			case ies.FullyQualifiedTEID:
-				it, err := ie.InterfaceType()
+			case ie.FullyQualifiedTEID:
+				it, err := childIE.InterfaceType()
 				if err != nil {
 					return err
 				}
-				oteiU, err = ie.TEID()
+				oteiU, err = childIE.TEID()
 				if err != nil {
 					return err
 				}
 				session.AddTEID(it, oteiU)
 
-				s5sgwuIP, err = ie.IPAddress()
+				s5sgwuIP, err = childIE.IPAddress()
 				if err != nil {
 					return err
 				}
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.BearerContext}
+		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
-	if ie := csReqFromSGW.PAA; ie != nil {
-		bearer.SubscriberIP, err = ie.IPAddress()
+	if paaIE := csReqFromSGW.PAA; paaIE != nil {
+		bearer.SubscriberIP, err = paaIE.IPAddress()
 		if err != nil {
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.PDNAddressAllocation}
+		return &v2.RequiredIEMissingError{Type: ie.PDNAddressAllocation}
 	}
 
 	cIP := strings.Split(c.LocalAddr().String(), ":")[0]
@@ -154,21 +154,21 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	if err != nil {
 		return err
 	}
-	csRspFromPGW := messages.NewCreateSessionResponse(
+	csRspFromPGW := message.NewCreateSessionResponse(
 		s5sgwTEID, 0,
-		ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+		ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
 		s5cFTEID,
-		ies.NewPDNAddressAllocation(bearer.SubscriberIP),
-		ies.NewAPNRestriction(v2.APNRestrictionPublic2),
-		ies.NewBearerContext(
-			ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
-			ies.NewEPSBearerID(bearer.EBI),
+		ie.NewPDNAddressAllocation(bearer.SubscriberIP),
+		ie.NewAPNRestriction(v2.APNRestrictionPublic2),
+		ie.NewBearerContext(
+			ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+			ie.NewEPSBearerID(bearer.EBI),
 			s5uFTEID,
-			ies.NewChargingID(bearer.ChargingID),
+			ie.NewChargingID(bearer.ChargingID),
 		),
 	)
 	if csReqFromSGW.SGWFQCSID != nil {
-		csRspFromPGW.PGWFQCSID = ies.NewFullyQualifiedCSID(cIP, 1)
+		csRspFromPGW.PGWFQCSID = ie.NewFullyQualifiedCSID(cIP, 1)
 	}
 	session.AddTEID(v2.IFTypeS5S8PGWGTPC, s5cFTEID.MustTEID())
 	session.AddTEID(v2.IFTypeS5S8PGWGTPU, s5uFTEID.MustTEID())
@@ -201,7 +201,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	return nil
 }
 
-func (p *pgw) handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
+func (p *pgw) handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if p.mc != nil {
 		p.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -212,9 +212,9 @@ func (p *pgw) handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	// specified correctly in AddHandler().
 	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)
 	if err != nil {
-		dsr := messages.NewDeleteSessionResponse(
+		dsr := message.NewDeleteSessionResponse(
 			0, 0,
-			ies.NewCause(v2.CauseIMSIIMEINotKnown, 0, 0, 0, nil),
+			ie.NewCause(v2.CauseIMSIIMEINotKnown, 0, 0, 0, nil),
 		)
 		if err := c.RespondTo(sgwAddr, msg, dsr); err != nil {
 			return err
@@ -229,9 +229,9 @@ func (p *pgw) handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 		log.Println(err)
 		return nil
 	}
-	dsr := messages.NewDeleteSessionResponse(
+	dsr := message.NewDeleteSessionResponse(
 		teid, 0,
-		ies.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+		ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
 	)
 	if err := c.RespondTo(sgwAddr, msg, dsr); err != nil {
 		return err

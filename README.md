@@ -80,9 +80,9 @@ For the detailed usage of specific version, see README.md under each version's d
 
 | Version | Details                   |
 |---------|---------------------------|
-| GTPv0   | [README.md](v0/README.md) |
-| GTPv1   | [README.md](v1/README.md) |
-| GTPv2   | [README.md](v2/README.md) |
+| GTPv0   | [README.md](gtpv0/README.md) |
+| GTPv1   | [README.md](gtpv1/README.md) |
+| GTPv2   | [README.md](gtpv2/README.md) |
 
 ## Supported Features
 
@@ -93,9 +93,9 @@ Your contribution is welcome to implement helpers for all the types, of course!
 
 | Version           | Messages | IEs   | Networking (state machine)                           | Details                                               |
 |-------------------|----------|-------|------------------------------------------------------|-------------------------------------------------------|
-| GTPv0             | 35.7%    | 81.8% | not implemented yet                                  | [Supported Features](v0/README.md#supported-features) |
-| GTPv1             | 26.6%    | 30.1% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](v1/README.md#supported-features) |
-| GTPv2             | 41.0%    | 43.2% | almost functional                                    | [Supported Features](v2/README.md#supported-features) |
+| GTPv0             | 35.7%    | 81.8% | not implemented yet                                  | [Supported Features](gtpv0/README.md#supported-features) |
+| GTPv1             | 26.6%    | 30.1% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](gtpv1/README.md#supported-features) |
+| GTPv2             | 41.0%    | 43.2% | almost functional                                    | [Supported Features](gtpv2/README.md#supported-features) |
 | GTP' <br> (Prime) | N/A      | N/A   | N/A                                                  | _not planned_                                         |
 
 ## Disclaimer

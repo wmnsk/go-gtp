@@ -12,9 +12,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/ies"
+	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
 // getPGWIP is to get P-GW's IP address according to APN.
@@ -87,30 +87,30 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 	localIP := strings.Split(c.LocalAddr().String(), ":")[0]
 	_, _, err = c.CreateSession(
 		raddr,
-		ies.NewIMSI(sub.IMSI),
-		ies.NewMSISDN(sub.MSISDN),
-		ies.NewMobileEquipmentIdentity(sub.IMEI),
-		ies.NewUserLocationInformation(
+		ie.NewIMSI(sub.IMSI),
+		ie.NewMSISDN(sub.MSISDN),
+		ie.NewMobileEquipmentIdentity(sub.IMEI),
+		ie.NewUserLocationInformation(
 			0, 0, 0, 1, 1, 0, 0, 0,
 			sub.MCC, sub.MCC, sub.LAC, sub.CI, sub.SAI, sub.RAI, sub.TAI, sub.ECI, sub.MeNBI, sub.EMeNBI,
 		),
-		ies.NewRATType(sub.RATType),
-		ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
+		ie.NewRATType(sub.RATType),
+		ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 		c.NewSenderFTEID(localIP, ""),
-		ies.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0, pgwAddr, "").WithInstance(1),
-		ies.NewAccessPointName(br.APN),
-		ies.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
-		ies.NewPDNType(v2.PDNTypeIPv4),
-		ies.NewPDNAddressAllocation("0.0.0.0"),
-		ies.NewAPNRestriction(v2.APNRestrictionNoExistingContextsorRestriction),
-		ies.NewAggregateMaximumBitRate(0, 0),
-		ies.NewBearerContext(
-			ies.NewEPSBearerID(br.EBI),
-			ies.NewBearerQoS(pci, br.PL, pvi, br.QCI, br.MBRUL, br.MBRDL, br.GBRUL, br.GBRDL),
+		ie.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0, pgwAddr, "").WithInstance(1),
+		ie.NewAccessPointName(br.APN),
+		ie.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
+		ie.NewPDNType(v2.PDNTypeIPv4),
+		ie.NewPDNAddressAllocation("0.0.0.0"),
+		ie.NewAPNRestriction(v2.APNRestrictionNoExistingContextsorRestriction),
+		ie.NewAggregateMaximumBitRate(0, 0),
+		ie.NewBearerContext(
+			ie.NewEPSBearerID(br.EBI),
+			ie.NewBearerQoS(pci, br.PL, pvi, br.QCI, br.MBRUL, br.MBRDL, br.GBRUL, br.GBRDL),
 		),
-		ies.NewFullyQualifiedCSID(localIP, 1),
-		ies.NewServingNetwork(sub.MCC, sub.MNC),
-		ies.NewUETimeZone(9*time.Hour, 0),
+		ie.NewFullyQualifiedCSID(localIP, 1),
+		ie.NewServingNetwork(sub.MCC, sub.MNC),
+		ie.NewUETimeZone(9*time.Hour, 0),
 	)
 	if err != nil {
 		return err

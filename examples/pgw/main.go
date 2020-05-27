@@ -27,9 +27,9 @@ import (
 	"net"
 	"time"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
 // command-line arguments
@@ -61,10 +61,10 @@ func main() {
 	}()
 	log.Printf("Started serving C-Plane on %s", s5cAddr)
 
-	// register handlers for ALL the messages you expect remote endpoint to send.
+	// register handlers for ALL the message you expect remote endpoint to send.
 	s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionRequest: handleCreateSessionRequest,
-		messages.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
+		message.MsgTypeCreateSessionRequest: handleCreateSessionRequest,
+		message.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
 	})
 
 	s5uAddr, err := net.ResolveUDPAddr("udp", *s5u+v2.GTPUPort)

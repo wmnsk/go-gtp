@@ -49,7 +49,7 @@ func (p *pgw) runMetricsCollector() error {
 	mc.messagesSent = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "pgw_messages_sent_total",
-			Help: "number of messages sent by messagge type",
+			Help: "number of message sent by messagge type",
 		},
 		[]string{"dst", "type"},
 	)
@@ -57,7 +57,7 @@ func (p *pgw) runMetricsCollector() error {
 	mc.messagesReceived = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "pgw_messages_received_total",
-			Help: "number of messages received by messagge type",
+			Help: "number of message received by messagge type",
 		},
 		[]string{"src", "type"},
 	)

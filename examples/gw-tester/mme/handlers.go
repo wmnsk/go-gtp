@@ -6,15 +6,15 @@ package main
 
 import (
 	"fmt"
+	"github.com/wmnsk/go-gtp/gtpv2/ie"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"log"
 	"net"
 
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/ies"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
 )
 
-func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
+func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if m.mc != nil {
 		m.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -31,11 +31,11 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 	// assert type to refer to the struct field specific to the message.
 	// in general, no need to check if it can be type-asserted, as long as the MessageType is
 	// specified correctly in AddHandler().
-	csRspFromSGW := msg.(*messages.CreateSessionResponse)
+	csRspFromSGW := msg.(*message.CreateSessionResponse)
 
 	// check Cause value first.
-	if ie := csRspFromSGW.Cause; ie != nil {
-		cause, err := ie.Cause()
+	if causeIE := csRspFromSGW.Cause; causeIE != nil {
+		cause, err := causeIE.Cause()
 		if err != nil {
 			return err
 		}
@@ -51,20 +51,20 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 		return &v2.RequiredIEMissingError{Type: msg.MessageType()}
 	}
 
-	if ie := csRspFromSGW.PAA; ie != nil {
-		bearer.SubscriberIP, err = ie.IPAddress()
+	if paaIE := csRspFromSGW.PAA; paaIE != nil {
+		bearer.SubscriberIP, err = paaIE.IPAddress()
 		if err != nil {
 			return err
 		}
 	}
-	if ie := csRspFromSGW.SenderFTEIDC; ie != nil {
-		teid, err := ie.TEID()
+	if fteidcIE := csRspFromSGW.SenderFTEIDC; fteidcIE != nil {
+		teid, err := fteidcIE.TEID()
 		if err != nil {
 			return err
 		}
 		session.AddTEID(v2.IFTypeS11S4SGWGTPC, teid)
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.FullyQualifiedTEID}
+		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
 
 	s11sgwTEID, err := session.GetTEID(v2.IFTypeS11S4SGWGTPC)
@@ -79,22 +79,22 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 	}
 
 	if brCtxIE := csRspFromSGW.BearerContextsCreated; brCtxIE != nil {
-		for _, ie := range brCtxIE.ChildIEs {
-			switch ie.Type {
-			case ies.EPSBearerID:
-				bearer.EBI, err = ie.EPSBearerID()
+		for _, childIE := range brCtxIE.ChildIEs {
+			switch childIE.Type {
+			case ie.EPSBearerID:
+				bearer.EBI, err = childIE.EPSBearerID()
 				if err != nil {
 					return err
 				}
-			case ies.FullyQualifiedTEID:
-				if ie.Instance() != 0 {
+			case ie.FullyQualifiedTEID:
+				if childIE.Instance() != 0 {
 					continue
 				}
-				it, err := ie.InterfaceType()
+				it, err := childIE.InterfaceType()
 				if err != nil {
 					return err
 				}
-				teid, err := ie.TEID()
+				teid, err := childIE.TEID()
 				if err != nil {
 					return err
 				}
@@ -102,7 +102,7 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.BearerContext}
+		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
 	if err := session.Activate(); err != nil {
@@ -118,7 +118,7 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 	return nil
 }
 
-func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
+func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if m.mc != nil {
 		m.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -129,9 +129,9 @@ func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messa
 		return err
 	}
 
-	mbRspFromSGW := msg.(*messages.ModifyBearerResponse)
-	if ie := mbRspFromSGW.Cause; ie != nil {
-		cause, err := ie.Cause()
+	mbRspFromSGW := msg.(*message.ModifyBearerResponse)
+	if causeIE := mbRspFromSGW.Cause; causeIE != nil {
+		cause, err := causeIE.Cause()
 		if err != nil {
 			return err
 		}
@@ -143,34 +143,34 @@ func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messa
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.Cause}
+		return &v2.RequiredIEMissingError{Type: ie.Cause}
 	}
 
 	if brCtxIE := mbRspFromSGW.BearerContextsModified; brCtxIE != nil {
-		for _, ie := range brCtxIE.ChildIEs {
-			switch ie.Type {
-			case ies.FullyQualifiedTEID:
-				if ie.Instance() != 0 {
+		for _, childIE := range brCtxIE.ChildIEs {
+			switch childIE.Type {
+			case ie.FullyQualifiedTEID:
+				if childIE.Instance() != 0 {
 					continue
 				}
-				it, err := ie.InterfaceType()
+				it, err := childIE.InterfaceType()
 				if err != nil {
 					return err
 				}
-				teid, err := ie.TEID()
+				teid, err := childIE.TEID()
 				if err != nil {
 					return err
 				}
 				session.AddTEID(it, teid)
 
-				m.sgw.s1uIP, err = ie.IPAddress()
+				m.sgw.s1uIP, err = childIE.IPAddress()
 				if err != nil {
 					return err
 				}
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ies.BearerContext}
+		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
 	log.Printf("Bearer modified with S-GW for Subscriber: %s", session.IMSI)
@@ -178,7 +178,7 @@ func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messa
 	return nil
 }
 
-func (m *mme) handleDeleteSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg messages.Message) error {
+func (m *mme) handleDeleteSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if m.mc != nil {
 		m.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()

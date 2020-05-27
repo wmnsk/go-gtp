@@ -12,11 +12,11 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
-	v1 "github.com/wmnsk/go-gtp/v1"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 
 	"github.com/pkg/errors"
-	v2 "github.com/wmnsk/go-gtp/v2"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
 )
 
 type pgw struct {
@@ -76,10 +76,10 @@ func (p *pgw) run(ctx context.Context) error {
 	}()
 	log.Printf("Started serving S5-C on %s", cAddr)
 
-	// register handlers for ALL the messages you expect remote endpoint to send.
+	// register handlers for ALL the message you expect remote endpoint to send.
 	p.cConn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionRequest: p.handleCreateSessionRequest,
-		messages.MsgTypeDeleteSessionRequest: p.handleDeleteSessionRequest,
+		message.MsgTypeCreateSessionRequest: p.handleCreateSessionRequest,
+		message.MsgTypeDeleteSessionRequest: p.handleDeleteSessionRequest,
 	})
 
 	uAddr, err := net.ResolveUDPAddr("udp", p.s5u)

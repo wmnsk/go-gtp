@@ -49,7 +49,7 @@ func (e *enb) runMetricsCollector() error {
 	mc.messagesSent = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "enb_messages_sent_total",
-			Help: "number of messages sent by messagge type",
+			Help: "number of message sent by messagge type",
 		},
 		[]string{"dst", "type"},
 	)
@@ -57,7 +57,7 @@ func (e *enb) runMetricsCollector() error {
 	mc.messagesReceived = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "enb_messages_received_total",
-			Help: "number of messages received by messagge type",
+			Help: "number of message received by messagge type",
 		},
 		[]string{"src", "type"},
 	)
