@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/wmnsk/go-gtp/examples/gw-tester/s1mme"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/ies"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/ie"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
 // Session represents a subscriber.
@@ -129,9 +129,9 @@ func (m *mme) run(ctx context.Context) error {
 	log.Printf("Started serving S11 on: %s", m.s11Addr)
 
 	m.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionResponse: m.handleCreateSessionResponse,
-		messages.MsgTypeModifyBearerResponse:  m.handleModifyBearerResponse,
-		messages.MsgTypeDeleteSessionResponse: m.handleDeleteSessionResponse,
+		message.MsgTypeCreateSessionResponse: m.handleCreateSessionResponse,
+		message.MsgTypeModifyBearerResponse:  m.handleModifyBearerResponse,
+		message.MsgTypeDeleteSessionResponse: m.handleDeleteSessionResponse,
 	})
 
 	// start serving Prometheus, if address is given
@@ -265,30 +265,30 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 
 	session, _, err := m.s11Conn.CreateSession(
 		raddr,
-		ies.NewIMSI(sess.IMSI),
-		ies.NewMSISDN(sess.MSISDN),
-		ies.NewMobileEquipmentIdentity(sess.IMEISV),
-		ies.NewUserLocationInformation(
+		ie.NewIMSI(sess.IMSI),
+		ie.NewMSISDN(sess.MSISDN),
+		ie.NewMobileEquipmentIdentity(sess.IMEISV),
+		ie.NewUserLocationInformation(
 			0, 0, 0, 1, 1, 0, 0, 0,
 			m.enb.mcc, m.enb.mnc, 0, 0, 0, 0, 1, 1, 0, 0,
 		),
-		ies.NewRATType(v2.RATTypeEUTRAN),
-		ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
+		ie.NewRATType(v2.RATTypeEUTRAN),
+		ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 		m.s11Conn.NewSenderFTEID(m.s11IP, ""),
-		ies.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0, m.pgw.s5cIP, "").WithInstance(1),
-		ies.NewAccessPointName(m.apn),
-		ies.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
-		ies.NewPDNType(v2.PDNTypeIPv4),
-		ies.NewPDNAddressAllocation(sess.SrcIP),
-		ies.NewAPNRestriction(v2.APNRestrictionNoExistingContextsorRestriction),
-		ies.NewAggregateMaximumBitRate(0, 0),
-		ies.NewBearerContext(
-			ies.NewEPSBearerID(br.EBI),
-			ies.NewBearerQoS(pci, br.PL, pvi, br.QCI, br.MBRUL, br.MBRDL, br.GBRUL, br.GBRDL),
+		ie.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0, m.pgw.s5cIP, "").WithInstance(1),
+		ie.NewAccessPointName(m.apn),
+		ie.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
+		ie.NewPDNType(v2.PDNTypeIPv4),
+		ie.NewPDNAddressAllocation(sess.SrcIP),
+		ie.NewAPNRestriction(v2.APNRestrictionNoExistingContextsorRestriction),
+		ie.NewAggregateMaximumBitRate(0, 0),
+		ie.NewBearerContext(
+			ie.NewEPSBearerID(br.EBI),
+			ie.NewBearerQoS(pci, br.PL, pvi, br.QCI, br.MBRUL, br.MBRDL, br.GBRUL, br.GBRDL),
 		),
-		ies.NewFullyQualifiedCSID(m.s11IP, 1),
-		ies.NewServingNetwork(m.mcc, m.mnc),
-		ies.NewUETimeZone(9*time.Hour, 0),
+		ie.NewFullyQualifiedCSID(m.s11IP, 1),
+		ie.NewServingNetwork(m.mcc, m.mnc),
+		ie.NewUETimeZone(9*time.Hour, 0),
 	)
 	if err != nil {
 		return nil, err
@@ -306,10 +306,10 @@ func (m *mme) ModifyBearer(sess *v2.Session, sub *Session) (*v2.Bearer, error) {
 		return nil, err
 	}
 
-	fteid := ies.NewFullyQualifiedTEID(v2.IFTypeS1UeNodeBGTPU, sub.itei, m.enb.s1uIP, "")
+	fteid := ie.NewFullyQualifiedTEID(v2.IFTypeS1UeNodeBGTPU, sub.itei, m.enb.s1uIP, "")
 	if _, err = m.s11Conn.ModifyBearer(
-		teid, sess, ies.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
-		ies.NewBearerContext(ies.NewEPSBearerID(sess.GetDefaultBearer().EBI), fteid, ies.NewPortNumber(2125)),
+		teid, sess, ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
+		ie.NewBearerContext(ie.NewEPSBearerID(sess.GetDefaultBearer().EBI), fteid, ie.NewPortNumber(2125)),
 	); err != nil {
 		return nil, err
 	}

@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/wmnsk/go-gtp/examples/gw-tester/s1mme"
-	v1 "github.com/wmnsk/go-gtp/v1"
+	v1 "github.com/wmnsk/go-gtp/gtpv1"
 )
 
 type enb struct {

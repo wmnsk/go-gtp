@@ -33,9 +33,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	v1 "github.com/wmnsk/go-gtp/v1"
-	v2 "github.com/wmnsk/go-gtp/v2"
-	"github.com/wmnsk/go-gtp/v2/messages"
+	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
 // command-line arguments and global variables
@@ -168,17 +168,17 @@ func main() {
 		return
 	}
 
-	// register handlers for ALL the messages you expect remote endpoint to send.
+	// register handlers for ALL the message you expect remote endpoint to send.
 	sgw.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionRequest: handleCreateSessionRequest,
-		messages.MsgTypeModifyBearerRequest:  handleModifyBearerRequest,
-		messages.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
-		messages.MsgTypeDeleteBearerResponse: handleDeleteBearerResponse,
+		message.MsgTypeCreateSessionRequest: handleCreateSessionRequest,
+		message.MsgTypeModifyBearerRequest:  handleModifyBearerRequest,
+		message.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
+		message.MsgTypeDeleteBearerResponse: handleDeleteBearerResponse,
 	})
 	sgw.s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
-		messages.MsgTypeCreateSessionResponse: handleCreateSessionResponse,
-		messages.MsgTypeDeleteSessionResponse: handleDeleteSessionResponse,
-		messages.MsgTypeDeleteBearerRequest:   handleDeleteBearerRequest,
+		message.MsgTypeCreateSessionResponse: handleCreateSessionResponse,
+		message.MsgTypeDeleteSessionResponse: handleDeleteSessionResponse,
+		message.MsgTypeDeleteBearerRequest:   handleDeleteBearerRequest,
 	})
 
 	log.Fatal(sgw.run())

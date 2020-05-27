@@ -5,12 +5,12 @@
 package gtp
 
 import (
-	v0msg "github.com/wmnsk/go-gtp/v0/messages"
-	v1msg "github.com/wmnsk/go-gtp/v1/messages"
-	v2msg "github.com/wmnsk/go-gtp/v2/messages"
+	v0msg "github.com/wmnsk/go-gtp/gtpv0/message"
+	v1msg "github.com/wmnsk/go-gtp/gtpv1/message"
+	v2msg "github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
-// Message is an interface that defines all versions of GTP messages.
+// Message is an interface that defines all versions of GTP message.
 type Message interface {
 	MarshalTo([]byte) error
 	UnmarshalBinary(b []byte) error
