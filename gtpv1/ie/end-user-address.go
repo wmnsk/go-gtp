@@ -139,28 +139,3 @@ func (i *IE) MustPDPTypeNumber() uint8 {
 	v, _ := i.PDPTypeNumber()
 	return v
 }
-
-// IPAddress returns IPAddress if type matches.
-func (i *IE) IPAddress() (string, error) {
-	if len(i.Payload) < 4 {
-		return "", io.ErrUnexpectedEOF
-	}
-	switch i.Type {
-	case EndUserAddress:
-		if i.MustPDPTypeOrganization() != pdpTypeIETF {
-			return "", ErrMalformed
-		}
-		return net.IP(i.Payload[2:]).String(), nil
-	case GSNAddress:
-		return net.IP(i.Payload).String(), nil
-	default:
-		return "", &InvalidTypeError{Type: i.Type}
-	}
-}
-
-// MustIPAddress returns IPAddress in string if type matches.
-// This should only be used if it is assured to have the value.
-func (i *IE) MustIPAddress() string {
-	v, _ := i.IPAddress()
-	return v
-}
