@@ -22,7 +22,16 @@ func NewEndUserAddress(addr string) *IE {
 	if addr == "ppp" {
 		return NewEndUserAddressPPP()
 	}
-	ip := net.ParseIP(addr)
+
+	return NewEndUserAddressByIP(net.ParseIP(addr))
+}
+
+// NewEndUserAddressByIP creates a new EndUserAddress IE from net.IP.
+func NewEndUserAddressByIP(ip net.IP) *IE {
+	if ip == nil {
+		return nil
+	}
+
 	v4 := ip.To4()
 
 	// IPv4
