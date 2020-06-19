@@ -11,7 +11,15 @@ import (
 
 // NewGSNAddress creates a new GSNAddress IE.
 func NewGSNAddress(addr string) *IE {
-	ip := net.ParseIP(addr)
+	return NewGSNAddressByIP(net.ParseIP(addr))
+}
+
+// NewGSNAddressByIP creates a new GSNAddress IE from net.IP.
+func NewGSNAddressByIP(ip net.IP) *IE {
+	if ip == nil {
+		return nil
+	}
+
 	v4 := ip.To4()
 
 	// IPv4

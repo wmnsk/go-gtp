@@ -105,81 +105,6 @@ func (i *IE) MustUserLocationInformation() []byte {
 	return v
 }
 
-// MCC returns MCC value if type matches.
-func (i *IE) MCC() (string, error) {
-	switch i.Type {
-	case RouteingAreaIdentity:
-		if len(i.Payload) < 2 {
-			return "", io.ErrUnexpectedEOF
-		}
-		return utils.SwappedBytesToStr(i.Payload[0:2], false), nil
-	case UserLocationInformation:
-		if len(i.Payload) < 3 {
-			return "", io.ErrUnexpectedEOF
-		}
-		return utils.SwappedBytesToStr(i.Payload[1:3], false), nil
-	default:
-		return "", &InvalidTypeError{Type: i.Type}
-	}
-}
-
-// MustMCC returns MCC in string if type matches.
-// This should only be used if it is assured to have the value.
-func (i *IE) MustMCC() string {
-	v, _ := i.MCC()
-	return v
-}
-
-// MNC returns MNC value if type matches.
-func (i *IE) MNC() (string, error) {
-	switch i.Type {
-	case RouteingAreaIdentity:
-		if len(i.Payload) < 2 {
-			return "", io.ErrUnexpectedEOF
-		}
-		return utils.SwappedBytesToStr(i.Payload[1:2], true), nil
-	case UserLocationInformation:
-		if len(i.Payload) < 3 {
-			return "", io.ErrUnexpectedEOF
-		}
-		return utils.SwappedBytesToStr(i.Payload[2:3], true), nil
-	default:
-		return "", &InvalidTypeError{Type: i.Type}
-	}
-}
-
-// MustMNC returns MNC in string if type matches.
-// This should only be used if it is assured to have the value.
-func (i *IE) MustMNC() string {
-	v, _ := i.MNC()
-	return v
-}
-
-// LAC returns LAC value if type matches.
-func (i *IE) LAC() (uint16, error) {
-	switch i.Type {
-	case RouteingAreaIdentity:
-		if len(i.Payload) < 5 {
-			return 0, io.ErrUnexpectedEOF
-		}
-		return binary.BigEndian.Uint16(i.Payload[3:5]), nil
-	case UserLocationInformation:
-		if len(i.Payload) < 6 {
-			return 0, io.ErrUnexpectedEOF
-		}
-		return binary.BigEndian.Uint16(i.Payload[4:6]), nil
-	default:
-		return 0, &InvalidTypeError{Type: i.Type}
-	}
-}
-
-// MustLAC returns LAC in uint16 if type matches.
-// This should only be used if it is assured to have the value.
-func (i *IE) MustLAC() uint16 {
-	v, _ := i.LAC()
-	return v
-}
-
 // CGI returns CGI value if type matches.
 func (i *IE) CGI() (uint16, error) {
 	if i.Type != UserLocationInformation {
@@ -229,31 +154,5 @@ func (i *IE) SAC() (uint16, error) {
 // This should only be used if it is assured to have the value.
 func (i *IE) MustSAC() uint16 {
 	v, _ := i.SAC()
-	return v
-}
-
-// RAC returns RAC value if type matches.
-func (i *IE) RAC() (uint8, error) {
-	switch i.Type {
-	case RouteingAreaIdentity:
-		if len(i.Payload) < 6 {
-			return 0, io.ErrUnexpectedEOF
-		}
-		return i.Payload[5], nil
-	case UserLocationInformation:
-		if len(i.Payload) < 7 {
-			return 0, io.ErrUnexpectedEOF
-		}
-		if i.Payload[0] == locTypeRAI {
-			return i.Payload[6], nil
-		}
-	}
-	return 0, &InvalidTypeError{Type: i.Type}
-}
-
-// MustRAC returns RAC in uint8 if type matches.
-// This should only be used if it is assured to have the value.
-func (i *IE) MustRAC() uint8 {
-	v, _ := i.RAC()
 	return v
 }
