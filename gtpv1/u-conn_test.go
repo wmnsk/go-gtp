@@ -33,6 +33,7 @@ func setup(ctx context.Context) (cliConn, srvConn *v1.UPlaneConn, err error) {
 
 	go func() {
 		srvConn = v1.NewUPlaneConn(srvAddr)
+		srvConn.DisableErrorIndication()
 		if err := srvConn.ListenAndServe(ctx); err != nil {
 			return
 		}
@@ -44,6 +45,7 @@ func setup(ctx context.Context) (cliConn, srvConn *v1.UPlaneConn, err error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	cliConn.DisableErrorIndication()
 
 	return cliConn, srvConn, nil
 }
