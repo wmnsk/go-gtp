@@ -10,7 +10,6 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"strings"
 	"sync"
 	"time"
 
@@ -43,6 +42,7 @@ type UPlaneConn struct {
 
 	// for Linux kernel GTP with netlink
 	kernGTPEnabled bool
+	errIndEnabled  bool
 	GTPLink        *netlink.GTP
 }
 
@@ -56,6 +56,8 @@ func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
+
+		errIndEnabled: true,
 	}
 }
 
@@ -69,6 +71,8 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
+
+		errIndEnabled: true,
 	}
 
 	// setup UDPConn first.
@@ -180,7 +184,16 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 			u.mu.Lock()
 			peer, ok := u.relayMap[binary.BigEndian.Uint32(buf[4:8])]
 			u.mu.Unlock()
-			if !ok {
+			if !ok { // pass message to handler if TEID is unknown
+				msg, err := message.Parse(buf[:n])
+				if err != nil {
+					continue
+				}
+
+				if err := u.handleMessage(raddr, msg); err != nil {
+					// should not stop serving with this error
+					logf("error handling message on UPlaneConn %s: %s", u.LocalAddr(), err)
+				}
 				continue
 			}
 
@@ -410,11 +423,15 @@ func (u *UPlaneConn) EchoResponse(raddr net.Addr) error {
 
 // ErrorIndication just sends ErrorIndication message.
 func (u *UPlaneConn) ErrorIndication(raddr net.Addr, received message.Message) error {
-	addr := strings.Split(raddr.String(), ":")[0]
+	ip, _, err := net.SplitHostPort(u.LocalAddr().String())
+	if err != nil {
+		return err
+	}
+
 	errInd, err := message.NewErrorIndication(
 		0, received.Sequence(),
 		ie.NewTEIDDataI(received.TEID()),
-		ie.NewGSNAddress(addr),
+		ie.NewGSNAddress(ip),
 	).Marshal()
 	if err != nil {
 		return err
@@ -510,4 +527,27 @@ func (t *iteiMap) tryStore(itei uint32, ts time.Time) bool {
 
 func (t *iteiMap) delete(itei uint32) {
 	t.syncMap.Delete(itei)
+}
+
+// EnableErrorIndication re-enables automatic sending of
+// Error Indication to unknown messages, which is enabled by
+// default.
+//
+// See also: DisableErrorIndication.
+func (u *UPlaneConn) EnableErrorIndication() {
+	u.mu.Lock()
+	u.errIndEnabled = true
+	u.mu.Unlock()
+}
+
+// DisableErrorIndication makes default T-PDU handler stop
+// responding with Error Indication in case of receiving T-PDU
+// with unknown TEID.
+//
+// When disabled, it passes the unhandled T-PDU to user who calls
+// ReadFromGTP instead.
+func (u *UPlaneConn) DisableErrorIndication() {
+	u.mu.Lock()
+	u.errIndEnabled = false
+	u.mu.Unlock()
 }
