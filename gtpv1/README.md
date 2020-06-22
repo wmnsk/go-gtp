@@ -291,7 +291,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 28      | Trace Type                                |           |
 | 29      | MS Not Reachable Reason                   |           |
 | 30-126  | (Spare/Reserved)                          | -         |
-| 127     | Charging ID                               |           |
+| 127     | Charging ID                               | Yes       |
 | 128     | End User Address                          | Yes       |
 | 129     | MM Context                                |           |
 | 130     | PDP Context                               |           |

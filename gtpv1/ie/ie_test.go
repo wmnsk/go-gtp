@@ -172,6 +172,10 @@ func TestIEs(t *testing.T) {
 			"ULITimestamp",
 			ie.NewULITimestamp(time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)),
 			[]byte{0xd6, 0x00, 0x04, 0xdf, 0xd5, 0x2c, 0x00},
+		}, {
+			"ChargingID",
+			ie.NewChargingID(0xffffffff),
+			[]byte{0x7f, 0xff, 0xff, 0xff, 0xff},
 		},
 	}
 
