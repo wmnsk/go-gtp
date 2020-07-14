@@ -8,156 +8,14 @@ import (
 	"encoding/binary"
 )
 
-// ConfigurationProtocolOption represents a Configuration protocol option in PCO.
-type ConfigurationProtocolOption struct {
-	ProtocolID uint16
-	Length     uint8
-	Contents   []byte
-}
-
-// NewConfigurationProtocolOption creates a new ConfigurationProtocolOption.
-func NewConfigurationProtocolOption(pid uint16, contents []byte) *ConfigurationProtocolOption {
-	c := &ConfigurationProtocolOption{
-		ProtocolID: pid,
-		Length:     uint8(len(contents)),
-		Contents:   contents,
-	}
-	return c
-}
-
-// Marshal serializes ConfigurationProtocolOption.
-func (c *ConfigurationProtocolOption) Marshal() ([]byte, error) {
-	b := make([]byte, c.MarshalLen())
-	if err := c.MarshalTo(b); err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
-// MarshalTo serializes ConfigurationProtocolOption.
-func (c *ConfigurationProtocolOption) MarshalTo(b []byte) error {
-	binary.BigEndian.PutUint16(b[0:2], c.ProtocolID)
-	b[2] = c.Length
-	if c.Length != 0 {
-		copy(b[3:], c.Contents)
-	}
-
-	return nil
-}
-
-// ParseConfigurationProtocolOption decodes ConfigurationProtocolOption.
-func ParseConfigurationProtocolOption(b []byte) (*ConfigurationProtocolOption, error) {
-	c := &ConfigurationProtocolOption{}
-	if err := c.UnmarshalBinary(b); err != nil {
-		return nil, err
-	}
-
-	return c, nil
-}
-
-// UnmarshalBinary decodes given bytes into ConfigurationProtocolOption.
-func (c *ConfigurationProtocolOption) UnmarshalBinary(b []byte) error {
-	if len(b) < 4 {
-		return ErrTooShortToParse
-	}
-	c.ProtocolID = binary.BigEndian.Uint16(b[0:2])
-	c.Length = b[2]
-	if c.Length != 0 {
-		copy(c.Contents, b[3:])
-	}
-
-	return nil
-}
-
-// MarshalLen returns the serial length of ConfigurationProtocolOption in int.
-func (c *ConfigurationProtocolOption) MarshalLen() int {
-	return 3 + len(c.Contents)
-}
-
-// PCOPayload is a Payload of ProtocolConfigurationPayload IE.
-type PCOPayload struct {
-	ConfigurationProtocol        uint8
-	ConfigurationProtocolOptions []*ConfigurationProtocolOption
-}
-
-// NewPCOPayload creates a new PCOPayload.
-func NewPCOPayload(configProto uint8, opts ...*ConfigurationProtocolOption) *PCOPayload {
-	p := &PCOPayload{ConfigurationProtocol: configProto}
-	p.ConfigurationProtocolOptions = append(p.ConfigurationProtocolOptions, opts...)
-
-	return p
-}
-
-// Marshal serializes PCOPayload.
-func (p *PCOPayload) Marshal() ([]byte, error) {
-	b := make([]byte, p.MarshalLen())
-	if err := p.MarshalTo(b); err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
-// MarshalTo serializes PCOPayload.
-func (p *PCOPayload) MarshalTo(b []byte) error {
-	b[0] = (p.ConfigurationProtocol & 0x07) | 0x80
-	offset := 1
-	for _, opt := range p.ConfigurationProtocolOptions {
-		if err := opt.MarshalTo(b[offset:]); err != nil {
-			return err
-		}
-		offset += opt.MarshalLen()
-	}
-
-	return nil
-}
-
-// ParsePCOPayload decodes PCOPayload.
-func ParsePCOPayload(b []byte) (*PCOPayload, error) {
-	p := &PCOPayload{}
-	if err := p.UnmarshalBinary(b); err != nil {
-		return nil, err
-	}
-
-	return p, nil
-}
-
-// UnmarshalBinary decodes given bytes into PCOPayload.
-func (p *PCOPayload) UnmarshalBinary(b []byte) error {
-	if len(b) == 0 {
-		return ErrTooShortToParse
-	}
-
-	p.ConfigurationProtocol = b[0] & 0x07
-
-	offset := 1
-	for {
-		if offset >= len(b) {
-			return nil
-		}
-		opt, err := ParseConfigurationProtocolOption(b[offset:])
-		if err != nil {
-			return err
-		}
-		p.ConfigurationProtocolOptions = append(p.ConfigurationProtocolOptions, opt)
-		offset += opt.MarshalLen()
-	}
-}
-
-// MarshalLen returns the serial length of PCOPayload in int.
-func (p *PCOPayload) MarshalLen() int {
-	l := 1
-	for _, opt := range p.ConfigurationProtocolOptions {
-		l += opt.MarshalLen()
-	}
-
-	return l
-}
+// ConfigurationProtocol definitions.
+const (
+	ConfigurationProtocolPPPForUseWithIPPDPTypeOrIPPDNType uint8 = 0b000
+)
 
 // NewProtocolConfigurationOptions creates a new ProtocolConfigurationOptions IE.
-func NewProtocolConfigurationOptions(configProto uint8, options ...*ConfigurationProtocolOption) *IE {
-	pco := NewPCOPayload(configProto, options...)
+func NewProtocolConfigurationOptions(proto uint8, options ...*PCOContainer) *IE {
+	pco := NewProtocolConfigurationOptionsFields(proto, options...)
 
 	i := New(ProtocolConfigurationOptions, 0x00, make([]byte, pco.MarshalLen()))
 	if err := pco.MarshalTo(i.Payload); err != nil {
@@ -168,18 +26,189 @@ func NewProtocolConfigurationOptions(configProto uint8, options ...*Configuratio
 }
 
 // ProtocolConfigurationOptions returns ProtocolConfigurationOptions in
-// PCOPayload type if the type of IE matches.
-func (i *IE) ProtocolConfigurationOptions() (*PCOPayload, error) {
+// ProtocolConfigurationOptionsFields type if the type of IE matches.
+func (i *IE) ProtocolConfigurationOptions() (*ProtocolConfigurationOptionsFields, error) {
 	if i.Type != ProtocolConfigurationOptions {
 		return nil, &InvalidTypeError{Type: i.Type}
 	}
 
-	return ParsePCOPayload(i.Payload)
+	return ParseProtocolConfigurationOptionsFields(i.Payload)
 }
 
-// MustProtocolConfigurationOptions returns ProtocolConfigurationOptions in *PCOPayload, ignoring errors.
+// MustProtocolConfigurationOptions returns ProtocolConfigurationOptions in *ProtocolConfigurationOptionsFields, ignoring errors.
 // This should only be used if it is assured to have the value.
-func (i *IE) MustProtocolConfigurationOptions() *PCOPayload {
+func (i *IE) MustProtocolConfigurationOptions() *ProtocolConfigurationOptionsFields {
 	v, _ := i.ProtocolConfigurationOptions()
 	return v
+}
+
+// ProtocolConfigurationOptionsFields is a set of fields in ProtocolConfigurationOptions IE.
+type ProtocolConfigurationOptionsFields struct {
+	Extension             uint8 // bit 8 of octet 1
+	ConfigurationProtocol uint8 // bit 1-3 of octet 1
+	ProtocolOrContainers  []*PCOContainer
+}
+
+// NewProtocolConfigurationOptionsFields creates a new ProtocolConfigurationOptionsFields.
+func NewProtocolConfigurationOptionsFields(proto uint8, opts ...*PCOContainer) *ProtocolConfigurationOptionsFields {
+	p := &ProtocolConfigurationOptionsFields{ConfigurationProtocol: proto}
+	p.ProtocolOrContainers = append(p.ProtocolOrContainers, opts...)
+
+	return p
+}
+
+// Marshal serializes ProtocolConfigurationOptionsFields.
+func (p *ProtocolConfigurationOptionsFields) Marshal() ([]byte, error) {
+	b := make([]byte, p.MarshalLen())
+	if err := p.MarshalTo(b); err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+// MarshalTo serializes ProtocolConfigurationOptionsFields.
+func (p *ProtocolConfigurationOptionsFields) MarshalTo(b []byte) error {
+	b[0] = (p.ConfigurationProtocol & 0x07) | 0x80
+	offset := 1
+	for _, opt := range p.ProtocolOrContainers {
+		if err := opt.MarshalTo(b[offset:]); err != nil {
+			return err
+		}
+		offset += opt.MarshalLen()
+	}
+
+	return nil
+}
+
+// ParseProtocolConfigurationOptionsFields decodes ProtocolConfigurationOptionsFields.
+func ParseProtocolConfigurationOptionsFields(b []byte) (*ProtocolConfigurationOptionsFields, error) {
+	p := &ProtocolConfigurationOptionsFields{}
+	if err := p.UnmarshalBinary(b); err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+// UnmarshalBinary decodes given bytes into ProtocolConfigurationOptionsFields.
+func (p *ProtocolConfigurationOptionsFields) UnmarshalBinary(b []byte) error {
+	if len(b) < 1 {
+		return ErrTooShortToParse
+	}
+
+	p.Extension = (b[0] >> 7) & 0x01
+	p.ConfigurationProtocol = b[0] & 0x07
+
+	offset := 1
+	for {
+		if offset >= len(b) {
+			return nil
+		}
+		opt, err := ParsePCOContainer(b[offset:])
+		if err != nil {
+			return err
+		}
+		p.ProtocolOrContainers = append(p.ProtocolOrContainers, opt)
+		offset += opt.MarshalLen()
+	}
+}
+
+// MarshalLen returns the serial length of ProtocolConfigurationOptionsFields in int.
+func (p *ProtocolConfigurationOptionsFields) MarshalLen() int {
+	l := 1
+	for _, opt := range p.ProtocolOrContainers {
+		l += opt.MarshalLen()
+	}
+
+	return l
+}
+
+// ProtocolIdentifier definitions.
+//
+// [Table 10.5.154/3GPP TS 24.008]
+//
+// At least the following protocol identifiers (as defined in RFC 3232 [103]) shall be
+// supported in this version of the protocol:
+//  - C021H (LCP);
+//  - C023H (PAP);
+//  - C223H (CHAP); and
+//  - 8021H (IPCP).
+const (
+	PCOProtocolIdentifierLCP  uint16 = 0xc021
+	PCOProtocolIdentifierPAP  uint16 = 0xc023
+	PCOProtocolIdentifierCHAP uint16 = 0xc223
+	PCOProtocolIdentifierIPCP uint16 = 0x8021
+)
+
+// PCOContainer is either of a Configuration protocol option or Additional parameters in PCO,
+// which are not distinguishable without meta information(link direction) but fortunately
+// the format is the same.
+type PCOContainer struct {
+	ID       uint16
+	Length   uint8
+	Contents []byte
+}
+
+// NewPCOContainer creates a new PCOContainer.
+func NewPCOContainer(pid uint16, contents []byte) *PCOContainer {
+	c := &PCOContainer{
+		ID:       pid,
+		Length:   uint8(len(contents)),
+		Contents: contents,
+	}
+	return c
+}
+
+// Marshal serializes PCOContainer.
+func (c *PCOContainer) Marshal() ([]byte, error) {
+	b := make([]byte, c.MarshalLen())
+	if err := c.MarshalTo(b); err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+// MarshalTo serializes PCOContainer.
+func (c *PCOContainer) MarshalTo(b []byte) error {
+	binary.BigEndian.PutUint16(b[0:2], c.ID)
+	b[2] = c.Length
+	if c.Length != 0 {
+		copy(b[3:], c.Contents)
+	}
+
+	return nil
+}
+
+// ParsePCOContainer decodes PCOContainer.
+func ParsePCOContainer(b []byte) (*PCOContainer, error) {
+	c := &PCOContainer{}
+	if err := c.UnmarshalBinary(b); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+// UnmarshalBinary decodes given bytes into PCOContainer.
+func (c *PCOContainer) UnmarshalBinary(b []byte) error {
+	l := len(b)
+	if l < 3 {
+		return ErrTooShortToParse
+	}
+
+	c.ID = binary.BigEndian.Uint16(b[0:2])
+	c.Length = b[2]
+
+	if c.Length != 0 && l > 3+int(c.Length) {
+		copy(c.Contents, b[3:3+int(c.Length)])
+	}
+
+	return nil
+}
+
+// MarshalLen returns the serial length of PCOContainer in int.
+func (c *PCOContainer) MarshalLen() int {
+	return 3 + len(c.Contents)
 }

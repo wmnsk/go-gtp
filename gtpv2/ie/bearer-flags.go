@@ -32,6 +32,46 @@ func (i *IE) MustBearerFlags() uint8 {
 	return v
 }
 
+// HasPPC reports whether an IE has PPC bit.
+func (i *IE) HasPPC() bool {
+	v, err := i.BearerFlags()
+	if err != nil {
+		return false
+	}
+
+	return has1stBit(v)
+}
+
+// HasVB reports whether an IE has VB bit.
+func (i *IE) HasVB() bool {
+	v, err := i.BearerFlags()
+	if err != nil {
+		return false
+	}
+
+	return has2ndBit(v)
+}
+
+// HasVind reports whether an IE has Vind bit.
+func (i *IE) HasVind() bool {
+	v, err := i.BearerFlags()
+	if err != nil {
+		return false
+	}
+
+	return has3rdBit(v)
+}
+
+// HasASI reports whether an IE has ASI bit.
+func (i *IE) HasASI() bool {
+	v, err := i.BearerFlags()
+	if err != nil {
+		return false
+	}
+
+	return has4thBit(v)
+}
+
 // ActivityStatusIndicator reports whether the bearer context is preserved in
 // the CN without corresponding Radio Access Bearer established.
 func (i *IE) ActivityStatusIndicator() bool {
