@@ -29,28 +29,32 @@ func NewFullyQualifiedTEID(ifType uint8, teid uint32, v4, v6 string) *IE {
 	return i
 }
 
-// HasIPv4 reports whether the IE has IPv4 address in its payload or not.
+// HasIPv4 reports whether an IE has IPv4 bit.
 func (i *IE) HasIPv4() bool {
-	if i.Type != FullyQualifiedTEID {
-		return false
-	}
-	if len(i.Payload) == 0 {
-		return false
-	}
+	switch i.Type {
+	case FullyQualifiedTEID:
+		if len(i.Payload) < 1 {
+			return false
+		}
 
-	return i.Payload[0]&0x80>>7 == 1
+		return has8thBit(i.Payload[0])
+	default:
+		return false
+	}
 }
 
-// HasIPv6 reports whether the IE has IPv6 address in its payload or not.
+// HasIPv6 reports whether an IE has IPv6 bit.
 func (i *IE) HasIPv6() bool {
-	if i.Type != FullyQualifiedTEID {
-		return false
-	}
-	if len(i.Payload) == 0 {
-		return false
-	}
+	switch i.Type {
+	case FullyQualifiedTEID:
+		if len(i.Payload) < 1 {
+			return false
+		}
 
-	return i.Payload[0]&0x48>>6 == 1
+		return has7thBit(i.Payload[0])
+	default:
+		return false
+	}
 }
 
 // InterfaceType returns InterfaceType in uint8 if the type of IE matches.

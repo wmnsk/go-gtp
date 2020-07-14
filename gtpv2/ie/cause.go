@@ -24,7 +24,7 @@ func (i *IE) Cause() (uint8, error) {
 	if i.Type != Cause {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 
@@ -36,6 +36,55 @@ func (i *IE) Cause() (uint8, error) {
 func (i *IE) MustCause() uint8 {
 	v, _ := i.Cause()
 	return v
+}
+
+// CauseFlags returns CauseFlags in uint8 if the type of IE matches.
+func (i *IE) CauseFlags() (uint8, error) {
+	if i.Type != Cause {
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
+	if len(i.Payload) < 2 {
+		return 0, io.ErrUnexpectedEOF
+	}
+
+	return i.Payload[1], nil
+}
+
+// MustCauseFlags returns CauseFlags in uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustCauseFlags() uint8 {
+	v, _ := i.CauseFlags()
+	return v
+}
+
+// HasCS reports whether an IE has CS bit.
+func (i *IE) HasCS() bool {
+	v, err := i.CauseFlags()
+	if err != nil {
+		return false
+	}
+
+	return has2ndBit(v)
+}
+
+// HasBCE reports whether an IE has BCE bit.
+func (i *IE) HasBCE() bool {
+	v, err := i.CauseFlags()
+	if err != nil {
+		return false
+	}
+
+	return has1stBit(v)
+}
+
+// HasPCE reports whether an IE has PCE bit.
+func (i *IE) HasPCE() bool {
+	v, err := i.CauseFlags()
+	if err != nil {
+		return false
+	}
+
+	return has3rdBit(v)
 }
 
 // IsRemoteCause returns IsRemoteCause in bool if the type of IE matches.

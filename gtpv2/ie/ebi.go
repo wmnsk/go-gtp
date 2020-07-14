@@ -8,8 +8,7 @@ import "io"
 
 // NewEPSBearerID creates a new EPSBearerID IE.
 func NewEPSBearerID(ebi uint8) *IE {
-	ebi &= 0x0f
-	return newUint8ValIE(EPSBearerID, ebi)
+	return newUint8ValIE(EPSBearerID, ebi&0x0f)
 }
 
 // EPSBearerID returns EPSBearerID if the type of IE matches.
