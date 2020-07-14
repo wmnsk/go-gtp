@@ -369,6 +369,8 @@ func Parse(b []byte) (Message, error) {
 		m = &PGWRestartNotificationAcknowledge{}
 	case MsgTypeDetachNotification:
 		m = &DetachNotification{}
+	case MsgTypeDetachAcknowledge:
+		m = &DetachAcknowledge{}
 	default:
 		m = &Generic{}
 	}
