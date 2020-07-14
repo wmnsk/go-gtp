@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
@@ -25,11 +25,11 @@ func TestIEs(t *testing.T) {
 			[]byte{0x01, 0x00, 0x08, 0x00, 0x21, 0x43, 0x15, 0x32, 0x54, 0x76, 0x98, 0xf0},
 		}, {
 			"Cause",
-			ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+			ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 			[]byte{0x02, 0x00, 0x02, 0x00, 0x10, 0x00},
 		}, {
 			"CauseIMSIIMEINotKnown",
-			ie.NewCause(v2.CauseIMSIIMEINotKnown, 1, 0, 0, ie.NewIMSI("")),
+			ie.NewCause(gtpv2.CauseIMSIIMEINotKnown, 1, 0, 0, ie.NewIMSI("")),
 			[]byte{0x02, 0x00, 0x06, 0x00, 0x60, 0x04, 0x01, 0x00, 0x00, 0x00},
 		}, {
 			"Recovery",
@@ -92,15 +92,15 @@ func TestIEs(t *testing.T) {
 		}, {
 			"ProtocolConfigurationOptions",
 			ie.NewProtocolConfigurationOptions(
-				v2.ConfigProtocolPPPWithIP,
+				gtpv2.ConfigProtocolPPPWithIP,
 				// see pco-ppp_test.go for how to create these payload.
-				ie.NewPCOContainer(v2.ProtoIDIPCP, []byte{0x01, 0x00, 0x00, 0x10, 0x03, 0x06, 0x01, 0x01, 0x01, 0x01, 0x81, 0x06, 0x02, 0x02, 0x02, 0x02}),
-				ie.NewPCOContainer(v2.ProtoIDPAP, []byte{0x01, 0x00, 0x00, 0x0c, 0x03, 0x66, 0x6f, 0x6f, 0x03, 0x62, 0x61, 0x72}),
-				ie.NewPCOContainer(v2.ProtoIDCHAP, []byte{0x01, 0x00, 0x00, 0x0c, 0x04, 0xde, 0xad, 0xbe, 0xef, 0x66, 0x6f, 0x6f}),
-				ie.NewPCOContainer(v2.ContIDMSSupportofNetworkRequestedBearerControlIndicator, nil),
-				ie.NewPCOContainer(v2.ContIDIPaddressAllocationViaNASSignalling, nil),
-				ie.NewPCOContainer(v2.ContIDDNSServerIPv4AddressRequest, nil),
-				ie.NewPCOContainer(v2.ContIDIPv4LinkMTURequest, nil),
+				ie.NewPCOContainer(gtpv2.ProtoIDIPCP, []byte{0x01, 0x00, 0x00, 0x10, 0x03, 0x06, 0x01, 0x01, 0x01, 0x01, 0x81, 0x06, 0x02, 0x02, 0x02, 0x02}),
+				ie.NewPCOContainer(gtpv2.ProtoIDPAP, []byte{0x01, 0x00, 0x00, 0x0c, 0x03, 0x66, 0x6f, 0x6f, 0x03, 0x62, 0x61, 0x72}),
+				ie.NewPCOContainer(gtpv2.ProtoIDCHAP, []byte{0x01, 0x00, 0x00, 0x0c, 0x04, 0xde, 0xad, 0xbe, 0xef, 0x66, 0x6f, 0x6f}),
+				ie.NewPCOContainer(gtpv2.ContIDMSSupportofNetworkRequestedBearerControlIndicator, nil),
+				ie.NewPCOContainer(gtpv2.ContIDIPaddressAllocationViaNASSignalling, nil),
+				ie.NewPCOContainer(gtpv2.ContIDDNSServerIPv4AddressRequest, nil),
+				ie.NewPCOContainer(gtpv2.ContIDIPv4LinkMTURequest, nil),
 			),
 			[]byte{
 				0x4e, 0x00, 0x3e, 0x00,
@@ -142,7 +142,7 @@ func TestIEs(t *testing.T) {
 			[]byte{0x51, 0x00, 0x15, 0x00, 0xff, 0x11, 0x11, 0x11, 0x11, 0x11, 0x22, 0x22, 0x22, 0x22, 0x22, 0x11, 0x11, 0x11, 0x11, 0x11, 0x22, 0x22, 0x22, 0x22, 0x22},
 		}, {
 			"RATType",
-			ie.NewRATType(v2.RATTypeEUTRAN),
+			ie.NewRATType(gtpv2.RATTypeEUTRAN),
 			[]byte{0x52, 0x00, 0x01, 0x00, 0x06},
 		}, {
 			"ServingNetwork/2-digit",
@@ -242,15 +242,15 @@ func TestIEs(t *testing.T) {
 			},
 		}, {
 			"FullyQualifiedTEID/v4",
-			ie.NewFullyQualifiedTEID(v2.IFTypeS11MMEGTPC, 0xffffffff, "1.1.1.1", ""),
+			ie.NewFullyQualifiedTEID(gtpv2.IFTypeS11MMEGTPC, 0xffffffff, "1.1.1.1", ""),
 			[]byte{0x57, 0x00, 0x09, 0x00, 0x8a, 0xff, 0xff, 0xff, 0xff, 0x01, 0x01, 0x01, 0x01},
 		}, {
 			"FullyQualifiedTEID/v6",
-			ie.NewFullyQualifiedTEID(v2.IFTypeS11MMEGTPC, 0xffffffff, "", "2001::1"),
+			ie.NewFullyQualifiedTEID(gtpv2.IFTypeS11MMEGTPC, 0xffffffff, "", "2001::1"),
 			[]byte{0x57, 0x00, 0x15, 0x00, 0x4a, 0xff, 0xff, 0xff, 0xff, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
 		}, {
 			"FullyQualifiedTEID/v4v6",
-			ie.NewFullyQualifiedTEID(v2.IFTypeS11MMEGTPC, 0xffffffff, "1.1.1.1", "2001::1"),
+			ie.NewFullyQualifiedTEID(gtpv2.IFTypeS11MMEGTPC, 0xffffffff, "1.1.1.1", "2001::1"),
 			[]byte{0x57, 0x00, 0x19, 0x00, 0xca, 0xff, 0xff, 0xff, 0xff, 0x01, 0x01, 0x01, 0x01, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
 		}, {
 			"TMSI",
@@ -298,7 +298,7 @@ func TestIEs(t *testing.T) {
 			[]byte{0x61, 0x00, 0x01, 0x00, 0x0f},
 		}, {
 			"PDNType",
-			ie.NewPDNType(v2.PDNTypeIPv4),
+			ie.NewPDNType(gtpv2.PDNTypeIPv4),
 			[]byte{0x63, 0x00, 0x01, 0x00, 0x01},
 		}, {
 			"ProcedureTransactionID",
@@ -342,11 +342,11 @@ func TestIEs(t *testing.T) {
 			[]byte{0x7e, 0x00, 0x02, 0x00, 0x08, 0x4b},
 		}, {
 			"APNRestriction",
-			ie.NewAPNRestriction(v2.APNRestrictionPublic1),
+			ie.NewAPNRestriction(gtpv2.APNRestrictionPublic1),
 			[]byte{0x7f, 0x00, 0x01, 0x00, 0x01},
 		}, {
 			"SelectionMode",
-			ie.NewSelectionMode(v2.SelectionModeMSProvidedAPNSubscriptionNotVerified),
+			ie.NewSelectionMode(gtpv2.SelectionModeMSProvidedAPNSubscriptionNotVerified),
 			[]byte{0x80, 0x00, 0x01, 0x00, 0x01},
 		}, {
 			"FullyQualifiedCSID/v4",
@@ -366,7 +366,7 @@ func TestIEs(t *testing.T) {
 			[]byte{0x84, 0x00, 0x07, 0x00, 0x21, 0x12, 0x30, 0x45, 0x01, 0x00, 0x01},
 		}, {
 			"NodeType",
-			ie.NewNodeType(v2.NodeTypeMME),
+			ie.NewNodeType(gtpv2.NodeTypeMME),
 			[]byte{0x87, 0x00, 0x01, 0x00, 0x01},
 		}, {
 			"FullyQualifiedDomainName",
@@ -378,7 +378,7 @@ func TestIEs(t *testing.T) {
 			[]byte{0x90, 0x00, 0x01, 0x00, 0x01},
 		}, {
 			"UserCSGInformation",
-			ie.NewUserCSGInformation("123", "45", 0x00ffffff, v2.AccessModeHybrid, 0, v2.CMICSG),
+			ie.NewUserCSGInformation("123", "45", 0x00ffffff, gtpv2.AccessModeHybrid, 0, gtpv2.CMICSG),
 			[]byte{0x91, 0x00, 0x08, 0x00, 0x21, 0xf3, 0x54, 0x00, 0xff, 0xff, 0xff, 0x41},
 		}, {
 			"CSGID",
@@ -386,15 +386,15 @@ func TestIEs(t *testing.T) {
 			[]byte{0x93, 0x00, 0x04, 0x00, 0x00, 0xff, 0xff, 0xff},
 		}, {
 			"CSGMembershipIndication",
-			ie.NewCSGMembershipIndication(v2.CMICSG),
+			ie.NewCSGMembershipIndication(gtpv2.CMICSG),
 			[]byte{0x94, 0x00, 0x01, 0x00, 0x01},
 		}, {
 			"ServiceIndicator",
-			ie.NewServiceIndicator(v2.ServiceIndCSCall),
+			ie.NewServiceIndicator(gtpv2.ServiceIndCSCall),
 			[]byte{0x95, 0x00, 0x01, 0x00, 0x01},
 		}, {
 			"DetachType",
-			ie.NewDetachType(v2.DetachTypePS),
+			ie.NewDetachType(gtpv2.DetachTypePS),
 			[]byte{0x96, 0x00, 0x01, 0x00, 0x01},
 		}, {
 			"LocalDistinguishedName",
