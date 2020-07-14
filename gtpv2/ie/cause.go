@@ -13,7 +13,9 @@ func NewCause(cause uint8, pce, bce, cs uint8, offendingIE *IE) *IE {
 	i.Payload[1] = ((pce << 2) & 0x04) | ((bce << 1) & 0x02) | cs&0x01
 
 	if offendingIE != nil {
-		i.Payload = append(i.Payload, offendingIE.Type)
+		// trailing zeroes are length, instance and spare fields which should be
+		// filled with zeroes in this case (cf. §8.4, TS29.274)
+		i.Payload = append(i.Payload, []byte{offendingIE.Type, 0x00, 0x00, 0x00}...)
 		i.SetLength()
 	}
 	return i
