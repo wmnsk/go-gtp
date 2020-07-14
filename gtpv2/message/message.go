@@ -357,6 +357,8 @@ func Parse(b []byte) (Message, error) {
 		m = &ModifyAccessBearersResponse{}
 	case MsgTypePGWRestartNotification:
 		m = &PGWRestartNotification{}
+	case MsgTypePGWRestartNotificationAcknowledge:
+		m = &PGWRestartNotificationAcknowledge{}
 	default:
 		m = &Generic{}
 	}
