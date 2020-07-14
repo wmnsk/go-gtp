@@ -143,8 +143,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 98      | Update Bearer Response                          |           |
 | 99      | Delete Bearer Request                           | Yes       |
 | 100     | Delete Bearer Response                          | Yes       |
-| 101     | Delete PDN Connection Set Request               |           |
-| 102     | Delete PDN Connection Set Response              |           |
+| 101     | Delete PDN Connection Set Request               | Yes       |
+| 102     | Delete PDN Connection Set Response              | Yes       |
 | 103     | PGW Downlink Triggering Notification            |           |
 | 104     | PGW Downlink Triggering Acknowledge             |           |
 | 105-127 | (Spare/Reserved)                                | -         |
@@ -163,8 +163,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 140     | Relocation Cancel Response                      |           |
 | 141     | Configuration Transfer Tunnel                   |           |
 | 142-148 | (Spare/Reserved)                                | -         |
-| 149     | Detach Notification                             |           |
-| 150     | Detach Acknowledge                              |           |
+| 149     | Detach Notification                             | Yes       |
+| 150     | Detach Acknowledge                              | Yes       |
 | 151     | CS Paging Indication                            |           |
 | 152     | RAN Information Relay                           |           |
 | 153     | Alert MME Notification                          |           |
@@ -190,11 +190,11 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 176     | Downlink Data Notification                      |           |
 | 177     | Downlink Data Notification Acknowledge          |           |
 | 178     | (Spare/Reserved)                                | -         |
-| 179     | PGW Restart Notification                        |           |
-| 180     | PGW Restart Notification Acknowledge            |           |
+| 179     | PGW Restart Notification                        | Yes       |
+| 180     | PGW Restart Notification Acknowledge            | Yes       |
 | 181-199 | (Spare/Reserved)                                | -         |
-| 200     | Update PDN Connection Set Request               |           |
-| 201     | Update PDN Connection Set Response              |           |
+| 200     | Update PDN Connection Set Request               | Yes       |
+| 201     | Update PDN Connection Set Response              | Yes       |
 | 202-210 | (Spare/Reserved)                                | -         |
 | 211     | Modify Access Bearers Request                   | Yes       |
 | 212     | Modify Access Bearers Response                  | Yes       |

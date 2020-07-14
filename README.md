@@ -78,8 +78,8 @@ The basic idea behind the current implementation is;
 
 For the detailed usage of specific version, see README.md under each version's directory.
 
-| Version | Details                   |
-|---------|---------------------------|
+| Version | Details                      |
+|---------|------------------------------|
 | GTPv0   | [README.md](gtpv0/README.md) |
 | GTPv1   | [README.md](gtpv1/README.md) |
 | GTPv2   | [README.md](gtpv2/README.md) |
@@ -91,12 +91,12 @@ In other words, even if a message/IE is not marked as "Yes", you can make it wor
 
 Your contribution is welcome to implement helpers for all the types, of course!
 
-| Version           | Messages | IEs   | Networking (state machine)                           | Details                                               |
-|-------------------|----------|-------|------------------------------------------------------|-------------------------------------------------------|
+| Version           | Messages | IEs   | Networking (state machine)                           | Details                                                  |
+|-------------------|----------|-------|------------------------------------------------------|----------------------------------------------------------|
 | GTPv0             | 35.7%    | 81.8% | not implemented yet                                  | [Supported Features](gtpv0/README.md#supported-features) |
 | GTPv1             | 26.6%    | 30.1% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](gtpv1/README.md#supported-features) |
 | GTPv2             | 41.0%    | 43.2% | almost functional                                    | [Supported Features](gtpv2/README.md#supported-features) |
-| GTP' <br> (Prime) | N/A      | N/A   | N/A                                                  | _not planned_                                         |
+| GTP' <br> (Prime) | N/A      | N/A   | N/A                                                  | _not planned_                                            |
 
 ## Disclaimer
 
