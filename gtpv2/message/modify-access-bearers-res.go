@@ -15,6 +15,7 @@ type ModifyAccessBearersResponse struct {
 	Recovery                       *ie.IE
 	IndicationFlags                *ie.IE
 	SGWNodeLoadControlInformation  *ie.IE
+	SGWOverloadControlInformation  *ie.IE
 	PrivateExtension               *ie.IE
 	AdditionalIEs                  []*ie.IE
 }
@@ -48,6 +49,8 @@ func NewModifyAccessBearersResponse(teid, seq uint32, IEs ...*ie.IE) *ModifyAcce
 			m.IndicationFlags = i
 		case ie.LoadControlInformation:
 			m.SGWNodeLoadControlInformation = i
+		case ie.OverloadControlInformation:
+			m.SGWOverloadControlInformation = i
 		case ie.PrivateExtension:
 			m.PrivateExtension = i
 		default:
@@ -107,6 +110,12 @@ func (m *ModifyAccessBearersResponse) MarshalTo(b []byte) error {
 		offset += ie.MarshalLen()
 	}
 	if ie := m.SGWNodeLoadControlInformation; ie != nil {
+		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
+			return err
+		}
+		offset += ie.MarshalLen()
+	}
+	if ie := m.SGWOverloadControlInformation; ie != nil {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -177,6 +186,8 @@ func (m *ModifyAccessBearersResponse) UnmarshalBinary(b []byte) error {
 			m.IndicationFlags = i
 		case ie.LoadControlInformation:
 			m.SGWNodeLoadControlInformation = i
+		case ie.OverloadControlInformation:
+			m.SGWOverloadControlInformation = i
 		case ie.PrivateExtension:
 			m.PrivateExtension = i
 		default:
@@ -206,6 +217,9 @@ func (m *ModifyAccessBearersResponse) MarshalLen() int {
 		l += ie.MarshalLen()
 	}
 	if ie := m.SGWNodeLoadControlInformation; ie != nil {
+		l += ie.MarshalLen()
+	}
+	if ie := m.SGWOverloadControlInformation; ie != nil {
 		l += ie.MarshalLen()
 	}
 	if ie := m.PrivateExtension; ie != nil {
