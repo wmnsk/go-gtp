@@ -220,13 +220,13 @@ const (
 	MaximumPacketLossRate
 	APNRateControlStatus
 	ExtendedTraceInformation
-	_
-	_
-	_
-	_
-	_
-	_
-	_
+	MonitoringEventExtensionInformation
+	AdditionalRRMPolicyIndex
+	V2XContext
+	PC5QoSParameters
+	ServicesAuthorized
+	BitRate
+	PC5QoSFlow
 	_
 	_
 	_

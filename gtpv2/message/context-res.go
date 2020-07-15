@@ -11,35 +11,38 @@ import (
 // ContextResponse is a ContextResponse Header and its IEs above.
 type ContextResponse struct {
 	*Header
-	Cause                           *ie.IE
-	IMSI                            *ie.IE
-	UEMMContext                     *ie.IE
-	UEPDNConnections                *ie.IE
-	SenderFTEID                     *ie.IE
-	SGWS11S4FTEID                   *ie.IE
-	SGWNodeName                     *ie.IE
-	IndicationFlags                 *ie.IE
-	TraceInformation                *ie.IE
-	S101IPAddress                   *ie.IE
-	S102IPAddress                   *ie.IE
-	SubscribedRFSPIndex             *ie.IE
-	RFSPIndexInUse                  *ie.IE
-	UETimeZone                      *ie.IE
-	MMESGSNLDN                      *ie.IE
-	MDTConfiguration                *ie.IE
-	SGSNNodeName                    *ie.IE
-	MMENodeName                     *ie.IE
-	UCI                             *ie.IE
-	MonitoringEventInformation      *ie.IE
-	UEUsageType                     *ie.IE
-	SCEFPDNConnection               *ie.IE
-	RATType                         *ie.IE
-	ServingPLMNRateControl          *ie.IE
-	MOExceptionDataCounter          *ie.IE
-	RemainingRunningServiceGapTimer *ie.IE
-	ExtendedTraceInformation        *ie.IE
-	PrivateExtension                *ie.IE
-	AdditionalIEs                   []*ie.IE
+	Cause                               *ie.IE
+	IMSI                                *ie.IE
+	UEMMContext                         *ie.IE
+	UEPDNConnections                    *ie.IE
+	SenderFTEID                         *ie.IE
+	SGWS11S4FTEID                       *ie.IE
+	SGWNodeName                         *ie.IE
+	IndicationFlags                     *ie.IE
+	TraceInformation                    *ie.IE
+	S101IPAddress                       *ie.IE
+	S102IPAddress                       *ie.IE
+	SubscribedRFSPIndex                 *ie.IE
+	RFSPIndexInUse                      *ie.IE
+	UETimeZone                          *ie.IE
+	MMESGSNLDN                          *ie.IE
+	MDTConfiguration                    *ie.IE
+	SGSNNodeName                        *ie.IE
+	MMENodeName                         *ie.IE
+	UCI                                 *ie.IE
+	MonitoringEventInformation          *ie.IE
+	MonitoringEventExtensionInformation *ie.IE
+	UEUsageType                         *ie.IE
+	SCEFPDNConnection                   *ie.IE
+	RATType                             *ie.IE
+	ServingPLMNRateControl              *ie.IE
+	MOExceptionDataCounter              *ie.IE
+	RemainingRunningServiceGapTimer     *ie.IE
+	ExtendedTraceInformation            *ie.IE
+	SubscribedAdditionalRRMPolicyIndex  *ie.IE
+	AdditionalRRMPolicyIndexInUse       *ie.IE
+	PrivateExtension                    *ie.IE
+	AdditionalIEs                       []*ie.IE
 }
 
 // NewContextResponse creates a new ContextResponse.
@@ -123,6 +126,8 @@ func NewContextResponse(teid, seq uint32, IEs ...*ie.IE) *ContextResponse {
 			c.UCI = i
 		case ie.MonitoringEventInformation:
 			c.MonitoringEventInformation = i
+		case ie.MonitoringEventExtensionInformation:
+			c.MonitoringEventExtensionInformation = i
 		case ie.IntegerNumber:
 			switch i.Instance() {
 			case 0:
@@ -142,6 +147,15 @@ func NewContextResponse(teid, seq uint32, IEs ...*ie.IE) *ContextResponse {
 			c.MOExceptionDataCounter = i
 		case ie.ExtendedTraceInformation:
 			c.ExtendedTraceInformation = i
+		case ie.AdditionalRRMPolicyIndex:
+			switch i.Instance() {
+			case 0:
+				c.SubscribedAdditionalRRMPolicyIndex = i
+			case 1:
+				c.AdditionalRRMPolicyIndexInUse = i
+			default:
+				c.AdditionalIEs = append(c.AdditionalIEs, i)
+			}
 		case ie.PrivateExtension:
 			c.PrivateExtension = i
 		default:

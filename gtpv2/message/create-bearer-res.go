@@ -22,7 +22,6 @@ type CreateBearerResponse struct {
 	UETimeZone                         *ie.IE
 	ULI                                *ie.IE
 	TWANIdentifier                     *ie.IE
-	TWANIdentifierTimestamp            *ie.IE
 	MMEOverloadControlInformation      *ie.IE
 	SGWOverloadControlInformation      *ie.IE
 	PresenceReportingAction            *ie.IE
@@ -88,8 +87,6 @@ func NewCreateBearerResponse(teid, seq uint32, IEs ...*ie.IE) *CreateBearerRespo
 			}
 		case ie.TWANIdentifierTimestamp:
 			switch i.Instance() {
-			case 0:
-				c.TWANIdentifierTimestamp = i
 			case 1:
 				c.WLANLocationTimestamp = i
 			default:
@@ -215,12 +212,6 @@ func (c *CreateBearerResponse) MarshalTo(b []byte) error {
 		offset += ie.MarshalLen()
 	}
 	if ie := c.TWANIdentifier; ie != nil {
-		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
-			return err
-		}
-		offset += ie.MarshalLen()
-	}
-	if ie := c.TWANIdentifierTimestamp; ie != nil {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -375,8 +366,6 @@ func (c *CreateBearerResponse) UnmarshalBinary(b []byte) error {
 			}
 		case ie.TWANIdentifierTimestamp:
 			switch i.Instance() {
-			case 0:
-				c.TWANIdentifierTimestamp = i
 			case 1:
 				c.WLANLocationTimestamp = i
 			}
@@ -452,9 +441,6 @@ func (c *CreateBearerResponse) MarshalLen() int {
 		l += ie.MarshalLen()
 	}
 	if ie := c.TWANIdentifier; ie != nil {
-		l += ie.MarshalLen()
-	}
-	if ie := c.TWANIdentifierTimestamp; ie != nil {
 		l += ie.MarshalLen()
 	}
 	if ie := c.MMEOverloadControlInformation; ie != nil {

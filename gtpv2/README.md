@@ -360,6 +360,13 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 203     | Maximum Packet Loss Rate                                       |           |
 | 204     | APN Rate Control Status                                        |           |
 | 205     | Extended Trace Information                                     |           |
-| 206-253 | (Spare/Reserved)                                               | -         |
+| 206     | Monitoring Event Extension Information                         |           |
+| 207     | Additional RRM Policy Index                                    |           |
+| 208     | V2X Context                                                    |           |
+| 209     | PC5 QoS Parameters                                             |           |
+| 210     | Services Authorized                                            |           |
+| 211     | Bit Rate                                                       |           |
+| 212     | PC5 QoS Flow                                                   |           |
+| 213-253 | (Spare/Reserved)                                               | -         |
 | 254     | (Spare/Reserved)                                               | -         |
 | 255     | Private Extension                                              | Yes       |
