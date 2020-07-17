@@ -6,6 +6,8 @@ package ie
 
 import (
 	"encoding/binary"
+	"fmt"
+	"io"
 )
 
 // ConfigurationProtocol definitions.
@@ -28,11 +30,28 @@ func NewProtocolConfigurationOptions(proto uint8, options ...*PCOContainer) *IE 
 // ProtocolConfigurationOptions returns ProtocolConfigurationOptions in
 // ProtocolConfigurationOptionsFields type if the type of IE matches.
 func (i *IE) ProtocolConfigurationOptions() (*ProtocolConfigurationOptionsFields, error) {
-	if i.Type != ProtocolConfigurationOptions {
+	switch i.Type {
+	case ProtocolConfigurationOptions:
+		if len(i.Payload) < 1 {
+			return nil, io.ErrUnexpectedEOF
+		}
+
+		return ParseProtocolConfigurationOptionsFields(i.Payload)
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve ProtocolConfigurationOptions: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == ProtocolConfigurationOptions {
+				return child.ProtocolConfigurationOptions()
+			}
+		}
+		return nil, ErrIENotFound
+	default:
 		return nil, &InvalidTypeError{Type: i.Type}
 	}
-
-	return ParseProtocolConfigurationOptionsFields(i.Payload)
 }
 
 // MustProtocolConfigurationOptions returns ProtocolConfigurationOptions in *ProtocolConfigurationOptionsFields, ignoring errors.

@@ -6,6 +6,7 @@ package ie
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 )
 
@@ -16,14 +17,28 @@ func NewChargingID(id uint32) *IE {
 
 // ChargingID returns the ChargingID value in uint32 if the type of IE matches.
 func (i *IE) ChargingID() (uint32, error) {
-	if i.Type != ChargingID {
+	switch i.Type {
+	case ChargingID:
+		if len(i.Payload) < 4 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
+		return binary.BigEndian.Uint32(i.Payload[:4]), nil
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return 0, fmt.Errorf("failed to retrieve ChargingID: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == ChargingID {
+				return child.ChargingID()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 4 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return binary.BigEndian.Uint32(i.Payload), nil
 }
 
 // MustChargingID returns ChargingID in uint32, ignoring errors.

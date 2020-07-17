@@ -4,7 +4,10 @@
 
 package ie
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 // NewBearerFlags creates a new BearerFlags IE.
 func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
@@ -15,14 +18,28 @@ func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
 
 // BearerFlags returns BearerFlags in uint8(=as it is) if the type of IE matches.
 func (i *IE) BearerFlags() (uint8, error) {
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-	if i.Type != BearerFlags {
+	switch i.Type {
+	case BearerFlags:
+		if len(i.Payload) < 1 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
+		return i.Payload[0], nil
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return 0, fmt.Errorf("failed to retrieve BearerFlags: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == BearerFlags {
+				return child.BearerFlags()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-
-	return i.Payload[0], nil
 }
 
 // MustBearerFlags returns BearerFlags in uint8, ignoring errors.
