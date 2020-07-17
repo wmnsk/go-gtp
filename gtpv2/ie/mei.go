@@ -6,6 +6,7 @@ package ie
 
 import (
 	"io"
+	"strings"
 
 	"github.com/wmnsk/go-gtp/utils"
 )
@@ -28,7 +29,9 @@ func (i *IE) MobileEquipmentIdentity() (string, error) {
 	if len(i.Payload) == 0 {
 		return "", io.ErrUnexpectedEOF
 	}
-	return utils.SwappedBytesToStr(i.Payload, true), nil
+
+	str := utils.SwappedBytesToStr(i.Payload, false)
+	return strings.TrimSuffix(str, "f"), nil
 }
 
 // MustMobileEquipmentIdentity returns MobileEquipmentIdentity in string, ignoring errors.
