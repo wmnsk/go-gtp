@@ -18,7 +18,7 @@ func (i *IE) MBMSFlags() (uint8, error) {
 	if i.Type != MBMSFlags {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 
@@ -55,7 +55,7 @@ func (i *IE) HasLMRI() bool {
 // LocalMBMSBearerContextRelease reports whether the MBMS Session Stop Request
 // message is used to release the MBMS Bearer Context locally in the MME/SGSN.
 func (i *IE) LocalMBMSBearerContextRelease() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {
@@ -69,7 +69,7 @@ func (i *IE) LocalMBMSBearerContextRelease() bool {
 // MBMSSessionReEstablishment reports whether the MBMS Session Start Request
 // message is used to re-establish an MBMS session.
 func (i *IE) MBMSSessionReEstablishment() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {

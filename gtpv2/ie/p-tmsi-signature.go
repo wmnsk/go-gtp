@@ -20,7 +20,7 @@ func (i *IE) PTMSISignature() (uint32, error) {
 	if i.Type != PTMSISignature {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 

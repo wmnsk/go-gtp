@@ -4,7 +4,10 @@
 
 package ie
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 // NewEPSBearerID creates a new EPSBearerID IE.
 func NewEPSBearerID(ebi uint8) *IE {
@@ -13,14 +16,28 @@ func NewEPSBearerID(ebi uint8) *IE {
 
 // EPSBearerID returns EPSBearerID if the type of IE matches.
 func (i *IE) EPSBearerID() (uint8, error) {
-	if i.Type != EPSBearerID {
+	switch i.Type {
+	case EPSBearerID:
+		if len(i.Payload) < 1 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
+		return i.Payload[0], nil
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return 0, fmt.Errorf("failed to retrieve EPSBearerID: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == EPSBearerID {
+				return child.EPSBearerID()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
 }
 
 // MustEPSBearerID returns EPSBearerID in uint8, ignoring errors.

@@ -4,7 +4,10 @@
 
 package ie
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 // NewCause creates a new Cause IE.
 func NewCause(cause uint8, pce, bce, cs uint8, offendingIE *IE) *IE {
@@ -23,14 +26,28 @@ func NewCause(cause uint8, pce, bce, cs uint8, offendingIE *IE) *IE {
 
 // Cause returns Cause in uint8 if the type of IE matches.
 func (i *IE) Cause() (uint8, error) {
-	if i.Type != Cause {
+	switch i.Type {
+	case Cause:
+		if len(i.Payload) < 1 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
+		return i.Payload[0], nil
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return 0, fmt.Errorf("failed to retrieve Cause: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == Cause {
+				return child.Cause()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
 }
 
 // MustCause returns Cause in uint8, ignoring errors.
@@ -42,14 +59,28 @@ func (i *IE) MustCause() uint8 {
 
 // CauseFlags returns CauseFlags in uint8 if the type of IE matches.
 func (i *IE) CauseFlags() (uint8, error) {
-	if i.Type != Cause {
+	switch i.Type {
+	case Cause:
+		if len(i.Payload) < 1 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
+		return i.Payload[1], nil
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return 0, fmt.Errorf("failed to retrieve Cause: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == Cause {
+				return child.Cause()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 2 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[1], nil
 }
 
 // MustCauseFlags returns CauseFlags in uint8, ignoring errors.

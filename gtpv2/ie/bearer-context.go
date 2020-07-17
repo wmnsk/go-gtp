@@ -106,7 +106,7 @@ func (i *IE) BearerContext() ([]*IE, error) {
 	if i.Type != BearerContext {
 		return nil, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return nil, io.ErrUnexpectedEOF
 	}
 

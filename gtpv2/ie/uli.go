@@ -22,8 +22,8 @@ const (
 	emenbilen int = 6
 )
 
-// ULI IE's info fields
-type ULI struct {
+// UserLocationInformationFields IE's info fields
+type UserLocationInformationFields struct {
 	*CGI
 	*SAI
 	*RAI
@@ -34,58 +34,58 @@ type ULI struct {
 	*EMENBI
 }
 
-// PLMN info field of ULI IE
+// PLMN info field of UserLocationInformationFields IE
 type PLMN struct {
 	MCC string
 	MNC string
 }
 
-// CGI field of ULI IE
+// CGI field of UserLocationInformationFields IE
 type CGI struct {
 	*PLMN
 	LAC uint16
 	CI  uint16
 }
 
-// SAI field of ULI IE
+// SAI field of UserLocationInformationFields IE
 type SAI struct {
 	*PLMN
 	LAC uint16
 	SAC uint16
 }
 
-// RAI field of ULI IE
+// RAI field of UserLocationInformationFields IE
 type RAI struct {
 	*PLMN
 	LAC uint16
 	RAC uint16
 }
 
-// TAI field of ULI IE
+// TAI field of UserLocationInformationFields IE
 type TAI struct {
 	*PLMN
 	TAC uint16
 }
 
-// ECGI field of ULI IE
+// ECGI field of UserLocationInformationFields IE
 type ECGI struct {
 	*PLMN
 	ECI uint32
 }
 
-// LAI field of ULI IE
+// LAI field of UserLocationInformationFields IE
 type LAI struct {
 	*PLMN
 	LAC uint16
 }
 
-// MENBI field of ULI IE
+// MENBI field of UserLocationInformationFields IE
 type MENBI struct {
 	*PLMN
 	MENBI uint32
 }
 
-// EMENBI field of ULI IE
+// EMENBI field of UserLocationInformationFields IE
 type EMENBI struct {
 	*PLMN
 	EMENBI uint32
@@ -227,9 +227,9 @@ func uliPayloadLen(flags uint8) int {
 	return l
 }
 
-// UserLocationInfo is a getter function to parse ULI
-func (i *IE) UserLocationInfo() (*ULI, error) {
-	var uli ULI
+// UserLocationInfo is a getter function to parse UserLocationInformationFields
+func (i *IE) UserLocationInfo() (*UserLocationInformationFields, error) {
+	var uli UserLocationInformationFields
 	var plmn PLMN
 	l := len(i.Payload)
 	if l == 0 {

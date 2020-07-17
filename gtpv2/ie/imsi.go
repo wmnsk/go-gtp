@@ -25,7 +25,7 @@ func (i *IE) IMSI() (string, error) {
 	if i.Type != IMSI {
 		return "", &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return "", io.ErrUnexpectedEOF
 	}
 
