@@ -5,6 +5,7 @@
 package ie
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/wmnsk/go-gtp/utils"
@@ -26,6 +27,18 @@ func (i *IE) BearerQoS() (*BearerQoSFields, error) {
 	switch i.Type {
 	case BearerQoS:
 		return ParseBearerQoSFields(i.Payload)
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve BearerQoS: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == BearerQoS {
+				return child.BearerQoS()
+			}
+		}
+		return nil, ErrIENotFound
 	default:
 		return nil, &InvalidTypeError{Type: i.Type}
 	}
@@ -43,7 +56,7 @@ type BearerQoSFields struct {
 
 // NewBearerQoSFields creates a new BearerQoSFields.
 func NewBearerQoSFields(pci, pl, pvi, qci uint8, umbr, dmbr, ugbr, dgbr uint64) *BearerQoSFields {
-	f := &BearerQoSFields{
+	return &BearerQoSFields{
 		ARP:                          (pci << 6 & 0x40) | (pl << 2 & 0x3c) | (pvi & 0x01),
 		QCI:                          qci,
 		MaximumBitRateForUplink:      umbr,
@@ -51,8 +64,6 @@ func NewBearerQoSFields(pci, pl, pvi, qci uint8, umbr, dmbr, ugbr, dgbr uint64) 
 		GuaranteedBitRateForUplink:   ugbr,
 		GuaranteedBitRateForDownlink: dgbr,
 	}
-
-	return f
 }
 
 // Marshal serializes BearerQoSFields.

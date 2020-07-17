@@ -11,7 +11,89 @@ import (
 
 // NewAggregateMaximumBitRate creates a new AggregateMaximumBitRate IE.
 func NewAggregateMaximumBitRate(up, down uint32) *IE {
-	return newUint64ValIE(AggregateMaximumBitRate, (uint64(up)<<32 | uint64(down)))
+	// this is more efficient but removed for consistency with other structured IEs.
+	// return newUint64ValIE(AggregateMaximumBitRate, (uint64(up)<<32 | uint64(down)))
+
+	v := NewAggregateMaximumBitRateFields(up, down)
+	b, err := v.Marshal()
+	if err != nil {
+		return nil
+	}
+
+	return New(AggregateMaximumBitRate, 0x00, b)
+}
+
+// AggregateMaximumBitRate returns AggregateMaximumBitRate in AggregateMaximumBitRateFields type if the type of IE matches.
+func (i *IE) AggregateMaximumBitRate() (*AggregateMaximumBitRateFields, error) {
+	switch i.Type {
+	case AggregateMaximumBitRate:
+		return ParseAggregateMaximumBitRateFields(i.Payload)
+	default:
+		return nil, &InvalidTypeError{Type: i.Type}
+	}
+}
+
+// AggregateMaximumBitRateFields is a set of fields in AggregateMaximumBitRate IE.
+type AggregateMaximumBitRateFields struct {
+	APNAMBRForUplink   uint32
+	APNAMBRForDownlink uint32
+}
+
+// NewAggregateMaximumBitRateFields creates a new AggregateMaximumBitRateFields.
+func NewAggregateMaximumBitRateFields(up, down uint32) *AggregateMaximumBitRateFields {
+	return &AggregateMaximumBitRateFields{
+		APNAMBRForUplink:   up,
+		APNAMBRForDownlink: down,
+	}
+}
+
+// Marshal serializes AggregateMaximumBitRateFields.
+func (f *AggregateMaximumBitRateFields) Marshal() ([]byte, error) {
+	b := make([]byte, f.MarshalLen())
+	if err := f.MarshalTo(b); err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+// MarshalTo serializes AggregateMaximumBitRateFields.
+func (f *AggregateMaximumBitRateFields) MarshalTo(b []byte) error {
+	if len(b) < 8 {
+		return io.ErrUnexpectedEOF
+	}
+
+	binary.BigEndian.PutUint32(b[0:4], f.APNAMBRForUplink)
+	binary.BigEndian.PutUint32(b[4:8], f.APNAMBRForDownlink)
+
+	return nil
+}
+
+// ParseAggregateMaximumBitRateFields decodes AggregateMaximumBitRateFields.
+func ParseAggregateMaximumBitRateFields(b []byte) (*AggregateMaximumBitRateFields, error) {
+	f := &AggregateMaximumBitRateFields{}
+	if err := f.UnmarshalBinary(b); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+// UnmarshalBinary decodes given bytes into AggregateMaximumBitRateFields.
+func (f *AggregateMaximumBitRateFields) UnmarshalBinary(b []byte) error {
+	if len(b) < 8 {
+		return io.ErrUnexpectedEOF
+	}
+
+	f.APNAMBRForUplink = binary.BigEndian.Uint32(b[0:4])
+	f.APNAMBRForDownlink = binary.BigEndian.Uint32(b[4:8])
+
+	return nil
+}
+
+// MarshalLen returns the serial length of AggregateMaximumBitRateFields in int.
+func (f *AggregateMaximumBitRateFields) MarshalLen() int {
+	return 8
 }
 
 // AggregateMaximumBitRateUp returns AggregateMaximumBitRate for Uplink
