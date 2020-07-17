@@ -17,14 +17,13 @@ const (
 
 // NewProtocolConfigurationOptions creates a new ProtocolConfigurationOptions IE.
 func NewProtocolConfigurationOptions(proto uint8, options ...*PCOContainer) *IE {
-	pco := NewProtocolConfigurationOptionsFields(proto, options...)
-
-	i := New(ProtocolConfigurationOptions, 0x00, make([]byte, pco.MarshalLen()))
-	if err := pco.MarshalTo(i.Payload); err != nil {
+	v := NewProtocolConfigurationOptionsFields(proto, options...)
+	b, err := v.Marshal()
+	if err != nil {
 		return nil
 	}
 
-	return i
+	return New(ProtocolConfigurationOptions, 0x00, b)
 }
 
 // ProtocolConfigurationOptions returns ProtocolConfigurationOptions in
@@ -70,16 +69,16 @@ type ProtocolConfigurationOptionsFields struct {
 
 // NewProtocolConfigurationOptionsFields creates a new ProtocolConfigurationOptionsFields.
 func NewProtocolConfigurationOptionsFields(proto uint8, opts ...*PCOContainer) *ProtocolConfigurationOptionsFields {
-	p := &ProtocolConfigurationOptionsFields{ConfigurationProtocol: proto}
-	p.ProtocolOrContainers = append(p.ProtocolOrContainers, opts...)
+	f := &ProtocolConfigurationOptionsFields{ConfigurationProtocol: proto}
+	f.ProtocolOrContainers = append(f.ProtocolOrContainers, opts...)
 
-	return p
+	return f
 }
 
 // Marshal serializes ProtocolConfigurationOptionsFields.
-func (p *ProtocolConfigurationOptionsFields) Marshal() ([]byte, error) {
-	b := make([]byte, p.MarshalLen())
-	if err := p.MarshalTo(b); err != nil {
+func (f *ProtocolConfigurationOptionsFields) Marshal() ([]byte, error) {
+	b := make([]byte, f.MarshalLen())
+	if err := f.MarshalTo(b); err != nil {
 		return nil, err
 	}
 
@@ -87,10 +86,10 @@ func (p *ProtocolConfigurationOptionsFields) Marshal() ([]byte, error) {
 }
 
 // MarshalTo serializes ProtocolConfigurationOptionsFields.
-func (p *ProtocolConfigurationOptionsFields) MarshalTo(b []byte) error {
-	b[0] = (p.ConfigurationProtocol & 0x07) | 0x80
+func (f *ProtocolConfigurationOptionsFields) MarshalTo(b []byte) error {
+	b[0] = (f.ConfigurationProtocol & 0x07) | 0x80
 	offset := 1
-	for _, opt := range p.ProtocolOrContainers {
+	for _, opt := range f.ProtocolOrContainers {
 		if err := opt.MarshalTo(b[offset:]); err != nil {
 			return err
 		}
@@ -102,22 +101,22 @@ func (p *ProtocolConfigurationOptionsFields) MarshalTo(b []byte) error {
 
 // ParseProtocolConfigurationOptionsFields decodes ProtocolConfigurationOptionsFields.
 func ParseProtocolConfigurationOptionsFields(b []byte) (*ProtocolConfigurationOptionsFields, error) {
-	p := &ProtocolConfigurationOptionsFields{}
-	if err := p.UnmarshalBinary(b); err != nil {
+	f := &ProtocolConfigurationOptionsFields{}
+	if err := f.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 
-	return p, nil
+	return f, nil
 }
 
 // UnmarshalBinary decodes given bytes into ProtocolConfigurationOptionsFields.
-func (p *ProtocolConfigurationOptionsFields) UnmarshalBinary(b []byte) error {
+func (f *ProtocolConfigurationOptionsFields) UnmarshalBinary(b []byte) error {
 	if len(b) < 1 {
 		return ErrTooShortToParse
 	}
 
-	p.Extension = (b[0] >> 7) & 0x01
-	p.ConfigurationProtocol = b[0] & 0x07
+	f.Extension = (b[0] >> 7) & 0x01
+	f.ConfigurationProtocol = b[0] & 0x07
 
 	offset := 1
 	for {
@@ -128,15 +127,15 @@ func (p *ProtocolConfigurationOptionsFields) UnmarshalBinary(b []byte) error {
 		if err != nil {
 			return err
 		}
-		p.ProtocolOrContainers = append(p.ProtocolOrContainers, opt)
+		f.ProtocolOrContainers = append(f.ProtocolOrContainers, opt)
 		offset += opt.MarshalLen()
 	}
 }
 
 // MarshalLen returns the serial length of ProtocolConfigurationOptionsFields in int.
-func (p *ProtocolConfigurationOptionsFields) MarshalLen() int {
+func (f *ProtocolConfigurationOptionsFields) MarshalLen() int {
 	l := 1
-	for _, opt := range p.ProtocolOrContainers {
+	for _, opt := range f.ProtocolOrContainers {
 		l += opt.MarshalLen()
 	}
 
