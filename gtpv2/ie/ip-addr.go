@@ -85,7 +85,7 @@ func (i *IE) IP() (net.IP, error) {
 		default:
 			return nil, ErrMalformed
 		}
-	case S103PDNDataForwardingInfo, S1UDataForwarding:
+	case S103PDNDataForwardingInfo:
 		switch i.Payload[0] {
 		case 4:
 			if len(i.Payload) < 5 {
@@ -97,6 +97,21 @@ func (i *IE) IP() (net.IP, error) {
 				return nil, io.ErrUnexpectedEOF
 			}
 			return net.IP(i.Payload[1:17]), nil
+		default:
+			return nil, ErrMalformed
+		}
+	case S1UDataForwarding:
+		switch i.Payload[1] {
+		case 4:
+			if len(i.Payload) < 6 {
+				return nil, io.ErrUnexpectedEOF
+			}
+			return net.IP(i.Payload[2:6]), nil
+		case 16:
+			if len(i.Payload) < 18 {
+				return nil, io.ErrUnexpectedEOF
+			}
+			return net.IP(i.Payload[2:18]), nil
 		default:
 			return nil, ErrMalformed
 		}
