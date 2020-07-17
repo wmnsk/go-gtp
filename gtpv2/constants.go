@@ -252,8 +252,7 @@ const (
 
 // Cause Type definitions.
 const (
-	CauseType uint8 = iota
-	CauseTypeRadioNetworkLayer
+	CauseTypeRadioNetworkLayer uint8 = iota
 	CauseTypeTransportLayer
 	CauseTypeNAS
 	CauseTypeProtocol
