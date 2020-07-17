@@ -16,7 +16,7 @@ func (i *IE) NodeType() (uint8, error) {
 	if i.Type != NodeType {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 

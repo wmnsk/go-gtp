@@ -16,7 +16,7 @@ func (i *IE) LocalDistinguishedName() (string, error) {
 	if i.Type != LocalDistinguishedName {
 		return "", &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return "", io.ErrUnexpectedEOF
 	}
 

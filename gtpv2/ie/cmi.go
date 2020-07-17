@@ -13,7 +13,7 @@ func NewCSGMembershipIndication(cmi uint8) *IE {
 
 // CMI returns CMI in uint8 if the type of IE matches.
 func (i *IE) CMI() (uint8, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 

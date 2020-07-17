@@ -24,7 +24,7 @@ func NewIPAddress(addr string) *IE {
 
 // IPAddress returns IPAddress value if the type of IE matches.
 func (i *IE) IPAddress() (string, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return "", io.ErrUnexpectedEOF
 	}
 

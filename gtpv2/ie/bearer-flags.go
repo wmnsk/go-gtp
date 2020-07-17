@@ -15,7 +15,7 @@ func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
 
 // BearerFlags returns BearerFlags in uint8(=as it is) if the type of IE matches.
 func (i *IE) BearerFlags() (uint8, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 	if i.Type != BearerFlags {
@@ -75,7 +75,7 @@ func (i *IE) HasASI() bool {
 // ActivityStatusIndicator reports whether the bearer context is preserved in
 // the CN without corresponding Radio Access Bearer established.
 func (i *IE) ActivityStatusIndicator() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {
@@ -89,7 +89,7 @@ func (i *IE) ActivityStatusIndicator() bool {
 // VSRVCC reports whether this bearer is an IMS video bearer and is candidate
 // for PS-to-CS vSRVCC handover.
 func (i *IE) VSRVCC() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {
@@ -102,7 +102,7 @@ func (i *IE) VSRVCC() bool {
 
 // VoiceBearer reports whether a voice bearer when doing PS-to-CS (v)SRVCC handover.
 func (i *IE) VoiceBearer() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {
@@ -116,7 +116,7 @@ func (i *IE) VoiceBearer() bool {
 // ProhibitPayloadCompression reports whether an SGSN should attempt to
 // compress the payload of user data when the users asks for it to be compressed.
 func (i *IE) ProhibitPayloadCompression() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {

@@ -53,7 +53,7 @@ func NewFullyQualifiedCSID(nodeID string, csIDs ...uint16) *IE {
 
 // NodeIDType returns NodeIDType in uint8 if the type of IE matches.
 func (i *IE) NodeIDType() (uint8, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 
@@ -74,7 +74,7 @@ func (i *IE) MustNodeIDType() uint8 {
 
 // NodeID returns NodeID in []byte if the type of IE matches.
 func (i *IE) NodeID() ([]byte, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return nil, io.ErrUnexpectedEOF
 	}
 
@@ -108,7 +108,7 @@ func (i *IE) MustNodeID() []byte {
 
 // CSIDs returns CSIDs in []uint16 if the type of IE matches.
 func (i *IE) CSIDs() ([]uint16, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return nil, io.ErrUnexpectedEOF
 	}
 

@@ -63,7 +63,7 @@ func (i *IE) EBIs() ([]uint8, error) {
 	if i.Type != S103PDNDataForwardingInfo {
 		return nil, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return nil, io.ErrUnexpectedEOF
 	}
 

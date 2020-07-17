@@ -34,7 +34,7 @@ func (i *IE) TimeZone() (time.Duration, error) {
 	if i.Type != UETimeZone {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 

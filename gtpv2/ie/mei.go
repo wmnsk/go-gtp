@@ -26,7 +26,7 @@ func (i *IE) MobileEquipmentIdentity() (string, error) {
 	if i.Type != MobileEquipmentIdentity {
 		return "", &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return "", io.ErrUnexpectedEOF
 	}
 
