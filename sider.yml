@@ -2,7 +2,7 @@ linter:
   # https://help.sider.review/getting-started/custom-configuration
 
   #   # https://help.sider.review/tools/others/misspell
-  #   misspell:
+  misspell:
   #     exclude:
   #       - vendor
   #       - "**/*.min.js"
