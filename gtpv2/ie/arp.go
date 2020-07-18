@@ -46,12 +46,24 @@ func (i *IE) HasPCI() bool {
 
 // PriorityLevel returns PriorityLevel in uint8 if the type of IE matches.
 func (i *IE) PriorityLevel() (uint8, error) {
-	v, err := i.AllocationRetensionPriority()
-	if err != nil {
-		return 0, err
-	}
+	switch i.Type {
+	case AllocationRetensionPriority:
+		v, err := i.AllocationRetensionPriority()
+		if err != nil {
+			return 0, err
+		}
 
-	return (v & 0x3c) >> 2, nil
+		return (v & 0x3c) >> 2, nil
+	case BearerQoS:
+		v, err := i.BearerQoS()
+		if err != nil {
+			return 0, err
+		}
+
+		return (v.ARP & 0x3c) >> 2, nil
+	default:
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
 }
 
 // PreemptionVulnerability reports whether the preemption vulnerability is set to enabled if the type of IE matches.
