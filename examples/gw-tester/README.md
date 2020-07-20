@@ -9,7 +9,7 @@ A pseudo eNB and MME as a tester for S/P-GW.
 It is a burden to use actual UE/eNB/MME just to test S/P-GW, isn't it?  
 GW Tester emulates the minimal required behavior of surrounding nodes to perform a quick and simple testing on S/P-GW.
 
-A blog post by the author is available [here](https://wmnsk.com/posts/20200116_gw-tester/) for those who interested :)
+A blog post by the author is available [here](https://wmnsk.com/posts/20200116_gw-tester/) for those who are interested in :)
 
 ## How it works
 
@@ -84,7 +84,7 @@ And run them with YAML configuration. See [Configuration](#configurations) secti
 Then you'll see;
 
 * MME starts sending GTPv2 Create Session Request to S-GW after it receives subscriber information from eNB.
-* When session is successfully created on S/P-GW, eNB sets up GTP-U tunnels with S-GW.
+* When sessions are successfully created on S/P-GW, eNB sets up GTP-U tunnels with S-GW.
 
 After successful creation of the sessions, you can inject packets externally or generate it on eNB.
 
@@ -109,14 +109,14 @@ These values are used to identify eNB. Some of them are just to set inside the p
 | `mme_addr`  | string        | IP/Port of MME to dial, for S1-MME interface |
 | `prom_addr` | string        | IP/Port of MME to serve Prometheus           |
 
-#### Local Addressess
+#### Local Addresses
 
 `local_addresses` are the IP addresses/ports to be bound on local machine.
 
-| config     | type of value | description                        |
-|------------|---------------|------------------------------------|
-| `s1c_ip`   | string        | local IP for S1-MME interface      |
-| `s1u_ip`   | string        | local IP for S1-U interface        |
+| config   | type of value | description                   |
+|----------|---------------|-------------------------------|
+| `s1c_ip` | string        | local IP for S1-MME interface |
+| `s1u_ip` | string        | local IP for S1-U interface   |
 
 #### Subscribers
 
@@ -147,7 +147,7 @@ These values are used to identify MME. Some of them are just to set inside the p
 | `apn`       | string        | APN assigned to all the subscriber |
 | `prom_addr` | string        | IP/Port of MME to serve Prometheus |
 
-#### Local Addressess
+#### Local Addresses
 
 `local_addresses` are the IP addresses/ports to be bound on local machine.
 
@@ -167,7 +167,7 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 
 ### S-GW
 
-#### Local Addressess
+#### Local Addresses
 
 `local_addresses` are the IP addresses/ports to be bound on local machine.
 
@@ -189,15 +189,15 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 | `route_subnet` | string        | IP subnet of UEs that should be routed properly.                       |
 | `prom_addr`    | string        | IP/Port of MME to serve Prometheus                                     |
 
-#### Local Addressess
+#### Local Addresses
 
 `local_addresses` are the IP addresses/ports to be bound on local machine.
 
-| config     | type of value | description                      |
-|------------|---------------|----------------------------------|
-| `s5c_ip`   | string        | local IP for S5-C interface      |
-| `s5u_ip`   | string        | local IP for S5-U interface      |
-| `sgi_ip`   | string        | local IP for SGi interface       |
+| config   | type of value | description                 |
+|----------|---------------|-----------------------------|
+| `s5c_ip` | string        | local IP for S5-C interface |
+| `s5u_ip` | string        | local IP for S5-U interface |
+| `sgi_ip` | string        | local IP for SGi interface  |
 
 ## Other Features
 

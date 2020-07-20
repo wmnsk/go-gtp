@@ -5,7 +5,7 @@ Package v0 provides the simple and painless handling of GTPv2-C protocol in pure
 ## Getting Started
 
 This package is still under construction.
-See messages and ies directory for what you can do with the current implementation. 
+See message and ie directory for what you can do with the current implementation. 
 
 ### Creating a PDP Context as a client
 
@@ -23,7 +23,7 @@ _NOT IMPLEMENTED YET!_
 
 The following Messages marked with "Yes" are currently available with their own useful constructors.
 
-_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGeneric()`._
+_Even there are some missing Messages, you can create any kind of Message by using `message.NewGeneric()`._
 
 ### Messages
 
@@ -76,7 +76,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 
 The following Information Elements marked with "Yes" are currently available with their own useful constructors.
 
-_Even there are some missing IEs, you can create any kind of IEs by using `ies.New()` function or by initializing ies.IE directly._
+_Even there are some missing IEs, you can create any kind of IEs by using `ie.New()` function or by initializing ie.IE directly._
 
 | ID      | Name                                   | Supported |
 |---------|----------------------------------------|-----------|
