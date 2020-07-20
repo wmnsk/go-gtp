@@ -65,19 +65,19 @@ func (e *EchoResponse) MarshalTo(b []byte) error {
 
 	offset := 0
 	if ie := e.Recovery; ie != nil {
-		if err := ie.MarshalTo(e.Header.Payload); err != nil {
+		if err := ie.MarshalTo(e.Header.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
 	}
 	if ie := e.SendingNodeFeatures; ie != nil {
-		if err := ie.MarshalTo(e.Header.Payload); err != nil {
+		if err := ie.MarshalTo(e.Header.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
 	}
 	if ie := e.PrivateExtension; ie != nil {
-		if err := ie.MarshalTo(e.Header.Payload); err != nil {
+		if err := ie.MarshalTo(e.Header.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
