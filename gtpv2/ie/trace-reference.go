@@ -12,15 +12,95 @@ import (
 
 // NewTraceReference creates a new TraceReference IE.
 func NewTraceReference(mcc, mnc string, traceID uint32) *IE {
-	i := New(TraceReference, 0x00, make([]byte, 6))
-	plmn, err := utils.EncodePLMN(mcc, mnc)
+	v := NewTraceReferenceFields(mcc, mnc, traceID)
+	b, err := v.Marshal()
 	if err != nil {
 		return nil
 	}
-	copy(i.Payload[0:3], plmn)
-	copy(i.Payload[3:6], utils.Uint32To24(traceID))
 
-	return i
+	return New(TraceReference, 0x00, b)
+}
+
+// TraceReferenceFields is a set of fields in TraceReference IE.
+type TraceReferenceFields struct {
+	MCC, MNC string
+	TraceID  uint32 // 24-bit
+}
+
+// NewTraceReferenceFields creates a new TraceReferenceFields.
+func NewTraceReferenceFields(mcc, mnc string, traceID uint32) *TraceReferenceFields {
+	return &TraceReferenceFields{
+		MCC:     mcc,
+		MNC:     mnc,
+		TraceID: traceID,
+	}
+}
+
+// Marshal serializes TraceReferenceFields.
+func (f *TraceReferenceFields) Marshal() ([]byte, error) {
+	b := make([]byte, f.MarshalLen())
+	if err := f.MarshalTo(b); err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+// MarshalTo serializes TraceReferenceFields.
+func (f *TraceReferenceFields) MarshalTo(b []byte) error {
+	l := len(b)
+	if l < 3 {
+		return io.ErrUnexpectedEOF
+	}
+
+	plmn, err := utils.EncodePLMN(f.MCC, f.MNC)
+	if err != nil {
+		return err
+	}
+	copy(b[0:3], plmn)
+
+	if l < 6 {
+		return io.ErrUnexpectedEOF
+	}
+	copy(b[3:6], utils.Uint32To24(f.TraceID))
+
+	return nil
+}
+
+// ParseTraceReferenceFields decodes TraceReferenceFields.
+func ParseTraceReferenceFields(b []byte) (*TraceReferenceFields, error) {
+	f := &TraceReferenceFields{}
+	if err := f.UnmarshalBinary(b); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+// UnmarshalBinary decodes given bytes into TraceReferenceFields.
+func (f *TraceReferenceFields) UnmarshalBinary(b []byte) error {
+	l := len(b)
+	if l < 3 {
+		return io.ErrUnexpectedEOF
+	}
+
+	var err error
+	f.MCC, f.MNC, err = utils.DecodePLMN(b[0:3])
+	if err != nil {
+		return err
+	}
+
+	if l < 6 {
+		return io.ErrUnexpectedEOF
+	}
+	f.TraceID = utils.Uint24To32(b[3:6])
+
+	return nil
+}
+
+// MarshalLen returns the serial length of TraceReferenceFields in int.
+func (f *TraceReferenceFields) MarshalLen() int {
+	return 6
 }
 
 // TraceID returns TraceID in uint32 if the type of IE matches.
