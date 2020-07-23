@@ -165,6 +165,10 @@ func TestIEs(t *testing.T) {
 			ie.NewMSTimeZone(9*time.Hour, 0), // XXX - should be updated with more realistic value
 			[]byte{0x99, 0x00, 0x02, 0x63, 0x00},
 		}, {
+			"MSTimeZone",
+			ie.NewMSTimeZone(2*time.Hour, 0),
+			[]byte{0x99, 0x00, 0x02, 0x80, 0x00},
+		}, {
 			"IMEISV",
 			ie.NewIMEISV("123450123456789"),
 			[]byte{0x9a, 0x00, 0x08, 0x21, 0x43, 0x05, 0x21, 0x43, 0x65, 0x87, 0xf9},
