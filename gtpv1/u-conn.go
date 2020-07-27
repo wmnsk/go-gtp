@@ -17,7 +17,7 @@ import (
 	"github.com/vishvananda/netlink"
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
 	"github.com/wmnsk/go-gtp/gtpv1/message"
-	v2ies "github.com/wmnsk/go-gtp/gtpv2/ie"
+	v2ie "github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
 type tpduSet struct {
@@ -476,7 +476,7 @@ func (u *UPlaneConn) Restarts() uint8 {
 // time to find a new unique value.
 //
 // TODO: optimize performance...
-func (u *UPlaneConn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *v2ies.IE) {
+func (u *UPlaneConn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *v2ie.IE) {
 	var teid uint32
 	for try := uint32(0); try < 0xffff; try++ {
 		const logEvery = 0xff
@@ -502,7 +502,7 @@ func (u *UPlaneConn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *v2ies.IE) {
 	if teid == 0 {
 		return nil
 	}
-	return v2ies.NewFullyQualifiedTEID(ifType, teid, v4, v6)
+	return v2ie.NewFullyQualifiedTEID(ifType, teid, v4, v6)
 }
 
 func generateRandomUint32() uint32 {
