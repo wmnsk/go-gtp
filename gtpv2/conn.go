@@ -62,7 +62,7 @@ func NewConn(laddr net.Addr, localIfType, counter uint8) *Conn {
 		localIfType:       localIfType,
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
-		msgHandlerMap:     defaultHandlerMap,
+		msgHandlerMap:     newDefaultMsgHandlerMap(),
 		sequence:          0,
 		RestartCounter:    counter,
 	}
@@ -82,7 +82,7 @@ func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8
 		localIfType:       localIfType,
 		validationEnabled: true,
 		closeCh:           make(chan struct{}),
-		msgHandlerMap:     defaultHandlerMap,
+		msgHandlerMap:     newDefaultMsgHandlerMap(),
 		sequence:          0,
 		RestartCounter:    counter,
 	}
@@ -101,7 +101,7 @@ func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8
 		return nil, err
 	}
 
-	buf := make([]byte, 1600)
+	buf := make([]byte, 1500)
 
 	// if no response coming within 3 seconds, returns error without retrying.
 	if err := c.pktConn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
@@ -217,8 +217,9 @@ func (c *Conn) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.msgHandlerMap = defaultHandlerMap
-	c.RestartCounter = 0
+	c.msgHandlerMap = newMsgHandlerMap(
+		map[uint8]HandlerFunc{},
+	)
 	close(c.closeCh)
 
 	if err := c.pktConn.Close(); err != nil {
