@@ -50,7 +50,7 @@ type UPlaneConn struct {
 func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
 	return &UPlaneConn{
 		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
+		msgHandlerMap: newDefaultMsgHandlerMap(),
 		iteiMap:       newiteiMap(),
 		laddr:         laddr,
 
@@ -65,7 +65,7 @@ func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
 func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error) {
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
+		msgHandlerMap: newDefaultMsgHandlerMap(),
 		iteiMap:       newiteiMap(),
 		laddr:         laddr,
 
@@ -289,7 +289,9 @@ func (u *UPlaneConn) Close() error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	u.msgHandlerMap = defaultHandlerMap
+	u.msgHandlerMap = newMsgHandlerMap(
+		map[uint8]HandlerFunc{},
+	)
 	u.relayMap = nil
 	close(u.closeCh)
 
