@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	v0 "github.com/wmnsk/go-gtp/gtpv0"
+	"github.com/wmnsk/go-gtp/gtpv0"
 	"github.com/wmnsk/go-gtp/gtpv0/ie"
 )
 
@@ -20,7 +20,7 @@ func TestIE(t *testing.T) {
 	}{
 		{
 			"Cause",
-			ie.NewCause(v0.CauseRequestAccepted),
+			ie.NewCause(gtpv0.CauseRequestAccepted),
 			[]byte{0x01, 0x80},
 		}, {
 			"IMSI",
