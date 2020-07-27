@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"github.com/wmnsk/go-gtp/gtpv2/testutils"
@@ -21,7 +21,7 @@ func TestPGWRestartNotification(t *testing.T) {
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ie.NewIPAddress("1.1.1.1"),
 				ie.NewIPAddress("1.1.1.1").WithInstance(1),
-				ie.NewCause(v2.CausePGWNotResponding, 0, 0, 0, nil),
+				ie.NewCause(gtpv2.CausePGWNotResponding, 0, 0, 0, nil),
 			),
 			Serialized: []byte{
 				// Header

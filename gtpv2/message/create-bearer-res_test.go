@@ -10,7 +10,7 @@ import (
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"github.com/wmnsk/go-gtp/gtpv2/testutils"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
@@ -20,7 +20,7 @@ func TestCreateBearerResponse(t *testing.T) {
 			Description: "Normal",
 			Structured: message.NewCreateBearerResponse(
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
-				ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+				ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 				ie.NewBearerContext(
 					ie.NewEPSBearerID(0),
 					ie.NewBearerQoS(1, 2, 1, 0xff, 0x1111111111, 0x2222222222, 0x1111111111, 0x2222222222),

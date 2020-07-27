@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v0 "github.com/wmnsk/go-gtp/gtpv0"
+	"github.com/wmnsk/go-gtp/gtpv0"
 	"github.com/wmnsk/go-gtp/gtpv0/ie"
 	"github.com/wmnsk/go-gtp/gtpv0/message"
 	"github.com/wmnsk/go-gtp/gtpv0/testutils"
@@ -19,7 +19,7 @@ func TestDeletePDPContextResponse(t *testing.T) {
 			Description: "request-accepted",
 			Structured: message.NewDeletePDPContextResponse(
 				testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
-				ie.NewCause(v0.CauseRequestAccepted),
+				ie.NewCause(gtpv0.CauseRequestAccepted),
 			),
 			Serialized: []byte{
 				// Hewader

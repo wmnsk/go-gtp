@@ -7,25 +7,25 @@ import (
 	"strconv"
 	"testing"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 )
 
-var testConn *v2.Conn
-var sessions []*v2.Session
+var testConn *gtpv2.Conn
+var sessions []*gtpv2.Session
 var dummyAddr net.Addr = &net.UDPAddr{IP: net.IP{0x00, 0x00, 0x00, 0x00}, Port: 2123}
 
 func init() {
-	testConn = v2.NewConn(dummyAddr, v2.IFTypeS11MMEGTPC, 0)
-	sessions = []*v2.Session{
-		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}),
-		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567892"}),
-		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567893"}),
-		v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567894"}),
+	testConn = gtpv2.NewConn(dummyAddr, gtpv2.IFTypeS11MMEGTPC, 0)
+	sessions = []*gtpv2.Session{
+		gtpv2.NewSession(dummyAddr, &gtpv2.Subscriber{IMSI: "001011234567891"}),
+		gtpv2.NewSession(dummyAddr, &gtpv2.Subscriber{IMSI: "001011234567892"}),
+		gtpv2.NewSession(dummyAddr, &gtpv2.Subscriber{IMSI: "001011234567893"}),
+		gtpv2.NewSession(dummyAddr, &gtpv2.Subscriber{IMSI: "001011234567894"}),
 	}
 
 	for i, sess := range sessions {
 		_ = sess.Activate()
-		sess.AddTEID(v2.IFTypeS11MMEGTPC, uint32(i+1))
+		sess.AddTEID(gtpv2.IFTypeS11MMEGTPC, uint32(i+1))
 		testConn.RegisterSession(uint32(i+1), sess)
 	}
 }
@@ -44,7 +44,7 @@ func TestGetSessionByIMSI_GetTEID(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		teid, err := sess.GetTEID(v2.IFTypeS11MMEGTPC)
+		teid, err := sess.GetTEID(gtpv2.IFTypeS11MMEGTPC)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -58,14 +58,14 @@ func TestGetSessionByIMSI_GetTEID(t *testing.T) {
 func BenchmarkAddSession(b *testing.B) {
 	for k := 0.; k < 6; k++ {
 		existingSessions := int(math.Pow(10, k))
-		benchConn := v2.NewConn(dummyAddr, v2.IFTypeS11MMEGTPC, 0)
+		benchConn := gtpv2.NewConn(dummyAddr, gtpv2.IFTypeS11MMEGTPC, 0)
 		for i := 0; i < existingSessions; i++ {
 			imsi := fmt.Sprintf("%015d", i)
-			benchConn.RegisterSession(0, v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: imsi}))
+			benchConn.RegisterSession(0, gtpv2.NewSession(dummyAddr, &gtpv2.Subscriber{IMSI: imsi}))
 		}
 		b.Run(fmt.Sprintf("%d", existingSessions), func(b *testing.B) {
 			for i := 1; i <= b.N; i++ {
-				benchConn.RegisterSession(0, v2.NewSession(dummyAddr, &v2.Subscriber{IMSI: "001011234567891"}))
+				benchConn.RegisterSession(0, gtpv2.NewSession(dummyAddr, &gtpv2.Subscriber{IMSI: "001011234567891"}))
 			}
 		})
 	}

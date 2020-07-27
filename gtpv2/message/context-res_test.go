@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"github.com/wmnsk/go-gtp/gtpv2/testutils"
@@ -21,10 +21,10 @@ func TestContextResponse(t *testing.T) {
 			Description: "Normal",
 			Structured: message.NewContextResponse(
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
-				ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+				ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 				ie.NewIMSI("123451234567890"),
 				// ie.NewMMContext(),  XXX- implement!
-				ie.NewFullyQualifiedTEID(v2.IFTypeS10MMEGTPC, 0xffffffff, "1.1.1.1", ""),
+				ie.NewFullyQualifiedTEID(gtpv2.IFTypeS10MMEGTPC, 0xffffffff, "1.1.1.1", ""),
 			),
 			Serialized: []byte{
 				// Header

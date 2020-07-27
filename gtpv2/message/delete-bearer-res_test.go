@@ -10,7 +10,7 @@ import (
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"github.com/wmnsk/go-gtp/gtpv2/testutils"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
@@ -20,7 +20,7 @@ func TestDeleteBearerResponse(t *testing.T) {
 			Description: "Normal/CauseOnly",
 			Structured: message.NewDeleteBearerResponse(
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
-				ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+				ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 			),
 			Serialized: []byte{
 				// Header

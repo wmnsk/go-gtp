@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"github.com/wmnsk/go-gtp/gtpv2/testutils"
@@ -22,9 +22,9 @@ func TestCreateSessionRequest(t *testing.T) {
 				ie.NewIMSI("123451234567890"),
 				ie.NewMSISDN("123450123456789"),
 				ie.NewAccessPointName("some.apn.example"),
-				ie.NewFullyQualifiedTEID(v2.IFTypeS11MMEGTPC, 0xffffffff, "1.1.1.1", ""),
-				ie.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0xffffffff, "1.1.1.2", "").WithInstance(1),
-				ie.NewPDNType(v2.PDNTypeIPv4),
+				ie.NewFullyQualifiedTEID(gtpv2.IFTypeS11MMEGTPC, 0xffffffff, "1.1.1.1", ""),
+				ie.NewFullyQualifiedTEID(gtpv2.IFTypeS5S8PGWGTPC, 0xffffffff, "1.1.1.2", "").WithInstance(1),
+				ie.NewPDNType(gtpv2.PDNTypeIPv4),
 				ie.NewAggregateMaximumBitRate(0x11111111, 0x22222222),
 				ie.NewIndicationFromOctets(0xa1, 0x08, 0x15, 0x10, 0x88, 0x81, 0x40),
 				ie.NewBearerContext(
@@ -34,13 +34,13 @@ func TestCreateSessionRequest(t *testing.T) {
 				ie.NewMobileEquipmentIdentity("123450123456789"),
 				ie.NewServingNetwork("123", "45"),
 				ie.NewPDNAddressAllocation("2.2.2.2"),
-				ie.NewAPNRestriction(v2.APNRestrictionPublic1),
+				ie.NewAPNRestriction(gtpv2.APNRestrictionPublic1),
 				ie.NewUserLocationInformationLazy(
 					"123", "45",
 					-1, -1, -1, -1, 0x0001, 0x00000101, -1, -1,
 				),
-				ie.NewRATType(v2.RATTypeEUTRAN),
-				ie.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
+				ie.NewRATType(gtpv2.RATTypeEUTRAN),
+				ie.NewSelectionMode(gtpv2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
 			),
 			Serialized: []byte{
 				// Header

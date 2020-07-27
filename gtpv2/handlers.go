@@ -41,13 +41,15 @@ func newMsgHandlerMap(m map[uint8]HandlerFunc) *msgHandlerMap {
 	return mhm
 }
 
-var defaultHandlerMap = newMsgHandlerMap(
-	map[uint8]HandlerFunc{
-		message.MsgTypeEchoRequest:                   handleEchoRequest,
-		message.MsgTypeEchoResponse:                  handleEchoResponse,
-		message.MsgTypeVersionNotSupportedIndication: handleVersionNotSupportedIndication,
-	},
-)
+func newDefaultMsgHandlerMap() *msgHandlerMap {
+	return newMsgHandlerMap(
+		map[uint8]HandlerFunc{
+			message.MsgTypeEchoRequest:                   handleEchoRequest,
+			message.MsgTypeEchoResponse:                  handleEchoResponse,
+			message.MsgTypeVersionNotSupportedIndication: handleVersionNotSupportedIndication,
+		},
+	)
+}
 
 func handleEchoRequest(c *Conn, senderAddr net.Addr, msg message.Message) error {
 	// this should never happen, as the type should have been assured by

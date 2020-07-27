@@ -42,14 +42,16 @@ func newMsgHandlerMap(m map[uint8]HandlerFunc) *msgHandlerMap {
 	return mhm
 }
 
-var defaultHandlerMap = newMsgHandlerMap(
-	map[uint8]HandlerFunc{
-		message.MsgTypeTPDU:            handleTPDU,
-		message.MsgTypeEchoRequest:     handleEchoRequest,
-		message.MsgTypeEchoResponse:    handleEchoResponse,
-		message.MsgTypeErrorIndication: handleErrorIndication,
-	},
-)
+func newDefaultMsgHandlerMap() *msgHandlerMap {
+	return newMsgHandlerMap(
+		map[uint8]HandlerFunc{
+			message.MsgTypeTPDU:            handleTPDU,
+			message.MsgTypeEchoRequest:     handleEchoRequest,
+			message.MsgTypeEchoResponse:    handleEchoResponse,
+			message.MsgTypeErrorIndication: handleErrorIndication,
+		},
+	)
+}
 
 // handleTPDU responds to sender with ErrorIndication by default.
 // By disabling it(DisableErrorIndication), it passes unhandled T-PDU to

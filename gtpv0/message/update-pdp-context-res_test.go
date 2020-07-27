@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v0 "github.com/wmnsk/go-gtp/gtpv0"
+	"github.com/wmnsk/go-gtp/gtpv0"
 	"github.com/wmnsk/go-gtp/gtpv0/ie"
 	"github.com/wmnsk/go-gtp/gtpv0/message"
 	"github.com/wmnsk/go-gtp/gtpv0/testutils"
@@ -19,7 +19,7 @@ func TestUpdatePDPContextResponse(t *testing.T) {
 			Description: "request-accepted",
 			Structured: message.NewUpdatePDPContextResponse(
 				testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
-				ie.NewCause(v0.CauseRequestAccepted),
+				ie.NewCause(gtpv0.CauseRequestAccepted),
 				ie.NewQualityOfServiceProfile(1, 1, 1, 1, 1),
 				ie.NewFlowLabelDataI(11),
 				ie.NewFlowLabelSignalling(22),
@@ -58,7 +58,7 @@ func TestUpdatePDPContextResponse(t *testing.T) {
 			Description: "no-resources",
 			Structured: message.NewUpdatePDPContextResponse(
 				testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
-				ie.NewCause(v0.CauseNoResourcesAvailable),
+				ie.NewCause(gtpv0.CauseNoResourcesAvailable),
 			),
 			Serialized: []byte{
 				// Header

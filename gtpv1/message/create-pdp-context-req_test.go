@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv1"
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
 	"github.com/wmnsk/go-gtp/gtpv1/message"
 	"github.com/wmnsk/go-gtp/gtpv1/testutils"
@@ -22,7 +22,7 @@ func TestCreatePDPContextRequest(t *testing.T) {
 				ie.NewIMSI("123450123456789"),
 				ie.NewRouteingAreaIdentity("123", "45", 0x1111, 0x22),
 				ie.NewRecovery(254),
-				ie.NewSelectionMode(v1.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
+				ie.NewSelectionMode(gtpv1.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
 				ie.NewTEIDDataI(0xdeadbeef),
 				ie.NewTEIDCPlane(0xdeadbeef),
 				ie.NewNSAPI(5),
@@ -36,7 +36,7 @@ func TestCreatePDPContextRequest(t *testing.T) {
 				ie.NewMSISDN("123412345678"),
 				ie.NewQoSProfile([]byte{0xde, 0xad, 0xbe, 0xef}), // XXX - Implement!
 				ie.NewCommonFlags(0, 0, 1, 0, 0, 0, 0, 0),
-				ie.NewRATType(v1.RatTypeUTRAN),
+				ie.NewRATType(gtpv1.RatTypeUTRAN),
 				ie.NewUserLocationInformationWithSAI("123", "45", 0x1111, 0x2222),
 				ie.NewMSTimeZone(0x00, 0x00),
 			),

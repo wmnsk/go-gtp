@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv1"
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
 	"github.com/wmnsk/go-gtp/gtpv1/message"
 	"github.com/wmnsk/go-gtp/gtpv1/testutils"
@@ -19,7 +19,7 @@ func TestUpdatePDPContextResponse(t *testing.T) {
 			Description: "Normal",
 			Structured: message.NewUpdatePDPContextResponse(
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
-				ie.NewCause(v1.ResCauseRequestAccepted),
+				ie.NewCause(gtpv1.ResCauseRequestAccepted),
 				ie.NewRecovery(0),
 				ie.NewTEIDDataI(0xdeadbeef),
 				ie.NewTEIDCPlane(0xdeadbeef),
