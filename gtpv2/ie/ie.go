@@ -10,6 +10,7 @@ package ie
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
 )
 
 // IE definitions.
@@ -320,19 +321,33 @@ func (i *IE) Marshal() ([]byte, error) {
 
 // MarshalTo puts the byte sequence in the byte array given as b.
 func (i *IE) MarshalTo(b []byte) error {
+	l := len(b)
+	if l < 4 {
+		return io.ErrUnexpectedEOF
+	}
+
 	b[0] = i.Type
 	binary.BigEndian.PutUint16(b[1:3], i.Length)
 	b[3] = i.instance
 	if i.IsGrouped() {
 		offset := 4
 		for _, ie := range i.ChildIEs {
-			if err := ie.MarshalTo(b[offset:]); err != nil {
+			if l < offset+ie.MarshalLen() {
+				break
+			}
+
+			if err := ie.MarshalTo(b[offset : offset+ie.MarshalLen()]); err != nil {
 				return err
 			}
 			offset += ie.MarshalLen()
 		}
 		return nil
 	}
+
+	if l < i.MarshalLen() {
+		return io.ErrUnexpectedEOF
+	}
+
 	copy(b[4:i.MarshalLen()], i.Payload)
 	return nil
 }
@@ -350,7 +365,7 @@ func Parse(b []byte) (*IE, error) {
 func (i *IE) UnmarshalBinary(b []byte) error {
 	l := len(b)
 	if l < 5 {
-		return ErrTooShortToParse
+		return io.ErrUnexpectedEOF
 	}
 
 	i.Type = b[0]
