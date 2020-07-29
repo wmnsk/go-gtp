@@ -73,17 +73,17 @@ func (i *IE) IP() (net.IP, error) {
 		if len(i.Payload) < 5 {
 			return nil, io.ErrUnexpectedEOF
 		}
-		pdnType, err := i.PDNType()
+		paa, err := ParsePDNAddressAllocationFields(i.Payload)
 		if err != nil {
 			return nil, err
 		}
-		switch pdnType {
-		case 0x01:
-			return net.IP(i.Payload[1:]), nil
-		case 0x02:
-			return net.IP(i.Payload[2:]), nil
+		switch paa.PDNType {
+		case pdnTypeIPv4, pdnTypeIPv4v6:
+			return paa.IPv4Address, nil
+		case pdnTypeIPv6:
+			return paa.IPv6Address, nil
 		default:
-			return nil, ErrMalformed
+			return nil, ErrIEValueNotFound
 		}
 	case S103PDNDataForwardingInfo:
 		switch i.Payload[0] {
