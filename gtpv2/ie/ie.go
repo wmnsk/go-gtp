@@ -424,7 +424,13 @@ func (i *IE) String() string {
 
 var grouped = []uint8{
 	BearerContext,
-	// TODO: add all grouped type of IEs here.
+	PDNConnection,
+	OverloadControlInformation,
+	LoadControlInformation,
+	RemoteUEContext,
+	SCEFPDNConnection,
+	V2XContext,
+	PC5QoSParameters,
 }
 
 // IsGrouped reports whether an IE is grouped type or not.
