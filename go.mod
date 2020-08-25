@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/golang/protobuf v1.4.2
-	github.com/google/go-cmp v0.5.1
+	github.com/google/go-cmp v0.5.2
 	github.com/pascaldekloe/goe v0.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/vishvananda/netlink v1.1.0
