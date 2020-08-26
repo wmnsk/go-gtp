@@ -182,7 +182,7 @@ func (c *Conn) serve(ctx context.Context) error {
 			}
 
 			if err := c.handleMessage(raddr, msg); err != nil {
-				logf("error handling message on Conn %s: %s", c.LocalAddr(), err)
+				logf("error handling message on Conn %s: %v", c.LocalAddr(), err)
 			}
 		}()
 	}
@@ -302,16 +302,17 @@ func (c *Conn) AddHandlers(funcs map[uint8]HandlerFunc) {
 func (c *Conn) handleMessage(senderAddr net.Addr, msg message.Message) error {
 	if c.validationEnabled {
 		if err := c.validate(senderAddr, msg); err != nil {
-			logf("failed to validate a message: %s", err)
+			return errors.Errorf("failed to validate %s: %v", msg.MessageTypeName(), err)
 		}
 	}
 
 	handle, ok := c.msgHandlerMap.load(msg.MessageType())
 	if !ok {
-		logf("%v", &HandlerNotFoundError{MsgType: msg.MessageTypeName()})
+		return &HandlerNotFoundError{MsgType: msg.MessageTypeName()}
 	}
+
 	if err := handle(c, senderAddr, msg); err != nil {
-		logf("failed to handle message %s: %s", msg, err)
+		return errors.Errorf("failed to handle %s: %v", msg.MessageTypeName(), err)
 	}
 
 	return nil
