@@ -3,12 +3,12 @@ workflows:
   version: 2
   test:
     jobs:
-      - test-1.13
       - test-1.14
+      - test-1.15
 jobs:
-  test-1.13:
+  test-1.14:
     docker:
-      - image: 'circleci/golang:1.13'
+      - image: "circleci/golang:1.14"
     steps: &ref_0
       - checkout
       - restore_cache:
@@ -21,7 +21,7 @@ jobs:
           key: go-mod-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-  test-1.14:
+  test-1.15:
     docker:
-      - image: 'circleci/golang:1.14'
+      - image: "circleci/golang:1.15"
     steps: *ref_0

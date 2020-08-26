@@ -192,7 +192,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 
 				if err := u.handleMessage(raddr, msg); err != nil {
 					// should not stop serving with this error
-					logf("error handling message on UPlaneConn %s: %s", u.LocalAddr(), err)
+					logf("error handling message on UPlaneConn %s: %v", u.LocalAddr(), err)
 				}
 				continue
 			}
@@ -386,13 +386,12 @@ func (u *UPlaneConn) AddHandlers(funcs map[uint8]HandlerFunc) {
 func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg message.Message) error {
 	handle, ok := u.msgHandlerMap.load(msg.MessageType())
 	if !ok {
-		return ErrNoHandlersFound
+		return &HandlerNotFoundError{MsgType: msg.MessageTypeName()}
 	}
-	go func() {
-		if err := handle(u, senderAddr, msg); err != nil {
-			logf("failed to handle message %s: %s", msg, err)
-		}
-	}()
+
+	if err := handle(u, senderAddr, msg); err != nil {
+		return errors.Errorf("failed to handle %s: %v", msg.MessageTypeName(), err)
+	}
 
 	return nil
 }
