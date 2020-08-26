@@ -3,7 +3,6 @@
 Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol), implemented in the Go Programming Language.
 
 [![CircleCI](https://circleci.com/gh/wmnsk/go-gtp.svg?style=shield)](https://circleci.com/gh/wmnsk/go-gtp)
-[![GolangCI](https://golangci.com/badges/github.com/wmnsk/go-gtp.svg)](https://golangci.com/r/github.com/wmnsk/go-gtp)
 [![GoDoc](https://godoc.org/github.com/wmnsk/go-gtp?status.svg)](https://godoc.org/github.com/wmnsk/go-gtp)
 [![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/wmnsk/go-gtp/blob/master/LICENSE)
 
@@ -20,19 +19,13 @@ Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol
 
 ### Prerequisites
 
-The following packages should be installed before starting.  
+go-gtp supports Go Modules. Just run go mod tidy in your project's directory to collect the required packages automatically.
 
-```shell-session
-go get -u github.com/pkg/errors
-go get -u github.com/google/go-cmp/cmp
-go get -u github.com/pascaldekloe/goe/verify
+```
+go mod tidy
 ```
 
-If you use Go 1.11+, you can also use Go Modules.
-
-```shell-session
-GO111MODULE=on go [test | build | run | etc...]
-```
+_This project follows [the Release Policy of Go](https://golang.org/doc/devel/release.html#policy)._
 
 ### Running examples
 
