@@ -173,6 +173,16 @@ func TestIEs(t *testing.T) {
 			ie.NewULITimestamp(time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)),
 			[]byte{0xd6, 0x00, 0x04, 0xdf, 0xd5, 0x2c, 0x00},
 		},
+		{
+			"PrivateExtension",
+			ie.NewPrivateExtension(0x0080, []byte{0xde, 0xad, 0xbe, 0xef}),
+			[]byte{
+				// Type, Length
+				0xff, 0x00, 0x06,
+				// Value
+				0x00, 0x80, 0xde, 0xad, 0xbe, 0xef,
+			},
+		},
 	}
 
 	for _, c := range cases {
