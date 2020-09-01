@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v0 "github.com/wmnsk/go-gtp/gtpv0"
+	"github.com/wmnsk/go-gtp/gtpv0"
 	"github.com/wmnsk/go-gtp/gtpv0/ie"
 	"github.com/wmnsk/go-gtp/gtpv0/message"
 	"github.com/wmnsk/go-gtp/gtpv0/testutils"
@@ -20,7 +20,7 @@ func TestCreatePDPContextRequest(t *testing.T) {
 			Structured: message.NewCreatePDPContextRequest(
 				testutils.TestFlow.Seq, testutils.TestFlow.Label, testutils.TestFlow.TID,
 				ie.NewQualityOfServiceProfile(1, 1, 1, 1, 1),
-				ie.NewSelectionMode(v0.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
+				ie.NewSelectionMode(gtpv0.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
 				ie.NewFlowLabelDataI(11),
 				ie.NewFlowLabelSignalling(22),
 				ie.NewEndUserAddress("1.1.1.1"),

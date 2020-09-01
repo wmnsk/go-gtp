@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv1"
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
 	"github.com/wmnsk/go-gtp/gtpv1/message"
 	"github.com/wmnsk/go-gtp/gtpv1/testutils"
@@ -19,7 +19,7 @@ func TestDeletePDPContextRequest(t *testing.T) {
 			Description: "Normal",
 			Structured: message.NewDeletePDPContextRequest(
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
-				ie.NewCause(v1.ReqCauseNetworkFailure),
+				ie.NewCause(gtpv1.ReqCauseNetworkFailure),
 				ie.NewNSAPI(5),
 			),
 			Serialized: []byte{

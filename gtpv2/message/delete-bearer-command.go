@@ -9,17 +9,16 @@ import "github.com/wmnsk/go-gtp/gtpv2/ie"
 // DeleteBearerCommand is a DeleteBearerCommand Header and its IEs above.
 type DeleteBearerCommand struct {
 	*Header
-	BearerContexts                     *ie.IE
-	ULI                                *ie.IE
-	ULITimestamp                       *ie.IE
-	UETimeZone                         *ie.IE
-	MMESGSNOverloadControlInformation  *ie.IE
-	SGWOverloadControlInformation      *ie.IE
-	TWANePDGOverloadControlInformation *ie.IE
-	SenderFTEIDC                       *ie.IE
-	SecondaryRATDataUsageReport        *ie.IE
-	PrivateExtension                   *ie.IE
-	AdditionalIEs                      []*ie.IE
+	BearerContexts                    *ie.IE
+	ULI                               *ie.IE
+	ULITimestamp                      *ie.IE
+	UETimeZone                        *ie.IE
+	MMESGSNOverloadControlInformation *ie.IE
+	SGWOverloadControlInformation     *ie.IE
+	SenderFTEIDC                      *ie.IE
+	SecondaryRATDataUsageReport       *ie.IE
+	PrivateExtension                  *ie.IE
+	AdditionalIEs                     []*ie.IE
 }
 
 // NewDeleteBearerCommand creates a new DeleteBearerCommand.
@@ -50,8 +49,6 @@ func NewDeleteBearerCommand(teid, seq uint32, IEs ...*ie.IE) *DeleteBearerComman
 				d.MMESGSNOverloadControlInformation = i
 			case 1:
 				d.SGWOverloadControlInformation = i
-			case 2:
-				d.TWANePDGOverloadControlInformation = i
 			}
 		case ie.FullyQualifiedTEID:
 			d.SenderFTEIDC = i
@@ -116,12 +113,6 @@ func (d *DeleteBearerCommand) MarshalTo(b []byte) error {
 		offset += ie.MarshalLen()
 	}
 	if ie := d.SGWOverloadControlInformation; ie != nil {
-		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
-			return err
-		}
-		offset += ie.MarshalLen()
-	}
-	if ie := d.TWANePDGOverloadControlInformation; ie != nil {
 		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
@@ -203,8 +194,6 @@ func (d *DeleteBearerCommand) UnmarshalBinary(b []byte) error {
 				d.MMESGSNOverloadControlInformation = i
 			case 1:
 				d.SGWOverloadControlInformation = i
-			case 2:
-				d.TWANePDGOverloadControlInformation = i
 			}
 		case ie.FullyQualifiedTEID:
 			d.SenderFTEIDC = i
@@ -239,9 +228,6 @@ func (d *DeleteBearerCommand) MarshalLen() int {
 		l += ie.MarshalLen()
 	}
 	if ie := d.SGWOverloadControlInformation; ie != nil {
-		l += ie.MarshalLen()
-	}
-	if ie := d.TWANePDGOverloadControlInformation; ie != nil {
 		l += ie.MarshalLen()
 	}
 	if ie := d.SenderFTEIDC; ie != nil {

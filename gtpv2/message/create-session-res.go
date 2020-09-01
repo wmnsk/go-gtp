@@ -13,6 +13,7 @@ type CreateSessionResponse struct {
 	*Header
 	Cause                         *ie.IE
 	ChangeReportingAction         *ie.IE
+	CSGInformationReportingAction *ie.IE
 	HeNBInformationReporting      *ie.IE
 	SenderFTEIDC                  *ie.IE
 	PGWS5S8FTEIDC                 *ie.IE
@@ -24,12 +25,12 @@ type CreateSessionResponse struct {
 	BearerContextsCreated         *ie.IE
 	BearerContextMarkedForRemoval *ie.IE
 	Recovery                      *ie.IE
-	ChargingGatewayName           *ie.IE
+	ChargingGatewayName           *ie.IE // = PGWNodeName
 	ChargingGatewayAddress        *ie.IE
 	PGWFQCSID                     *ie.IE
 	SGWFQCSID                     *ie.IE
-	PGWLDN                        *ie.IE
 	SGWLDN                        *ie.IE
+	PGWLDN                        *ie.IE
 	PGWBackOffTime                *ie.IE
 	APCO                          *ie.IE
 	TrustedTWANIPv4Parameters     *ie.IE
@@ -64,6 +65,8 @@ func NewCreateSessionResponse(teid, seq uint32, IEs ...*ie.IE) *CreateSessionRes
 			c.Cause = i
 		case ie.ChangeReportingAction:
 			c.ChangeReportingAction = i
+		case ie.CSGInformationReportingAction:
+			c.CSGInformationReportingAction = i
 		case ie.HeNBInformationReporting:
 			c.HeNBInformationReporting = i
 		case ie.FullyQualifiedTEID:
@@ -189,6 +192,12 @@ func (c *CreateSessionResponse) MarshalTo(b []byte) error {
 		offset += ie.MarshalLen()
 	}
 	if ie := c.ChangeReportingAction; ie != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
+			return err
+		}
+		offset += ie.MarshalLen()
+	}
+	if ie := c.CSGInformationReportingAction; ie != nil {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -429,6 +438,8 @@ func (c *CreateSessionResponse) UnmarshalBinary(b []byte) error {
 			c.Cause = i
 		case ie.ChangeReportingAction:
 			c.ChangeReportingAction = i
+		case ie.CSGInformationReportingAction:
+			c.CSGInformationReportingAction = i
 		case ie.HeNBInformationReporting:
 			c.HeNBInformationReporting = i
 		case ie.FullyQualifiedTEID:
@@ -537,6 +548,9 @@ func (c *CreateSessionResponse) MarshalLen() int {
 		l += ie.MarshalLen()
 	}
 	if ie := c.ChangeReportingAction; ie != nil {
+		l += ie.MarshalLen()
+	}
+	if ie := c.CSGInformationReportingAction; ie != nil {
 		l += ie.MarshalLen()
 	}
 	if ie := c.HeNBInformationReporting; ie != nil {

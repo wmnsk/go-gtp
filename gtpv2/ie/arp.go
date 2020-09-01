@@ -13,44 +13,69 @@ func NewAllocationRetensionPriority(pci, pl, pvi uint8) *IE {
 	return i
 }
 
-// PreemptionCapability reports whether the preemption capability is set to enabled if the type of IE matches.
-func (i *IE) PreemptionCapability() bool {
-	if len(i.Payload) == 0 {
+func (i *IE) AllocationRetensionPriority() (uint8, error) {
+	if i.Type != AllocationRetensionPriority {
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
+	if len(i.Payload) < 1 {
+		return 0, io.ErrUnexpectedEOF
+	}
+
+	return i.Payload[0], nil
+}
+
+// HasPVI reports whether an IE has PVI bit.
+func (i *IE) HasPVI() bool {
+	v, err := i.AllocationRetensionPriority()
+	if err != nil {
 		return false
 	}
 
-	switch i.Type {
-	case AllocationRetensionPriority, BearerQoS:
-		return (i.Payload[0] & 0x40) != 1
-	default:
+	return has1stBit(v)
+}
+
+// HasPCI reports whether an IE has PCI bit.
+func (i *IE) HasPCI() bool {
+	v, err := i.AllocationRetensionPriority()
+	if err != nil {
 		return false
 	}
+
+	return has7thBit(v)
 }
 
 // PriorityLevel returns PriorityLevel in uint8 if the type of IE matches.
 func (i *IE) PriorityLevel() (uint8, error) {
-	if len(i.Payload) == 0 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
 	switch i.Type {
-	case AllocationRetensionPriority, BearerQoS:
-		return (i.Payload[0] & 0x3c) >> 2, nil
+	case AllocationRetensionPriority:
+		v, err := i.AllocationRetensionPriority()
+		if err != nil {
+			return 0, err
+		}
+
+		return (v & 0x3c) >> 2, nil
+	case BearerQoS:
+		v, err := i.BearerQoS()
+		if err != nil {
+			return 0, err
+		}
+
+		return (v.ARP & 0x3c) >> 2, nil
 	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
 }
 
 // PreemptionVulnerability reports whether the preemption vulnerability is set to enabled if the type of IE matches.
+//
+// DEPRECATED: use HasPVI instead.
 func (i *IE) PreemptionVulnerability() bool {
-	if len(i.Payload) == 0 {
-		return false
-	}
+	return i.HasPVI()
+}
 
-	switch i.Type {
-	case AllocationRetensionPriority, BearerQoS:
-		return (i.Payload[0] & 0x01) != 1
-	default:
-		return false
-	}
+// PreemptionCapability reports whether the preemption capability is set to enabled if the type of IE matches.
+//
+// DEPRECATED: use HasPCI instead.
+func (i *IE) PreemptionCapability() bool {
+	return i.HasPCI()
 }

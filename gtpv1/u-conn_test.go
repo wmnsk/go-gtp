@@ -12,7 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv1"
 )
 
 type testVal struct {
@@ -21,7 +21,7 @@ type testVal struct {
 	payload         []byte
 }
 
-func setup(ctx context.Context) (cliConn, srvConn *v1.UPlaneConn, err error) {
+func setup(ctx context.Context) (cliConn, srvConn *gtpv1.UPlaneConn, err error) {
 	cliAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:2152")
 	if err != nil {
 		return nil, nil, err
@@ -32,7 +32,8 @@ func setup(ctx context.Context) (cliConn, srvConn *v1.UPlaneConn, err error) {
 	}
 
 	go func() {
-		srvConn = v1.NewUPlaneConn(srvAddr)
+		srvConn = gtpv1.NewUPlaneConn(srvAddr)
+		srvConn.DisableErrorIndication()
 		if err := srvConn.ListenAndServe(ctx); err != nil {
 			return
 		}
@@ -40,10 +41,11 @@ func setup(ctx context.Context) (cliConn, srvConn *v1.UPlaneConn, err error) {
 
 	// XXX - waiting for server to be well-prepared, should consider better way.
 	time.Sleep(1 * time.Second)
-	cliConn, err = v1.DialUPlane(ctx, cliAddr, srvAddr)
+	cliConn, err = gtpv1.DialUPlane(ctx, cliAddr, srvAddr)
 	if err != nil {
 		return nil, nil, err
 	}
+	cliConn.DisableErrorIndication()
 
 	return cliConn, srvConn, nil
 }

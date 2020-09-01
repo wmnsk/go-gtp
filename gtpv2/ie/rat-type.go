@@ -13,7 +13,7 @@ func NewRATType(rat uint8) *IE {
 
 // RATType returns RATType in uint8 if the type of IE matches.
 func (i *IE) RATType() (uint8, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 

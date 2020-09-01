@@ -5,6 +5,7 @@
 package ie
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/wmnsk/go-gtp/utils"
@@ -12,14 +13,116 @@ import (
 
 // NewBearerQoS creates a new BearerQoS IE.
 func NewBearerQoS(pci, pl, pvi, qci uint8, umbr, dmbr, ugbr, dgbr uint64) *IE {
-	i := New(BearerQoS, 0x00, make([]byte, 22))
-	i.Payload[0] |= (pci << 6 & 0x40) | (pl << 2 & 0x3c) | (pvi & 0x01)
-	i.Payload[1] = qci
-	copy(i.Payload[2:7], utils.Uint64To40(umbr))
-	copy(i.Payload[7:12], utils.Uint64To40(dmbr))
-	copy(i.Payload[12:17], utils.Uint64To40(ugbr))
-	copy(i.Payload[17:22], utils.Uint64To40(dgbr))
-	return i
+	v := NewBearerQoSFields(pci, pl, pvi, qci, umbr, dmbr, ugbr, dgbr)
+	b, err := v.Marshal()
+	if err != nil {
+		return nil
+	}
+
+	return New(BearerQoS, 0x00, b)
+}
+
+// BearerQoS returns BearerQoS in BearerQoSFields type if the type of IE matches.
+func (i *IE) BearerQoS() (*BearerQoSFields, error) {
+	switch i.Type {
+	case BearerQoS:
+		return ParseBearerQoSFields(i.Payload)
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve BearerQoS: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == BearerQoS {
+				return child.BearerQoS()
+			}
+		}
+		return nil, ErrIENotFound
+	default:
+		return nil, &InvalidTypeError{Type: i.Type}
+	}
+}
+
+// BearerQoSFields is a set of fields in BearerQoS IE.
+type BearerQoSFields struct {
+	ARP                          uint8
+	QCI                          uint8
+	MaximumBitRateForUplink      uint64 // 40 bits
+	MaximumBitRateForDownlink    uint64 // 40 bits
+	GuaranteedBitRateForUplink   uint64 // 40 bits
+	GuaranteedBitRateForDownlink uint64 // 40 bits
+}
+
+// NewBearerQoSFields creates a new BearerQoSFields.
+func NewBearerQoSFields(pci, pl, pvi, qci uint8, umbr, dmbr, ugbr, dgbr uint64) *BearerQoSFields {
+	return &BearerQoSFields{
+		ARP:                          (pci << 6 & 0x40) | (pl << 2 & 0x3c) | (pvi & 0x01),
+		QCI:                          qci,
+		MaximumBitRateForUplink:      umbr,
+		MaximumBitRateForDownlink:    dmbr,
+		GuaranteedBitRateForUplink:   ugbr,
+		GuaranteedBitRateForDownlink: dgbr,
+	}
+}
+
+// Marshal serializes BearerQoSFields.
+func (f *BearerQoSFields) Marshal() ([]byte, error) {
+	b := make([]byte, f.MarshalLen())
+	if err := f.MarshalTo(b); err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+// MarshalTo serializes BearerQoSFields.
+func (f *BearerQoSFields) MarshalTo(b []byte) error {
+	if len(b) < 22 {
+		return io.ErrUnexpectedEOF
+	}
+
+	b[0] = f.ARP
+	b[1] = f.QCI
+
+	copy(b[2:7], utils.Uint64To40(f.MaximumBitRateForUplink))
+	copy(b[7:12], utils.Uint64To40(f.MaximumBitRateForDownlink))
+	copy(b[12:17], utils.Uint64To40(f.GuaranteedBitRateForUplink))
+	copy(b[17:22], utils.Uint64To40(f.GuaranteedBitRateForDownlink))
+
+	return nil
+}
+
+// ParseBearerQoSFields decodes BearerQoSFields.
+func ParseBearerQoSFields(b []byte) (*BearerQoSFields, error) {
+	f := &BearerQoSFields{}
+	if err := f.UnmarshalBinary(b); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+// UnmarshalBinary decodes given bytes into BearerQoSFields.
+func (f *BearerQoSFields) UnmarshalBinary(b []byte) error {
+	if len(b) < 22 {
+		return io.ErrUnexpectedEOF
+	}
+
+	f.ARP = b[0]
+	f.QCI = b[1]
+
+	f.MaximumBitRateForUplink = utils.Uint40To64(b[2:7])
+	f.MaximumBitRateForDownlink = utils.Uint40To64(b[7:12])
+	f.GuaranteedBitRateForUplink = utils.Uint40To64(b[12:17])
+	f.GuaranteedBitRateForDownlink = utils.Uint40To64(b[17:22])
+
+	return nil
+}
+
+// MarshalLen returns the serial length of BearerQoSFields in int.
+func (f *BearerQoSFields) MarshalLen() int {
+	return 22
 }
 
 // QCILabel returns QCILabel in uint8 if the type of IE matches.

@@ -15,7 +15,7 @@ _Working examples are available in [example](../examples) directory, which might
 ```go
 // Note that the conn is not bound to raddr. to let a Conn to be able to communicate with multiple peers.
 // Interface type is required here to let Conn know which is the local interface type.
-conn, err := v2.Dial(ctx, laddr, raddr, v2.IFTypeS11MMEGTPC, 0)
+conn, err := gtpv2.Dial(ctx, laddr, raddr, gtpv2.IFTypeS11MMEGTPC, 0)
 if err != nil {
     // ...
 }
@@ -27,7 +27,7 @@ Retrieve `Conn` with `NewConn`, and `ListenAndServe` to start listening.
 
 ```go
 // Interface type is required here to let Conn know which is the local interface type.
-srvConn := v2.NewConn(srvAddr, v2.IFTypeS11MMEGTPC, 0)
+srvConn := gtpv2.NewConn(srvAddr, gtpv2.IFTypeS11MMEGTPC, 0)
 if err := srvConn.ListenAndServe(ctx); err != nil {
     // ...
 }
@@ -44,10 +44,10 @@ Also consider using `AddHandlers` when you have many `HandlerFunc`s.
 // write what you expect to do on receiving a message. Handlers should be added per message type.
 // by default, Echo Request/Response and Version Not Supported Indication is handled automatically.
 conn.AddHandler(
-    // first param is the type of message. give number in uint8 or use gtpv2.MsgTypeXXX.
+    // first param is the type of message. give number in uint8 or use gtpgtpv2.MsgTypeXXX.
     messages.MsgTypeCreateSessionResponse,
     // second param is the HandlerFunc to describe how you handle the message coming from peer.
-    func(c *v2.Conn, senderAddr net.Addr, msg messages.Message) error {
+    func(c *gtpv2.Conn, senderAddr net.Addr, msg messages.Message) error {
         // Do what you want with CreateSessionResponse message here.
         // see examples directly for functional examples
     },
@@ -67,22 +67,22 @@ In the following call, for example, IMSI and TEID for S1-U eNB is stored in the 
 session, err := c.CreateSession(
     // put IEs required for your implementation here.
     // it is easier to use constructors in ie package.
-    ies.NewIMSI("123451234567890"),
+    ie.NewIMSI("123451234567890"),
     
     // or, you can use ie.New() to create an IE without type-specific constructor.
     // put the type of IE, flags/instance, and payload as the parameters.
-    ies.New(ies.ExtendedTraceInformation, 0x00, []byte{0xde, 0xad, 0xbe, 0xef}),
+    ie.New(ie.ExtendedTraceInformation, 0x00, []byte{0xde, 0xad, 0xbe, 0xef}),
     
     // to set the instance to IE created with message-specific constructor, WithInstance()
     // may be your help.
-    ies.NewIMSI("123451234567890").WithInstance(1), // no one wants to set instance to IMSI, though.
+    ie.NewIMSI("123451234567890").WithInstance(1), // no one wants to set instance to IMSI, though.
 
     // don't forget to contain the Sender F-TEID, as it is used to distinguish the incoming
     // message by Conn.
     //
     // to be secure, TEID should be generated with random values, without conflicts in a Conn.
     // to achieve that, gtpv2 provides NewFTEID() which returns F-TEID in *ie.IE.
-    s11Conn.NewFTEID(v2.IFTypeS11MMEGTPC, mmeIP, ""),
+    s11Conn.NewFTEID(gtpv2.IFTypeS11MMEGTPC, mmeIP, ""),
 )
 if err != nil {
     // ...
@@ -143,8 +143,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 98      | Update Bearer Response                          |           |
 | 99      | Delete Bearer Request                           | Yes       |
 | 100     | Delete Bearer Response                          | Yes       |
-| 101     | Delete PDN Connection Set Request               |           |
-| 102     | Delete PDN Connection Set Response              |           |
+| 101     | Delete PDN Connection Set Request               | Yes       |
+| 102     | Delete PDN Connection Set Response              | Yes       |
 | 103     | PGW Downlink Triggering Notification            |           |
 | 104     | PGW Downlink Triggering Acknowledge             |           |
 | 105-127 | (Spare/Reserved)                                | -         |
@@ -163,8 +163,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 140     | Relocation Cancel Response                      |           |
 | 141     | Configuration Transfer Tunnel                   |           |
 | 142-148 | (Spare/Reserved)                                | -         |
-| 149     | Detach Notification                             |           |
-| 150     | Detach Acknowledge                              |           |
+| 149     | Detach Notification                             | Yes       |
+| 150     | Detach Acknowledge                              | Yes       |
 | 151     | CS Paging Indication                            |           |
 | 152     | RAN Information Relay                           |           |
 | 153     | Alert MME Notification                          |           |
@@ -190,11 +190,11 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 176     | Downlink Data Notification                      |           |
 | 177     | Downlink Data Notification Acknowledge          |           |
 | 178     | (Spare/Reserved)                                | -         |
-| 179     | PGW Restart Notification                        |           |
-| 180     | PGW Restart Notification Acknowledge            |           |
+| 179     | PGW Restart Notification                        | Yes       |
+| 180     | PGW Restart Notification Acknowledge            | Yes       |
 | 181-199 | (Spare/Reserved)                                | -         |
-| 200     | Update PDN Connection Set Request               |           |
-| 201     | Update PDN Connection Set Response              |           |
+| 200     | Update PDN Connection Set Request               | Yes       |
+| 201     | Update PDN Connection Set Response              | Yes       |
 | 202-210 | (Spare/Reserved)                                | -         |
 | 211     | Modify Access Bearers Request                   | Yes       |
 | 212     | Modify Access Bearers Response                  | Yes       |
@@ -213,7 +213,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 
 The following Information Elements marked with "Yes" are currently available with their own useful constructors.
 
-_Even there are some missing IEs, you can create any kind of IEs by using `ies.New()` function or by initializing ies.IE directly._
+_Even there are some missing IEs, you can create any kind of IEs by using `ie.New()` function or by initializing ie.IE directly._
 
 | ID      | Name                                                           | Supported |
 |---------|----------------------------------------------------------------|-----------|
@@ -306,10 +306,10 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 149     | Service Indicator                                              | Yes       |
 | 150     | Detach Type                                                    | Yes       |
 | 151     | Local Distinguished Name (LDN)                                 | Yes       |
-| 152     | Node Features                                                  |           |
+| 152     | Node Features                                                  | Yes       |
 | 153     | MBMS Time to Data Transfer                                     |           |
 | 154     | Throttling                                                     |           |
-| 155     | Allocation/Retention Priority (ARP)                            |           |
+| 155     | Allocation/Retention Priority (ARP)                            | Yes       |
 | 156     | EPC Timer                                                      |           |
 | 157     | Signalling Priority Indication                                 |           |
 | 158     | Temporary Mobile Group Identity (TMGI)                         |           |
@@ -360,6 +360,13 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 203     | Maximum Packet Loss Rate                                       |           |
 | 204     | APN Rate Control Status                                        |           |
 | 205     | Extended Trace Information                                     |           |
-| 206-253 | (Spare/Reserved)                                               | -         |
+| 206     | Monitoring Event Extension Information                         |           |
+| 207     | Additional RRM Policy Index                                    |           |
+| 208     | V2X Context                                                    |           |
+| 209     | PC5 QoS Parameters                                             |           |
+| 210     | Services Authorized                                            |           |
+| 211     | Bit Rate                                                       |           |
+| 212     | PC5 QoS Flow                                                   |           |
+| 213-253 | (Spare/Reserved)                                               | -         |
 | 254     | (Spare/Reserved)                                               | -         |
 | 255     | Private Extension                                              | Yes       |

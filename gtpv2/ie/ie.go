@@ -10,6 +10,7 @@ package ie
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
 )
 
 // IE definitions.
@@ -220,13 +221,13 @@ const (
 	MaximumPacketLossRate
 	APNRateControlStatus
 	ExtendedTraceInformation
-	_
-	_
-	_
-	_
-	_
-	_
-	_
+	MonitoringEventExtensionInformation
+	AdditionalRRMPolicyIndex
+	V2XContext
+	PC5QoSParameters
+	ServicesAuthorized
+	BitRate
+	PC5QoSFlow
 	_
 	_
 	_
@@ -320,19 +321,33 @@ func (i *IE) Marshal() ([]byte, error) {
 
 // MarshalTo puts the byte sequence in the byte array given as b.
 func (i *IE) MarshalTo(b []byte) error {
+	l := len(b)
+	if l < 4 {
+		return io.ErrUnexpectedEOF
+	}
+
 	b[0] = i.Type
 	binary.BigEndian.PutUint16(b[1:3], i.Length)
 	b[3] = i.instance
 	if i.IsGrouped() {
 		offset := 4
 		for _, ie := range i.ChildIEs {
-			if err := ie.MarshalTo(b[offset:]); err != nil {
+			if l < offset+ie.MarshalLen() {
+				break
+			}
+
+			if err := ie.MarshalTo(b[offset : offset+ie.MarshalLen()]); err != nil {
 				return err
 			}
 			offset += ie.MarshalLen()
 		}
 		return nil
 	}
+
+	if l < i.MarshalLen() {
+		return io.ErrUnexpectedEOF
+	}
+
 	copy(b[4:i.MarshalLen()], i.Payload)
 	return nil
 }
@@ -350,7 +365,7 @@ func Parse(b []byte) (*IE, error) {
 func (i *IE) UnmarshalBinary(b []byte) error {
 	l := len(b)
 	if l < 5 {
-		return ErrTooShortToParse
+		return io.ErrUnexpectedEOF
 	}
 
 	i.Type = b[0]
@@ -409,7 +424,13 @@ func (i *IE) String() string {
 
 var grouped = []uint8{
 	BearerContext,
-	// TODO: add all grouped type of IEs here.
+	PDNConnection,
+	OverloadControlInformation,
+	LoadControlInformation,
+	RemoteUEContext,
+	SCEFPDNConnection,
+	V2XContext,
+	PC5QoSParameters,
 }
 
 // IsGrouped reports whether an IE is grouped type or not.
@@ -519,11 +540,12 @@ func newUint32ValIE(t uint8, v uint32) *IE {
 	return i
 }
 
-func newUint64ValIE(t uint8, v uint64) *IE {
-	i := New(t, 0x00, make([]byte, 8))
-	binary.BigEndian.PutUint64(i.Payload, v)
-	return i
-}
+// unused for now.
+//func newUint64ValIE(t uint8, v uint64) *IE {
+//	i := New(t, 0x00, make([]byte, 8))
+//	binary.BigEndian.PutUint64(i.Payload, v)
+//	return i
+//}
 
 func newStringIE(t uint8, v string) *IE {
 	return New(t, 0x00, []byte(v))

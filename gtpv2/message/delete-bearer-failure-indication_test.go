@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"github.com/wmnsk/go-gtp/gtpv2/testutils"
@@ -20,7 +20,7 @@ func TestDeleteBearerFailureIndication(t *testing.T) {
 			Description: "Normal",
 			Structured: message.NewDeleteBearerFailureIndication(
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
-				ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+				ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 				ie.NewBearerContext(ie.NewDelayValue(500*time.Millisecond), ie.NewDelayValue(100*time.Millisecond)),
 			),
 			Serialized: []byte{

@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"github.com/wmnsk/go-gtp/gtpv2/testutils"
@@ -21,7 +21,7 @@ func TestModifyBearerRequest(t *testing.T) {
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ie.NewBearerContext(
 					ie.NewEPSBearerID(0x05),
-					ie.NewFullyQualifiedTEID(v2.IFTypeS1UeNodeBGTPU, 0xffffffff, "1.1.1.4", ""),
+					ie.NewFullyQualifiedTEID(gtpv2.IFTypeS1UeNodeBGTPU, 0xffffffff, "1.1.1.4", ""),
 				),
 			),
 			Serialized: []byte{

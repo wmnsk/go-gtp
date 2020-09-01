@@ -16,7 +16,7 @@ func (i *IE) RFSPIndex() (uint8, error) {
 	if i.Type != RFSPIndex {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 

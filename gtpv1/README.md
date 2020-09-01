@@ -5,7 +5,7 @@ Package v1 provides the simple and painless handling of GTPv1-C and GTPv1-U prot
 ## Getting Started
 
 This package is still under construction. The networking feature is only available for GTPv1-U. GTPv1-C feature would be available in the future.  
-See messages and ies directory for what you can do with the current implementation. 
+See message and ie directory for what you can do with the current implementation. 
 
 ### Creating a PDP Context as a client
 
@@ -98,7 +98,7 @@ The packets NOT forwarded by the Kernel can be handled automatically by giving a
 Handlers for T-PDU, Echo Request/Response, and Error Indication are registered by default, but you can override them using `AddHandler`.
 
 ```go
-uConn.AddHandler(messages.MsgTypeEchoRequest, func(c v1.Conn, senderAddr net.Addr, msg messages.Message) error {
+uConn.AddHandler(message.MsgTypeEchoRequest, func(c v1.Conn, senderAddr net.Addr, msg message.Message) error {
 	// do anything you want for Echo Request here.
 	// errors returned here are passed to `errCh` that is given to UPlaneConn at the beginning.
 	return nil
@@ -168,7 +168,7 @@ s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID, s1uBearer.RemoteAdd
 
 The following Messages marked with "Yes" are currently available with their own useful constructors.
 
-_Even there are some missing Messages, you can create any kind of Message by using `messages.NewGeneric`._
+_Even there are some missing Messages, you can create any kind of Message by using `message.NewGeneric`._
 
 | ID        | Name                                        | Supported |
 |-----------|---------------------------------------------|-----------|
@@ -256,7 +256,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 
 The following Information Elements marked with "Yes" are currently supported with their own useful constructors.
 
-_Even there are some missing IEs, you can create any kind of IEs by using `ies.New` function or by initializing ies.IE directly._
+_Even there are some missing IEs, you can create any kind of IEs by using `ie.New` function or by initializing ie.IE directly._
 
 | ID      | Name                                      | Supported |
 |---------|-------------------------------------------|-----------|
@@ -291,7 +291,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ies.N
 | 28      | Trace Type                                |           |
 | 29      | MS Not Reachable Reason                   |           |
 | 30-126  | (Spare/Reserved)                          | -         |
-| 127     | Charging ID                               |           |
+| 127     | Charging ID                               | Yes       |
 | 128     | End User Address                          | Yes       |
 | 129     | MM Context                                |           |
 | 130     | PDP Context                               |           |

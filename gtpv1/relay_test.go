@@ -9,7 +9,7 @@ import (
 	"net"
 	"testing"
 
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv1"
 )
 
 func TestRelay(t *testing.T) {
@@ -25,7 +25,7 @@ func TestRelay(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	leftConn := v1.NewUPlaneConn(leftAddr)
+	leftConn := gtpv1.NewUPlaneConn(leftAddr)
 	go func() {
 		if err := leftConn.ListenAndServe(ctx); err != nil {
 			t.Errorf("failed to listen on %s: %s", leftConn.LocalAddr(), err)
@@ -33,7 +33,7 @@ func TestRelay(t *testing.T) {
 		}
 	}()
 
-	rightConn := v1.NewUPlaneConn(rightAddr)
+	rightConn := gtpv1.NewUPlaneConn(rightAddr)
 	go func() {
 		if err := rightConn.ListenAndServe(ctx); err != nil {
 			t.Errorf("failed to listen on %s: %s", rightConn.LocalAddr(), err)

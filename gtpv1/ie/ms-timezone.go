@@ -7,7 +7,6 @@ package ie
 import (
 	"io"
 	"math"
-	"strconv"
 	"time"
 )
 
@@ -23,10 +22,7 @@ func NewMSTimeZone(tz time.Duration, daylightSaving uint8) *IE {
 	i := New(MSTimeZone, make([]byte, 2))
 	min := tz.Minutes() / 15
 	absMin := int(math.Abs(min))
-	hex, err := strconv.ParseInt(strconv.Itoa(absMin%10)+strconv.Itoa(absMin/10), 16, 8)
-	if err != nil {
-		return nil
-	}
+	hex := byte(((absMin % 10) << 4) | (absMin / 10))
 	if min < 0 {
 		hex |= 0x08
 	}

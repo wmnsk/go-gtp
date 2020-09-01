@@ -6,13 +6,14 @@ package ie
 
 import (
 	"io"
+	"strings"
 
 	"github.com/wmnsk/go-gtp/utils"
 )
 
 // NewMSISDN creates a new MSISDN IE.
-func NewMSISDN(mei string) *IE {
-	m, err := utils.StrToSwappedBytes(mei, "f")
+func NewMSISDN(msisdn string) *IE {
+	m, err := utils.StrToSwappedBytes(msisdn, "f")
 	if err != nil {
 		return nil
 	}
@@ -24,10 +25,12 @@ func (i *IE) MSISDN() (string, error) {
 	if i.Type != MSISDN {
 		return "", &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return "", io.ErrUnexpectedEOF
 	}
-	return utils.SwappedBytesToStr(i.Payload, true), nil
+
+	str := utils.SwappedBytesToStr(i.Payload, false)
+	return strings.TrimSuffix(str, "f"), nil
 }
 
 // MustMSISDN returns MSISDN in string, ignoring errors.

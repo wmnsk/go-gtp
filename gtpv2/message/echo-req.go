@@ -11,9 +11,10 @@ import (
 // EchoRequest is a EchoRequest Header and its IEs above.
 type EchoRequest struct {
 	*Header
-	Recovery         *ie.IE
-	PrivateExtension *ie.IE
-	AdditionalIEs    []*ie.IE
+	Recovery            *ie.IE
+	SendingNodeFeatures *ie.IE
+	PrivateExtension    *ie.IE
+	AdditionalIEs       []*ie.IE
 }
 
 // NewEchoRequest creates a new EchoRequest.
@@ -32,6 +33,8 @@ func NewEchoRequest(seq uint32, IEs ...*ie.IE) *EchoRequest {
 		switch i.Type {
 		case ie.Recovery:
 			e.Recovery = i
+		case ie.NodeFeatures:
+			e.SendingNodeFeatures = i
 		case ie.PrivateExtension:
 			e.PrivateExtension = i
 		default:
@@ -62,13 +65,19 @@ func (e *EchoRequest) MarshalTo(b []byte) error {
 
 	offset := 0
 	if ie := e.Recovery; ie != nil {
-		if err := ie.MarshalTo(e.Header.Payload); err != nil {
+		if err := ie.MarshalTo(e.Header.Payload[offset:]); err != nil {
+			return err
+		}
+		offset += ie.MarshalLen()
+	}
+	if ie := e.SendingNodeFeatures; ie != nil {
+		if err := ie.MarshalTo(e.Header.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
 	}
 	if ie := e.PrivateExtension; ie != nil {
-		if err := ie.MarshalTo(e.Header.Payload); err != nil {
+		if err := ie.MarshalTo(e.Header.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
@@ -117,6 +126,8 @@ func (e *EchoRequest) UnmarshalBinary(b []byte) error {
 		switch i.Type {
 		case ie.Recovery:
 			e.Recovery = i
+		case ie.NodeFeatures:
+			e.SendingNodeFeatures = i
 		case ie.PrivateExtension:
 			e.PrivateExtension = i
 		default:
@@ -132,6 +143,12 @@ func (e *EchoRequest) MarshalLen() int {
 	l := e.Header.MarshalLen() - len(e.Header.Payload)
 
 	if ie := e.Recovery; ie != nil {
+		l += ie.MarshalLen()
+	}
+	if ie := e.SendingNodeFeatures; ie != nil {
+		l += ie.MarshalLen()
+	}
+	if ie := e.PrivateExtension; ie != nil {
 		l += ie.MarshalLen()
 	}
 

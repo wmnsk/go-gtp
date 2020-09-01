@@ -4,7 +4,7 @@ jobs:
   test-linux:
     strategy:
       matrix:
-        go-version: [1.13.x, 1.14.x]
+        go-version: [1.14.x, 1.15.x]
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -20,7 +20,7 @@ jobs:
   test-macos:
     strategy:
       matrix:
-        go-version: [1.13.x, 1.14.x]
+        go-version: [1.14.x, 1.15.x]
     runs-on: macos-latest
     steps:
       - name: Install Go
@@ -41,7 +41,7 @@ jobs:
   # test-windows:
   #   strategy:
   #     matrix:
-  #       go-version: [1.13.x, 1.14.x]
+  #       go-version: [1.14.x, 1.15.x]
   #   runs-on: windows-latest
   #   steps:
   #   - name: Install Go

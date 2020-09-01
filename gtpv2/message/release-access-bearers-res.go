@@ -10,6 +10,7 @@ import "github.com/wmnsk/go-gtp/gtpv2/ie"
 type ReleaseAccessBearersResponse struct {
 	*Header
 	Cause                         *ie.IE
+	Recovery                      *ie.IE
 	IndicationFlags               *ie.IE
 	SGWNodeLoadControlInformation *ie.IE
 	SGWOverloadControlInformation *ie.IE
@@ -33,6 +34,8 @@ func NewReleaseAccessBearersResponse(teid, seq uint32, IEs ...*ie.IE) *ReleaseAc
 		switch i.Type {
 		case ie.Cause:
 			r.Cause = i
+		case ie.Recovery:
+			r.Recovery = i
 		case ie.Indication:
 			r.IndicationFlags = i
 		case ie.LoadControlInformation:
@@ -68,6 +71,12 @@ func (r *ReleaseAccessBearersResponse) MarshalTo(b []byte) error {
 
 	offset := 0
 	if ie := r.Cause; ie != nil {
+		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
+			return err
+		}
+		offset += ie.MarshalLen()
+	}
+	if ie := r.Recovery; ie != nil {
 		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
@@ -143,6 +152,8 @@ func (r *ReleaseAccessBearersResponse) UnmarshalBinary(b []byte) error {
 		switch i.Type {
 		case ie.Cause:
 			r.Cause = i
+		case ie.Recovery:
+			r.Recovery = i
 		case ie.Indication:
 			r.IndicationFlags = i
 		case ie.LoadControlInformation:
@@ -162,7 +173,11 @@ func (r *ReleaseAccessBearersResponse) UnmarshalBinary(b []byte) error {
 // MarshalLen returns the serial length in int.
 func (r *ReleaseAccessBearersResponse) MarshalLen() int {
 	l := r.Header.MarshalLen() - len(r.Header.Payload)
+
 	if ie := r.Cause; ie != nil {
+		l += ie.MarshalLen()
+	}
+	if ie := r.Recovery; ie != nil {
 		l += ie.MarshalLen()
 	}
 	if ie := r.IndicationFlags; ie != nil {

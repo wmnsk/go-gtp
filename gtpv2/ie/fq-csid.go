@@ -20,40 +20,164 @@ const (
 
 // NewFullyQualifiedCSID creates a new FullyQualifiedCSID IE.
 func NewFullyQualifiedCSID(nodeID string, csIDs ...uint16) *IE {
-	var (
-		nid   []byte
-		ntype uint8
-	)
+	v := NewFullyQualifiedCSIDFields(nodeID, csIDs...)
+	b, err := v.Marshal()
+	if err != nil {
+		return nil
+	}
+
+	return New(FullyQualifiedCSID, 0x00, b)
+}
+
+// FullyQualifiedCSID returns FullyQualifiedCSID in FullyQualifiedCSIDFields type if the type of IE matches.
+func (i *IE) FullyQualifiedCSID() (*FullyQualifiedCSIDFields, error) {
+	switch i.Type {
+	case FullyQualifiedCSID:
+		return ParseFullyQualifiedCSIDFields(i.Payload)
+	default:
+		return nil, &InvalidTypeError{Type: i.Type}
+	}
+}
+
+// FullyQualifiedCSIDFields is a set of fields in FullyQualifiedCSID IE.
+type FullyQualifiedCSIDFields struct {
+	NodeIDType    uint8 // 4-bit
+	NumberOfCSIDs uint8 // 4-bit
+	NodeID        []byte
+	CSIDs         []uint16
+}
+
+// NewFullyQualifiedCSIDFields creates a new FullyQualifiedCSIDFields.
+func NewFullyQualifiedCSIDFields(nodeID string, csIDs ...uint16) *FullyQualifiedCSIDFields {
+	f := &FullyQualifiedCSIDFields{
+		NumberOfCSIDs: uint8(len(csIDs)),
+		CSIDs:         csIDs,
+	}
+
 	ip := net.ParseIP(nodeID)
 	if ip == nil {
 		var err error
-		nid, err = hex.DecodeString(nodeID)
+		f.NodeID, err = hex.DecodeString(nodeID)
 		if err != nil {
 			return nil
 		}
-		ntype = nodeIDOther
+		f.NodeIDType = nodeIDOther
 	} else if v4 := ip.To4(); v4 != nil {
-		nid = v4
-		ntype = nodeIDIPv4
+		f.NodeID = v4
+		f.NodeIDType = nodeIDIPv4
 	} else {
-		nid = ip
-		ntype = nodeIDIPv6
+		f.NodeID = ip
+		f.NodeIDType = nodeIDIPv6
 	}
 
-	i := New(FullyQualifiedCSID, 0x00, make([]byte, 1+len(nid)+len(csIDs)*2))
-	i.Payload[0] = ((ntype << 4) & 0xf0) | uint8(len(csIDs)&0x0f)
+	return f
+}
 
-	offset := len(nid) + 1
-	copy(i.Payload[1:offset], nid)
-	for n, csid := range csIDs {
-		binary.BigEndian.PutUint16(i.Payload[offset+n*2:offset+n*2+2], csid)
+// Marshal serializes FullyQualifiedCSIDFields.
+func (f *FullyQualifiedCSIDFields) Marshal() ([]byte, error) {
+	b := make([]byte, f.MarshalLen())
+	if err := f.MarshalTo(b); err != nil {
+		return nil, err
 	}
-	return i
+
+	return b, nil
+}
+
+// MarshalTo serializes FullyQualifiedCSIDFields.
+func (f *FullyQualifiedCSIDFields) MarshalTo(b []byte) error {
+	l := len(b)
+	if l < 1 {
+		return io.ErrUnexpectedEOF
+	}
+
+	b[0] = ((f.NodeIDType << 4) & 0xf0) | (f.NumberOfCSIDs & 0x0f)
+	offset := 1
+
+	if l < offset+len(f.NodeID) {
+		return io.ErrUnexpectedEOF
+	}
+	copy(b[offset:offset+len(f.NodeID)], f.NodeID)
+	offset += len(f.NodeID)
+
+	for n, csid := range f.CSIDs {
+		if l < offset+n*2+2 {
+			break
+		}
+		binary.BigEndian.PutUint16(b[offset+n*2:offset+n*2+2], csid)
+	}
+
+	return nil
+}
+
+// ParseFullyQualifiedCSIDFields decodes FullyQualifiedCSIDFields.
+func ParseFullyQualifiedCSIDFields(b []byte) (*FullyQualifiedCSIDFields, error) {
+	f := &FullyQualifiedCSIDFields{}
+	if err := f.UnmarshalBinary(b); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+// UnmarshalBinary decodes given bytes into FullyQualifiedCSIDFields.
+func (f *FullyQualifiedCSIDFields) UnmarshalBinary(b []byte) error {
+	l := len(b)
+	if l < 1 {
+		return io.ErrUnexpectedEOF
+	}
+
+	f.NodeIDType = (b[0] >> 4) & 0x0f
+	f.NumberOfCSIDs = b[0] & 0x0f
+	offset := 1
+
+	switch f.NodeIDType {
+	case nodeIDIPv4, nodeIDOther:
+		if l < offset+4 {
+			return io.ErrUnexpectedEOF
+		}
+		f.NodeID = b[offset : offset+4]
+		offset += 4
+	case nodeIDIPv6:
+		if l < offset+16 {
+			return io.ErrUnexpectedEOF
+		}
+		f.NodeID = b[offset : offset+16]
+		offset += 16
+	default:
+		return ErrMalformed
+	}
+
+	for {
+		if l < offset+2 {
+			break
+		}
+		f.CSIDs = append(f.CSIDs, binary.BigEndian.Uint16(b[offset:offset+2]))
+		offset += 2
+	}
+
+	return nil
+}
+
+// MarshalLen returns the serial length of FullyQualifiedCSIDFields in int.
+func (f *FullyQualifiedCSIDFields) MarshalLen() int {
+	l := 1
+
+	switch f.NodeIDType {
+	case nodeIDIPv4, nodeIDOther:
+		l += 4
+	case nodeIDIPv6:
+		l += 16
+	default:
+
+	}
+
+	l += len(f.CSIDs) * 2
+	return l
 }
 
 // NodeIDType returns NodeIDType in uint8 if the type of IE matches.
 func (i *IE) NodeIDType() (uint8, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 
@@ -74,7 +198,7 @@ func (i *IE) MustNodeIDType() uint8 {
 
 // NodeID returns NodeID in []byte if the type of IE matches.
 func (i *IE) NodeID() ([]byte, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return nil, io.ErrUnexpectedEOF
 	}
 
@@ -108,7 +232,7 @@ func (i *IE) MustNodeID() []byte {
 
 // CSIDs returns CSIDs in []uint16 if the type of IE matches.
 func (i *IE) CSIDs() ([]uint16, error) {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return nil, io.ErrUnexpectedEOF
 	}
 

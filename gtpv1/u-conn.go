@@ -10,7 +10,6 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"strings"
 	"sync"
 	"time"
 
@@ -18,7 +17,7 @@ import (
 	"github.com/vishvananda/netlink"
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
 	"github.com/wmnsk/go-gtp/gtpv1/message"
-	v2ies "github.com/wmnsk/go-gtp/gtpv2/ie"
+	v2ie "github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
 type tpduSet struct {
@@ -43,6 +42,7 @@ type UPlaneConn struct {
 
 	// for Linux kernel GTP with netlink
 	kernGTPEnabled bool
+	errIndEnabled  bool
 	GTPLink        *netlink.GTP
 }
 
@@ -50,12 +50,14 @@ type UPlaneConn struct {
 func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
 	return &UPlaneConn{
 		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
+		msgHandlerMap: newDefaultMsgHandlerMap(),
 		iteiMap:       newiteiMap(),
 		laddr:         laddr,
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
+
+		errIndEnabled: true,
 	}
 }
 
@@ -63,12 +65,14 @@ func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
 func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error) {
 	u := &UPlaneConn{
 		mu:            sync.Mutex{},
-		msgHandlerMap: defaultHandlerMap,
+		msgHandlerMap: newDefaultMsgHandlerMap(),
 		iteiMap:       newiteiMap(),
 		laddr:         laddr,
 
 		tpduCh:  make(chan *tpduSet),
 		closeCh: make(chan struct{}),
+
+		errIndEnabled: true,
 	}
 
 	// setup UDPConn first.
@@ -180,7 +184,16 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 			u.mu.Lock()
 			peer, ok := u.relayMap[binary.BigEndian.Uint32(buf[4:8])]
 			u.mu.Unlock()
-			if !ok {
+			if !ok { // pass message to handler if TEID is unknown
+				msg, err := message.Parse(buf[:n])
+				if err != nil {
+					continue
+				}
+
+				if err := u.handleMessage(raddr, msg); err != nil {
+					// should not stop serving with this error
+					logf("error handling message on UPlaneConn %s: %v", u.LocalAddr(), err)
+				}
 				continue
 			}
 
@@ -276,7 +289,9 @@ func (u *UPlaneConn) Close() error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	u.msgHandlerMap = defaultHandlerMap
+	u.msgHandlerMap = newMsgHandlerMap(
+		map[uint8]HandlerFunc{},
+	)
 	u.relayMap = nil
 	close(u.closeCh)
 
@@ -371,13 +386,12 @@ func (u *UPlaneConn) AddHandlers(funcs map[uint8]HandlerFunc) {
 func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg message.Message) error {
 	handle, ok := u.msgHandlerMap.load(msg.MessageType())
 	if !ok {
-		return ErrNoHandlersFound
+		return &HandlerNotFoundError{MsgType: msg.MessageTypeName()}
 	}
-	go func() {
-		if err := handle(u, senderAddr, msg); err != nil {
-			logf("failed to handle message %s: %s", msg, err)
-		}
-	}()
+
+	if err := handle(u, senderAddr, msg); err != nil {
+		return errors.Errorf("failed to handle %s: %v", msg.MessageTypeName(), err)
+	}
 
 	return nil
 }
@@ -410,11 +424,15 @@ func (u *UPlaneConn) EchoResponse(raddr net.Addr) error {
 
 // ErrorIndication just sends ErrorIndication message.
 func (u *UPlaneConn) ErrorIndication(raddr net.Addr, received message.Message) error {
-	addr := strings.Split(raddr.String(), ":")[0]
+	ip, _, err := net.SplitHostPort(u.LocalAddr().String())
+	if err != nil {
+		return err
+	}
+
 	errInd, err := message.NewErrorIndication(
 		0, received.Sequence(),
 		ie.NewTEIDDataI(received.TEID()),
-		ie.NewGSNAddress(addr),
+		ie.NewGSNAddress(ip),
 	).Marshal()
 	if err != nil {
 		return err
@@ -457,7 +475,7 @@ func (u *UPlaneConn) Restarts() uint8 {
 // time to find a new unique value.
 //
 // TODO: optimize performance...
-func (u *UPlaneConn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *v2ies.IE) {
+func (u *UPlaneConn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *v2ie.IE) {
 	var teid uint32
 	for try := uint32(0); try < 0xffff; try++ {
 		const logEvery = 0xff
@@ -483,7 +501,7 @@ func (u *UPlaneConn) NewFTEID(ifType uint8, v4, v6 string) (fteidIE *v2ies.IE) {
 	if teid == 0 {
 		return nil
 	}
-	return v2ies.NewFullyQualifiedTEID(ifType, teid, v4, v6)
+	return v2ie.NewFullyQualifiedTEID(ifType, teid, v4, v6)
 }
 
 func generateRandomUint32() uint32 {
@@ -510,4 +528,27 @@ func (t *iteiMap) tryStore(itei uint32, ts time.Time) bool {
 
 func (t *iteiMap) delete(itei uint32) {
 	t.syncMap.Delete(itei)
+}
+
+// EnableErrorIndication re-enables automatic sending of
+// Error Indication to unknown messages, which is enabled by
+// default.
+//
+// See also: DisableErrorIndication.
+func (u *UPlaneConn) EnableErrorIndication() {
+	u.mu.Lock()
+	u.errIndEnabled = true
+	u.mu.Unlock()
+}
+
+// DisableErrorIndication makes default T-PDU handler stop
+// responding with Error Indication in case of receiving T-PDU
+// with unknown TEID.
+//
+// When disabled, it passes the unhandled T-PDU to user who calls
+// ReadFromGTP instead.
+func (u *UPlaneConn) DisableErrorIndication() {
+	u.mu.Lock()
+	u.errIndEnabled = false
+	u.mu.Unlock()
 }

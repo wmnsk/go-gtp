@@ -7,7 +7,7 @@ package message_test
 import (
 	"testing"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"github.com/wmnsk/go-gtp/gtpv2/testutils"
@@ -19,16 +19,16 @@ func TestCreateSessionResponse(t *testing.T) {
 			Description: "Normal/FromSGWtoMME",
 			Structured: message.NewCreateSessionResponse(
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
-				ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
-				ie.NewFullyQualifiedTEID(v2.IFTypeS11S4SGWGTPC, 0xffffffff, "1.1.1.3", ""),
-				ie.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0xffffffff, "1.1.1.2", "").WithInstance(1),
+				ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
+				ie.NewFullyQualifiedTEID(gtpv2.IFTypeS11S4SGWGTPC, 0xffffffff, "1.1.1.3", ""),
+				ie.NewFullyQualifiedTEID(gtpv2.IFTypeS5S8PGWGTPC, 0xffffffff, "1.1.1.2", "").WithInstance(1),
 				ie.NewPDNAddressAllocation("2.2.2.2"),
-				ie.NewAPNRestriction(v2.APNRestrictionPublic1),
+				ie.NewAPNRestriction(gtpv2.APNRestrictionPublic1),
 				ie.NewBearerContext(
-					ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+					ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 					ie.NewEPSBearerID(0x05),
-					ie.NewFullyQualifiedTEID(v2.IFTypeS1USGWGTPU, 0xffffffff, "1.1.1.3", ""),
-					ie.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPU, 0xffffffff, "1.1.1.2", "").WithInstance(1),
+					ie.NewFullyQualifiedTEID(gtpv2.IFTypeS1USGWGTPU, 0xffffffff, "1.1.1.3", ""),
+					ie.NewFullyQualifiedTEID(gtpv2.IFTypeS5S8PGWGTPU, 0xffffffff, "1.1.1.2", "").WithInstance(1),
 				),
 				ie.NewFullyQualifiedCSID("1.1.1.2", 1),
 				ie.NewFullyQualifiedCSID("1.1.1.3", 1).WithInstance(1),

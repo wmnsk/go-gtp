@@ -1,0 +1,47 @@
+// Copyright 2019-2020 go-gtp authors. All rights reserved.
+// Use of this source code is governed by a MIT-style license that can be
+// found in the LICENSE file.
+
+package message_test
+
+import (
+	"testing"
+
+	"github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/ie"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
+	"github.com/wmnsk/go-gtp/gtpv2/testutils"
+)
+
+func TestPGWRestartNotification(t *testing.T) {
+	cases := []testutils.TestCase{
+		{
+			Description: "Normal",
+			Structured: message.NewPGWRestartNotification(
+				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
+				ie.NewIPAddress("1.1.1.1"),
+				ie.NewIPAddress("1.1.1.1").WithInstance(1),
+				ie.NewCause(gtpv2.CausePGWNotResponding, 0, 0, 0, nil),
+			),
+			Serialized: []byte{
+				// Header
+				0x48, 0xb3, 0x00, 0x1e, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
+				// P-GW IP
+				0x4a, 0x00, 0x04, 0x00, 0x01, 0x01, 0x01, 0x01,
+				// S-GW IP
+				0x4a, 0x00, 0x04, 0x01, 0x01, 0x01, 0x01, 0x01,
+				// Cause
+				0x02, 0x00, 0x02, 0x00, 0x0c, 0x00,
+			},
+		},
+	}
+
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := message.ParsePGWRestartNotification(b)
+		if err != nil {
+			return nil, err
+		}
+		v.Payload = nil
+		return v, nil
+	})
+}

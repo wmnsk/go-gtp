@@ -4,7 +4,10 @@
 
 package ie
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 // NewCause creates a new Cause IE.
 func NewCause(cause uint8, pce, bce, cs uint8, offendingIE *IE) *IE {
@@ -13,7 +16,9 @@ func NewCause(cause uint8, pce, bce, cs uint8, offendingIE *IE) *IE {
 	i.Payload[1] = ((pce << 2) & 0x04) | ((bce << 1) & 0x02) | cs&0x01
 
 	if offendingIE != nil {
-		i.Payload = append(i.Payload, offendingIE.Type)
+		// trailing zeroes are length, instance and spare fields which should be
+		// filled with zeroes in this case (cf. §8.4, TS29.274)
+		i.Payload = append(i.Payload, []byte{offendingIE.Type, 0x00, 0x00, 0x00}...)
 		i.SetLength()
 	}
 	return i
@@ -21,14 +26,28 @@ func NewCause(cause uint8, pce, bce, cs uint8, offendingIE *IE) *IE {
 
 // Cause returns Cause in uint8 if the type of IE matches.
 func (i *IE) Cause() (uint8, error) {
-	if i.Type != Cause {
+	switch i.Type {
+	case Cause:
+		if len(i.Payload) < 1 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
+		return i.Payload[0], nil
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return 0, fmt.Errorf("failed to retrieve Cause: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == Cause {
+				return child.Cause()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) == 0 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
 }
 
 // MustCause returns Cause in uint8, ignoring errors.
@@ -36,6 +55,69 @@ func (i *IE) Cause() (uint8, error) {
 func (i *IE) MustCause() uint8 {
 	v, _ := i.Cause()
 	return v
+}
+
+// CauseFlags returns CauseFlags in uint8 if the type of IE matches.
+func (i *IE) CauseFlags() (uint8, error) {
+	switch i.Type {
+	case Cause:
+		if len(i.Payload) < 1 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
+		return i.Payload[1], nil
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return 0, fmt.Errorf("failed to retrieve Cause: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == Cause {
+				return child.Cause()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
+}
+
+// MustCauseFlags returns CauseFlags in uint8, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustCauseFlags() uint8 {
+	v, _ := i.CauseFlags()
+	return v
+}
+
+// HasCS reports whether an IE has CS bit.
+func (i *IE) HasCS() bool {
+	v, err := i.CauseFlags()
+	if err != nil {
+		return false
+	}
+
+	return has2ndBit(v)
+}
+
+// HasBCE reports whether an IE has BCE bit.
+func (i *IE) HasBCE() bool {
+	v, err := i.CauseFlags()
+	if err != nil {
+		return false
+	}
+
+	return has1stBit(v)
+}
+
+// HasPCE reports whether an IE has PCE bit.
+func (i *IE) HasPCE() bool {
+	v, err := i.CauseFlags()
+	if err != nil {
+		return false
+	}
+
+	return has3rdBit(v)
 }
 
 // IsRemoteCause returns IsRemoteCause in bool if the type of IE matches.

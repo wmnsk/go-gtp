@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv1"
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
 )
 
@@ -42,7 +42,7 @@ func TestIEs(t *testing.T) {
 			},
 		}, {
 			"MAPCause",
-			ie.NewMAPCause(v1.MAPCauseSystemFailure),
+			ie.NewMAPCause(gtpv1.MAPCauseSystemFailure),
 			[]byte{0x0b, 0x22},
 		}, {
 			"PTMSISignature",
@@ -58,7 +58,7 @@ func TestIEs(t *testing.T) {
 			[]byte{0x0e, 0x01},
 		}, {
 			"SelectionMode",
-			ie.NewSelectionMode(v1.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
+			ie.NewSelectionMode(gtpv1.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
 			[]byte{0x0f, 0xf0},
 		}, {
 			"TEIDDataI",
@@ -82,7 +82,7 @@ func TestIEs(t *testing.T) {
 			[]byte{0x14, 0x05},
 		}, {
 			"RANAPCause",
-			ie.NewRANAPCause(v1.MAPCauseUnknownSubscriber),
+			ie.NewRANAPCause(gtpv1.MAPCauseUnknownSubscriber),
 			[]byte{0x15, 0x01},
 		}, {
 			"EndUserAddress/v4",
@@ -142,11 +142,11 @@ func TestIEs(t *testing.T) {
 			[]byte{0x94, 0x00, 0x01, 0x40},
 		}, {
 			"APNRestriction",
-			ie.NewAPNRestriction(v1.APNRestrictionPrivate1),
+			ie.NewAPNRestriction(gtpv1.APNRestrictionPrivate1),
 			[]byte{0x95, 0x00, 0x01, 0x03},
 		}, {
 			"RATType",
-			ie.NewRATType(v1.RatTypeEUTRAN),
+			ie.NewRATType(gtpv1.RatTypeEUTRAN),
 			[]byte{0x97, 0x00, 0x01, 0x06},
 		}, {
 			"UserLocationInformationWithCGI",
@@ -165,6 +165,10 @@ func TestIEs(t *testing.T) {
 			ie.NewMSTimeZone(9*time.Hour, 0), // XXX - should be updated with more realistic value
 			[]byte{0x99, 0x00, 0x02, 0x63, 0x00},
 		}, {
+			"MSTimeZone",
+			ie.NewMSTimeZone(2*time.Hour, 0),
+			[]byte{0x99, 0x00, 0x02, 0x80, 0x00},
+		}, {
 			"IMEISV",
 			ie.NewIMEISV("123450123456789"),
 			[]byte{0x9a, 0x00, 0x08, 0x21, 0x43, 0x05, 0x21, 0x43, 0x65, 0x87, 0xf9},
@@ -172,6 +176,10 @@ func TestIEs(t *testing.T) {
 			"ULITimestamp",
 			ie.NewULITimestamp(time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)),
 			[]byte{0xd6, 0x00, 0x04, 0xdf, 0xd5, 0x2c, 0x00},
+		}, {
+			"ChargingID",
+			ie.NewChargingID(0xffffffff),
+			[]byte{0x7f, 0xff, 0xff, 0xff, 0xff},
 		},
 		{
 			"PrivateExtension",

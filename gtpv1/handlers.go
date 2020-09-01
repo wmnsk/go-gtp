@@ -42,15 +42,20 @@ func newMsgHandlerMap(m map[uint8]HandlerFunc) *msgHandlerMap {
 	return mhm
 }
 
-var defaultHandlerMap = newMsgHandlerMap(
-	map[uint8]HandlerFunc{
-		message.MsgTypeTPDU:            handleTPDU,
-		message.MsgTypeEchoRequest:     handleEchoRequest,
-		message.MsgTypeEchoResponse:    handleEchoResponse,
-		message.MsgTypeErrorIndication: handleErrorIndication,
-	},
-)
+func newDefaultMsgHandlerMap() *msgHandlerMap {
+	return newMsgHandlerMap(
+		map[uint8]HandlerFunc{
+			message.MsgTypeTPDU:            handleTPDU,
+			message.MsgTypeEchoRequest:     handleEchoRequest,
+			message.MsgTypeEchoResponse:    handleEchoResponse,
+			message.MsgTypeErrorIndication: handleErrorIndication,
+		},
+	)
+}
 
+// handleTPDU responds to sender with ErrorIndication by default.
+// By disabling it(DisableErrorIndication), it passes unhandled T-PDU to
+// user, which can be caught by calling ReadFromGTP.
 func handleTPDU(c Conn, senderAddr net.Addr, msg message.Message) error {
 	// this should never happen, as the type should have been assured by
 	// msgHandlerMap before this function is called.
@@ -62,6 +67,13 @@ func handleTPDU(c Conn, senderAddr net.Addr, msg message.Message) error {
 	u, ok := c.(*UPlaneConn)
 	if !ok {
 		return ErrInvalidConnection
+	}
+
+	if u.errIndEnabled {
+		if err := u.ErrorIndication(senderAddr, pdu); err != nil {
+			logf("failed to send Error Indication to %s: %v", senderAddr, err)
+		}
+		return nil
 	}
 
 	tpdu := &tpduSet{

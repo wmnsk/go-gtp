@@ -17,7 +17,7 @@ func (i *IE) APNRestriction() (uint8, error) {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
 
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 

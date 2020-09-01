@@ -4,7 +4,10 @@
 
 package ie
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 // NewBearerFlags creates a new BearerFlags IE.
 func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
@@ -15,14 +18,28 @@ func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
 
 // BearerFlags returns BearerFlags in uint8(=as it is) if the type of IE matches.
 func (i *IE) BearerFlags() (uint8, error) {
-	if len(i.Payload) == 0 {
-		return 0, io.ErrUnexpectedEOF
-	}
-	if i.Type != BearerFlags {
+	switch i.Type {
+	case BearerFlags:
+		if len(i.Payload) < 1 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
+		return i.Payload[0], nil
+	case BearerContext:
+		ies, err := i.BearerContext()
+		if err != nil {
+			return 0, fmt.Errorf("failed to retrieve BearerFlags: %w", err)
+		}
+
+		for _, child := range ies {
+			if child.Type == BearerFlags {
+				return child.BearerFlags()
+			}
+		}
+		return 0, ErrIENotFound
+	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-
-	return i.Payload[0], nil
 }
 
 // MustBearerFlags returns BearerFlags in uint8, ignoring errors.
@@ -32,10 +49,50 @@ func (i *IE) MustBearerFlags() uint8 {
 	return v
 }
 
+// HasPPC reports whether an IE has PPC bit.
+func (i *IE) HasPPC() bool {
+	v, err := i.BearerFlags()
+	if err != nil {
+		return false
+	}
+
+	return has1stBit(v)
+}
+
+// HasVB reports whether an IE has VB bit.
+func (i *IE) HasVB() bool {
+	v, err := i.BearerFlags()
+	if err != nil {
+		return false
+	}
+
+	return has2ndBit(v)
+}
+
+// HasVind reports whether an IE has Vind bit.
+func (i *IE) HasVind() bool {
+	v, err := i.BearerFlags()
+	if err != nil {
+		return false
+	}
+
+	return has3rdBit(v)
+}
+
+// HasASI reports whether an IE has ASI bit.
+func (i *IE) HasASI() bool {
+	v, err := i.BearerFlags()
+	if err != nil {
+		return false
+	}
+
+	return has4thBit(v)
+}
+
 // ActivityStatusIndicator reports whether the bearer context is preserved in
 // the CN without corresponding Radio Access Bearer established.
 func (i *IE) ActivityStatusIndicator() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {
@@ -49,7 +106,7 @@ func (i *IE) ActivityStatusIndicator() bool {
 // VSRVCC reports whether this bearer is an IMS video bearer and is candidate
 // for PS-to-CS vSRVCC handover.
 func (i *IE) VSRVCC() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {
@@ -62,7 +119,7 @@ func (i *IE) VSRVCC() bool {
 
 // VoiceBearer reports whether a voice bearer when doing PS-to-CS (v)SRVCC handover.
 func (i *IE) VoiceBearer() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {
@@ -76,7 +133,7 @@ func (i *IE) VoiceBearer() bool {
 // ProhibitPayloadCompression reports whether an SGSN should attempt to
 // compress the payload of user data when the users asks for it to be compressed.
 func (i *IE) ProhibitPayloadCompression() bool {
-	if len(i.Payload) == 0 {
+	if len(i.Payload) < 1 {
 		return false
 	}
 	switch i.Type {

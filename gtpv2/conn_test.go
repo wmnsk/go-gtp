@@ -12,29 +12,29 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
-func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn, err error) {
-	cliAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1"+v2.GTPCPort)
+func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *gtpv2.Conn, err error) {
+	cliAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1"+gtpv2.GTPCPort)
 	if err != nil {
 		return nil, nil, err
 	}
-	srvAddr, err := net.ResolveUDPAddr("udp", "127.0.0.2"+v2.GTPCPort)
+	srvAddr, err := net.ResolveUDPAddr("udp", "127.0.0.2"+gtpv2.GTPCPort)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	go func() {
-		srvConn = v2.NewConn(srvAddr, v2.IFTypeS11S4SGWGTPC, 0)
+		srvConn = gtpv2.NewConn(srvAddr, gtpv2.IFTypeS11S4SGWGTPC, 0)
 		srvConn.AddHandler(
 			message.MsgTypeCreateSessionRequest,
-			func(c *v2.Conn, cliAddr net.Addr, msg message.Message) error {
+			func(c *gtpv2.Conn, cliAddr net.Addr, msg message.Message) error {
 
 				csReq := msg.(*message.CreateSessionRequest)
-				session := v2.NewSession(cliAddr, &v2.Subscriber{Location: &v2.Location{}})
+				session := gtpv2.NewSession(cliAddr, &gtpv2.Subscriber{Location: &gtpv2.Location{}})
 
 				var otei uint32
 				if imsiIE := csReq.IMSI; imsiIE != nil {
@@ -47,7 +47,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 					}
 					session.IMSI = imsi
 				} else {
-					return &v2.RequiredIEMissingError{Type: ie.IMSI}
+					return &gtpv2.RequiredIEMissingError{Type: ie.IMSI}
 				}
 
 				if fteidcIE := csReq.SenderFTEIDC; fteidcIE != nil {
@@ -69,13 +69,13 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 					}
 					session.AddTEID(ifType, otei)
 				} else {
-					return &v2.RequiredIEMissingError{Type: ie.IMSI}
+					return &gtpv2.RequiredIEMissingError{Type: ie.IMSI}
 				}
 
 				fTEID := srvConn.NewSenderFTEID("127.0.0.2", "")
 				srvConn.RegisterSession(fTEID.MustTEID(), session)
 				csRsp := message.NewCreateSessionResponse(
-					otei, msg.Sequence(), ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil), fTEID,
+					otei, msg.Sequence(), ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil), fTEID,
 				)
 				if err := c.RespondTo(cliAddr, csReq, csRsp); err != nil {
 					return err
@@ -97,7 +97,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *v2.Conn
 
 	// XXX - waiting for server to be well-prepared, should consider better way.
 	time.Sleep(1 * time.Second)
-	cliConn, err = v2.Dial(ctx, cliAddr, srvAddr, v2.IFTypeS11MMEGTPC, 0)
+	cliConn, err = gtpv2.Dial(ctx, cliAddr, srvAddr, gtpv2.IFTypeS11MMEGTPC, 0)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -119,8 +119,8 @@ func TestCreateSession(t *testing.T) {
 
 	cliConn.AddHandler(
 		message.MsgTypeCreateSessionResponse,
-		func(c *v2.Conn, srvAddr net.Addr, msg message.Message) error {
-			if srvAddr.String() != "127.0.0.2"+v2.GTPCPort {
+		func(c *gtpv2.Conn, srvAddr net.Addr, msg message.Message) error {
+			if srvAddr.String() != "127.0.0.2"+gtpv2.GTPCPort {
 				t.Errorf("invalid server address: %s", srvAddr)
 			}
 			if msg.Sequence() != cliConn.SequenceNumber() {
@@ -138,15 +138,15 @@ func TestCreateSession(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if cause != v2.CauseRequestAccepted {
-					return &v2.CauseNotOKError{
+				if cause != gtpv2.CauseRequestAccepted {
+					return &gtpv2.CauseNotOKError{
 						MsgType: csRsp.MessageTypeName(),
 						Cause:   cause,
 						Msg:     "something went wrong",
 					}
 				}
 			} else {
-				return &v2.RequiredIEMissingError{Type: ie.Cause}
+				return &gtpv2.RequiredIEMissingError{Type: ie.Cause}
 			}
 
 			if fteidIE := csRsp.SenderFTEIDC; fteidIE != nil {
@@ -154,7 +154,7 @@ func TestCreateSession(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if it != v2.IFTypeS11S4SGWGTPC {
+				if it != gtpv2.IFTypeS11S4SGWGTPC {
 					return errors.Errorf("invalid InterfaceType: %v", it)
 				}
 				otei, err := fteidIE.TEID()
@@ -171,7 +171,7 @@ func TestCreateSession(t *testing.T) {
 					return errors.Errorf("unexpected IP in F-TEID: %s", ip)
 				}
 			} else {
-				return &v2.RequiredIEMissingError{Type: ie.Cause}
+				return &gtpv2.RequiredIEMissingError{Type: ie.Cause}
 			}
 
 			if err := session.Activate(); err != nil {

@@ -355,6 +355,22 @@ func Parse(b []byte) (Message, error) {
 		m = &ModifyAccessBearersRequest{}
 	case MsgTypeModifyAccessBearersResponse:
 		m = &ModifyAccessBearersResponse{}
+	case MsgTypeDeletePDNConnectionSetRequest:
+		m = &DeletePDNConnectionSetRequest{}
+	case MsgTypeDeletePDNConnectionSetResponse:
+		m = &DeletePDNConnectionSetResponse{}
+	case MsgTypeUpdatePDNConnectionSetRequest:
+		m = &UpdatePDNConnectionSetRequest{}
+	case MsgTypeUpdatePDNConnectionSetResponse:
+		m = &UpdatePDNConnectionSetResponse{}
+	case MsgTypePGWRestartNotification:
+		m = &PGWRestartNotification{}
+	case MsgTypePGWRestartNotificationAcknowledge:
+		m = &PGWRestartNotificationAcknowledge{}
+	case MsgTypeDetachNotification:
+		m = &DetachNotification{}
+	case MsgTypeDetachAcknowledge:
+		m = &DetachAcknowledge{}
 	default:
 		m = &Generic{}
 	}
