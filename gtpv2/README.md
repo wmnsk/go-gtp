@@ -132,7 +132,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 67      | Delete Bearer Failure Indication                | Yes       |
 | 68      | Bearer Resource Command                         |           |
 | 69      | Bearer Resource Failure Indication              |           |
-| 70      | Downlink Data Notification Failure Indication   |           |
+| 70      | Downlink Data Notification Failure Indication   | Yes       |
 | 71      | Trace Session Activation                        |           |
 | 72      | Trace Session Deactivation                      |           |
 | 73      | Stop Paging Indication                          | Yes       |
@@ -187,8 +187,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 170     | Release Access Bearers Request                  | Yes       |
 | 171     | Release Access Bearers Response                 | Yes       |
 | 172-175 | (Spare/Reserved)                                | -         |
-| 176     | Downlink Data Notification                      |           |
-| 177     | Downlink Data Notification Acknowledge          |           |
+| 176     | Downlink Data Notification                      | Yes       |
+| 177     | Downlink Data Notification Acknowledge          | Yes       |
 | 178     | (Spare/Reserved)                                | -         |
 | 179     | PGW Restart Notification                        | Yes       |
 | 180     | PGW Restart Notification Acknowledge            | Yes       |
@@ -308,9 +308,9 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ie.Ne
 | 151     | Local Distinguished Name (LDN)                                 | Yes       |
 | 152     | Node Features                                                  | Yes       |
 | 153     | MBMS Time to Data Transfer                                     |           |
-| 154     | Throttling                                                     |           |
+| 154     | Throttling                                                     | Yes       |
 | 155     | Allocation/Retention Priority (ARP)                            | Yes       |
-| 156     | EPC Timer                                                      |           |
+| 156     | EPC Timer                                                      | Yes       |
 | 157     | Signalling Priority Indication                                 |           |
 | 158     | Temporary Mobile Group Identity (TMGI)                         |           |
 | 159     | Additional MM context for SRVCC                                |           |
@@ -340,8 +340,8 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ie.Ne
 | 183     | Sequence Number                                                |           |
 | 184     | APN and Relative Capacity                                      |           |
 | 185     | WLAN Offloadability Indication                                 |           |
-| 186     | Paging and Service Information                                 |           |
-| 187     | Integer Number                                                 |           |
+| 186     | Paging and Service Information                                 | Yes       |
+| 187     | Integer Number                                                 | Yes       |
 | 188     | Millisecond Time Stamp                                         |           |
 | 189     | Monitoring Event Information                                   |           |
 | 190     | ECGI List                                                      |           |
