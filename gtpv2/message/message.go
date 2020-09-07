@@ -371,6 +371,8 @@ func Parse(b []byte) (Message, error) {
 		m = &DetachNotification{}
 	case MsgTypeDetachAcknowledge:
 		m = &DetachAcknowledge{}
+	case MsgTypeDownlinkDataNotification:
+		m = &DownlinkDataNotification{}
 	default:
 		m = &Generic{}
 	}
