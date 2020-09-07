@@ -447,6 +447,10 @@ func TestIEs(t *testing.T) {
 			ie.NewNodeFeatures(0x01),
 			[]byte{0x98, 0x00, 0x01, 0x00, 0x01},
 		}, {
+			"Throttling",
+			ie.NewThrottling(20*time.Hour, 80),
+			[]byte{0x9a, 0x00, 0x02, 0x00, 0x82, 0x50},
+		}, {
 			"AllocationRetensionPriority",
 			ie.NewAllocationRetensionPriority(1, 2, 1),
 			[]byte{0x9b, 0x00, 0x01, 0x00, 0x49},
