@@ -375,6 +375,8 @@ func Parse(b []byte) (Message, error) {
 		m = &DownlinkDataNotification{}
 	case MsgTypeDownlinkDataNotificationAcknowledge:
 		m = &DownlinkDataNotificationAcknowledge{}
+	case MsgTypeDownlinkDataNotificationFailureIndication:
+		m = &DownlinkDataNotificationFailureIndication{}
 	default:
 		m = &Generic{}
 	}
