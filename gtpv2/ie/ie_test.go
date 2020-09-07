@@ -451,6 +451,10 @@ func TestIEs(t *testing.T) {
 			ie.NewAllocationRetensionPriority(1, 2, 1),
 			[]byte{0x9b, 0x00, 0x01, 0x00, 0x49},
 		}, {
+			"EPCTimer",
+			ie.NewEPCTimer(20 * time.Hour),
+			[]byte{0x9c, 0x00, 0x01, 0x00, 0x82},
+		}, {
 			"ULITimestamp",
 			ie.NewULITimestamp(time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)),
 			[]byte{0xaa, 0x00, 0x04, 0x00, 0xdf, 0xd5, 0x2c, 0x00},
