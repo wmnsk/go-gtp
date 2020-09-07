@@ -73,19 +73,19 @@ func (i *IE) Timer() (time.Duration, error) {
 	switch i.Type {
 	case EPCTimer:
 		var d time.Duration
-		switch i.Payload[0] | 0xe0 {
-		case 0xe0:
+		switch (i.Payload[0] & 0xe0) >> 5 {
+		case 0x07:
 			d = time.Duration(math.MaxInt64)
-		case 0x80:
-			d = time.Duration(i.Payload[0]|0x1f) * 10 * time.Hour
-		case 0x60:
-			d = time.Duration(i.Payload[0]|0x1f) * time.Hour
-		case 0x40:
-			d = time.Duration(i.Payload[0]|0x1f) * 10 * time.Minute
-		case 0x20:
-			d = time.Duration(i.Payload[0]|0x1f) * time.Minute
+		case 0x04:
+			d = time.Duration(i.Payload[0]&0x1f) * 10 * time.Hour
+		case 0x03:
+			d = time.Duration(i.Payload[0]&0x1f) * time.Hour
+		case 0x02:
+			d = time.Duration(i.Payload[0]&0x1f) * 10 * time.Minute
+		case 0x01:
+			d = time.Duration(i.Payload[0]&0x1f) * time.Minute
 		case 0x00:
-			d = time.Duration(i.Payload[0]|0x1f) * 2 * time.Second
+			d = time.Duration(i.Payload[0]&0x1f) * 2 * time.Second
 		default:
 			d = 0
 		}
