@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -15,7 +16,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 	"google.golang.org/grpc"
@@ -269,11 +269,11 @@ func (e *enb) attach(ctx context.Context, sub *Subscriber) error {
 			net.ParseIP(sgwIP), net.ParseIP(req.SrcIp), rsp.OTei, req.ITei,
 		); err != nil {
 			log.Println(net.ParseIP(sgwIP), net.ParseIP(req.SrcIp), rsp.OTei, req.ITei)
-			e.errCh <- errors.Errorf("failed to create tunnel for %s: %s", sub.IMSI, err)
+			e.errCh <- fmt.Errorf("failed to create tunnel for %s: %w", sub.IMSI, err)
 			return nil
 		}
 		if err := e.addRoute(); err != nil {
-			e.errCh <- errors.Errorf("failed to add route for %s: %s", sub.IMSI, err)
+			e.errCh <- fmt.Errorf("failed to add route for %s: %w", sub.IMSI, err)
 			return nil
 		}
 
@@ -282,12 +282,12 @@ func (e *enb) attach(ctx context.Context, sub *Subscriber) error {
 
 		e.sessions = append(e.sessions, sub)
 		if err := e.setupUPlane(ctx, sub); err != nil {
-			e.errCh <- errors.Errorf("failed to setup U-Plane for %s: %s", sub.IMSI, err)
+			e.errCh <- fmt.Errorf("failed to setup U-Plane for %s: %w", sub.IMSI, err)
 			return nil
 		}
 		log.Printf("Successfully established tunnel for %s", sub.IMSI)
 	default:
-		e.errCh <- errors.Errorf("got unexpected Cause for %s: %s", rsp.Cause, sub.IMSI)
+		e.errCh <- fmt.Errorf("got unexpected Cause for %s: %s", rsp.Cause, sub.IMSI)
 		return nil
 	}
 
@@ -415,7 +415,7 @@ func (e *enb) runHTTPProbe(ctx context.Context, sub *Subscriber) error {
 
 		rsp, err := client.Get(sub.HTTPURL)
 		if err != nil {
-			e.errCh <- errors.Errorf("failed to GET %s: %s", sub.HTTPURL, err)
+			e.errCh <- fmt.Errorf("failed to GET %s: %w", sub.HTTPURL, err)
 			continue
 		}
 
@@ -425,7 +425,7 @@ func (e *enb) runHTTPProbe(ctx context.Context, sub *Subscriber) error {
 			continue
 		}
 		rsp.Body.Close()
-		e.errCh <- errors.Errorf("got invalid response on HTTP probe: %v", rsp.StatusCode)
+		e.errCh <- fmt.Errorf("got invalid response on HTTP probe: %v", rsp.StatusCode)
 	}
 }
 
@@ -452,7 +452,7 @@ func (e *enb) addIP(sub *Subscriber) error {
 		}
 	}
 	if !found {
-		return errors.Errorf("cannot find the interface to add address: %s", sub.EUuIFName)
+		return fmt.Errorf("cannot find the interface to add address: %s", sub.EUuIFName)
 	}
 
 	addr.IPNet = netToAdd
