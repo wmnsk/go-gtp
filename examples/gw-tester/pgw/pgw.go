@@ -13,14 +13,15 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+
+	"github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
 type pgw struct {
-	cConn *v2.Conn
-	uConn *v1.UPlaneConn
+	cConn *gtpv2.Conn
+	uConn *gtpv1.UPlaneConn
 
 	s5c, s5u string
 	sgiIF    string
@@ -37,8 +38,8 @@ type pgw struct {
 
 func newPGW(cfg *Config) (*pgw, error) {
 	p := &pgw{
-		s5c:   cfg.LocalAddrs.S5CIP + v2.GTPCPort,
-		s5u:   cfg.LocalAddrs.S5UIP + v2.GTPUPort,
+		s5c:   cfg.LocalAddrs.S5CIP + gtpv2.GTPCPort,
+		s5u:   cfg.LocalAddrs.S5UIP + gtpv2.GTPUPort,
 		sgiIF: cfg.SGiIFName,
 
 		errCh: make(chan error, 1),
@@ -66,7 +67,7 @@ func (p *pgw) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	p.cConn = v2.NewConn(cAddr, v2.IFTypeS5S8PGWGTPC, 0)
+	p.cConn = gtpv2.NewConn(cAddr, gtpv2.IFTypeS5S8PGWGTPC, 0)
 	go func() {
 		if err := p.cConn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
@@ -76,7 +77,7 @@ func (p *pgw) run(ctx context.Context) error {
 	log.Printf("Started serving S5-C on %s", cAddr)
 
 	// register handlers for ALL the message you expect remote endpoint to send.
-	p.cConn.AddHandlers(map[uint8]v2.HandlerFunc{
+	p.cConn.AddHandlers(map[uint8]gtpv2.HandlerFunc{
 		message.MsgTypeCreateSessionRequest: p.handleCreateSessionRequest,
 		message.MsgTypeDeleteSessionRequest: p.handleDeleteSessionRequest,
 	})
@@ -85,8 +86,8 @@ func (p *pgw) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	p.uConn = v1.NewUPlaneConn(uAddr)
-	if err := p.uConn.EnableKernelGTP("gtp-pgw", v1.RoleGGSN); err != nil {
+	p.uConn = gtpv1.NewUPlaneConn(uAddr)
+	if err := p.uConn.EnableKernelGTP("gtp-pgw", gtpv1.RoleGGSN); err != nil {
 		return err
 	}
 	go func() {
