@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/wmnsk/go-gtp/examples/gw-tester/s1mme"
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv1"
 )
 
 type enb struct {
@@ -34,7 +34,7 @@ type enb struct {
 
 	// S1-U
 	uAddr net.Addr
-	uConn *v1.UPlaneConn
+	uConn *gtpv1.UPlaneConn
 
 	location *s1mme.Location
 
@@ -69,7 +69,7 @@ func newENB(cfg *Config) (*enb, error) {
 	}
 
 	var err error
-	e.uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UIP+v1.GTPUPort)
+	e.uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UIP+gtpv1.GTPUPort)
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +99,8 @@ func (e *enb) run(ctx context.Context) error {
 	e.s1mmeClient = s1mme.NewAttacherClient(conn)
 	log.Printf("Established S1-MME connection with %s", e.mmeAddr)
 
-	e.uConn = v1.NewUPlaneConn(e.uAddr)
-	if err := e.uConn.EnableKernelGTP("gtp-enb", v1.RoleSGSN); err != nil {
+	e.uConn = gtpv1.NewUPlaneConn(e.uAddr)
+	if err := e.uConn.EnableKernelGTP("gtp-enb", gtpv1.RoleSGSN); err != nil {
 		return err
 	}
 	go func() {
