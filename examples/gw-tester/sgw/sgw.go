@@ -14,19 +14,19 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
 type sgw struct {
 	// C-Plane
 	s11Addr, s5cAddr net.Addr
-	s11Conn, s5cConn *v2.Conn
+	s11Conn, s5cConn *gtpv2.Conn
 
 	// U-Plane
 	s1uAddr, s5uAddr net.Addr
-	s1uConn, s5uConn *v1.UPlaneConn
+	s1uConn, s5uConn *gtpv1.UPlaneConn
 
 	s11IP, s5cIP, s1uIP, s5uIP string
 
@@ -45,7 +45,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 	}
 
 	var err error
-	s.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11IP+v2.GTPCPort)
+	s.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11IP+gtpv2.GTPCPort)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 		return nil, err
 	}
 
-	s.s5cAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5CIP+v2.GTPCPort)
+	s.s5cAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5CIP+gtpv2.GTPCPort)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 		return nil, err
 	}
 
-	s.s1uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UIP+v2.GTPUPort)
+	s.s1uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S1UIP+gtpv2.GTPUPort)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 		return nil, err
 	}
 
-	s.s5uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5UIP+v2.GTPUPort)
+	s.s5uAddr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S5UIP+gtpv2.GTPUPort)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func newSGW(cfg *Config) (*sgw, error) {
 }
 
 func (s *sgw) run(ctx context.Context) error {
-	s.s11Conn = v2.NewConn(s.s11Addr, v2.IFTypeS11S4SGWGTPC, 0)
+	s.s11Conn = gtpv2.NewConn(s.s11Addr, gtpv2.IFTypeS11S4SGWGTPC, 0)
 	go func() {
 		if err := s.s11Conn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
@@ -102,7 +102,7 @@ func (s *sgw) run(ctx context.Context) error {
 	}()
 	log.Printf("Started serving S11 on %s", s.s11Addr)
 
-	s.s5cConn = v2.NewConn(s.s5cAddr, v2.IFTypeS5S8SGWGTPC, 0)
+	s.s5cConn = gtpv2.NewConn(s.s5cAddr, gtpv2.IFTypeS5S8SGWGTPC, 0)
 	go func() {
 		if err := s.s5cConn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
@@ -112,20 +112,20 @@ func (s *sgw) run(ctx context.Context) error {
 	log.Printf("Started serving S5-C on %s", s.s5cAddr)
 
 	// register handlers for ALL the message you expect remote endpoint to send.
-	s.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
+	s.s11Conn.AddHandlers(map[uint8]gtpv2.HandlerFunc{
 		message.MsgTypeCreateSessionRequest: s.handleCreateSessionRequest,
 		message.MsgTypeModifyBearerRequest:  s.handleModifyBearerRequest,
 		message.MsgTypeDeleteSessionRequest: s.handleDeleteSessionRequest,
 		message.MsgTypeDeleteBearerResponse: s.handleDeleteBearerResponse,
 	})
-	s.s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
+	s.s5cConn.AddHandlers(map[uint8]gtpv2.HandlerFunc{
 		message.MsgTypeCreateSessionResponse: s.handleCreateSessionResponse,
 		message.MsgTypeDeleteSessionResponse: s.handleDeleteSessionResponse,
 		message.MsgTypeDeleteBearerRequest:   s.handleDeleteBearerRequest,
 	})
 
-	s.s1uConn = v1.NewUPlaneConn(s.s1uAddr)
-	if err := s.s1uConn.EnableKernelGTP("gtp-sgw-s1", v1.RoleGGSN); err != nil {
+	s.s1uConn = gtpv1.NewUPlaneConn(s.s1uAddr)
+	if err := s.s1uConn.EnableKernelGTP("gtp-sgw-s1", gtpv1.RoleGGSN); err != nil {
 		return err
 	}
 	go func() {
@@ -137,8 +137,8 @@ func (s *sgw) run(ctx context.Context) error {
 	}()
 	log.Printf("Started serving S1-U on %s", s.s1uAddr)
 
-	s.s5uConn = v1.NewUPlaneConn(s.s5uAddr)
-	if err := s.s5uConn.EnableKernelGTP("gtp-sgw-s5", v1.RoleSGSN); err != nil {
+	s.s5uConn = gtpv1.NewUPlaneConn(s.s5uAddr)
+	if err := s.s5uConn.EnableKernelGTP("gtp-sgw-s5", gtpv1.RoleSGSN); err != nil {
 		return err
 	}
 	go func() {
