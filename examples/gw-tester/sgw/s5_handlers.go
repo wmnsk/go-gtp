@@ -10,8 +10,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/pkg/errors"
-
 	v2 "github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
@@ -214,10 +212,7 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 			if err := s5cConn.RespondTo(pgwAddr, dbReqFromPGW, dbRspFromSGW); err != nil {
 				return err
 			}
-			return errors.Errorf(
-				"%T from %s had both Linked EBI and EBIs IE",
-				dbReqFromPGW, pgwAddr,
-			)
+			return fmt.Errorf("%T from %s had both Linked EBI and EBIs IE", dbReqFromPGW, pgwAddr)
 		}
 		ebi = ebiIE
 	}

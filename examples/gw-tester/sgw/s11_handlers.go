@@ -5,11 +5,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"time"
-
-	"github.com/pkg/errors"
 
 	v2 "github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
@@ -77,7 +76,7 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg
 			case *v2.UnknownIMSIError:
 				// whole new session. just ignore.
 			default:
-				return errors.Wrap(err, "got something unexpected")
+				return fmt.Errorf("got something unexpected: %w", err)
 			}
 		} else {
 			s11Conn.RemoveSession(sess)

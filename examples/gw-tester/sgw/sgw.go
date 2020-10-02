@@ -6,11 +6,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 
@@ -174,7 +174,7 @@ func (s *sgw) run(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case err := <-s.errCh:
-			log.Printf("Warning: %s", errors.WithStack(err))
+			log.Printf("Warning: %+v", err)
 		}
 	}
 }
@@ -217,7 +217,7 @@ func (s *sgw) close() error {
 	close(s.errCh)
 
 	if len(errs) > 0 {
-		return errors.Errorf("errors while closing S-GW: %v", errs)
+		return fmt.Errorf("errors while closing S-GW: %+v", errs)
 	}
 	return nil
 }
