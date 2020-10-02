@@ -10,14 +10,12 @@ import (
 	"net"
 	"time"
 
-	"github.com/pkg/errors"
-
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
-func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message.Message) error {
+func (s *sgw) handleCreateSessionResponse(s5cConn *gtpv2.Conn, pgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
 	if s.mc != nil {
 		s.mc.messagesReceived.WithLabelValues(pgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -39,11 +37,11 @@ func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 		if err != nil {
 			return err
 		}
-		if cause != v2.CauseRequestAccepted {
+		if cause != gtpv2.CauseRequestAccepted {
 			s5cConn.RemoveSession(s5Session)
 			// this is not such a fatal error worth stopping the whole program.
 			// in the real case it is better to take some action based on the Cause, though.
-			return &v2.CauseNotOKError{
+			return &gtpv2.CauseNotOKError{
 				MsgType: csRspFromPGW.MessageTypeName(),
 				Cause:   cause,
 				Msg:     fmt.Sprintf("subscriber: %s", s5Session.IMSI),
@@ -51,7 +49,7 @@ func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 		}
 	} else {
 		s5cConn.RemoveSession(s5Session)
-		return &v2.RequiredIEMissingError{
+		return &gtpv2.RequiredIEMissingError{
 			Type: ie.Cause,
 		}
 	}
@@ -66,7 +64,7 @@ func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 		bearer.SubscriberIP = ip
 	} else {
 		s5cConn.RemoveSession(s5Session)
-		return &v2.RequiredIEMissingError{Type: ie.PDNAddressAllocation}
+		return &gtpv2.RequiredIEMissingError{Type: ie.PDNAddressAllocation}
 	}
 
 	if fteidcIE := csRspFromPGW.PGWS5S8FTEIDC; fteidcIE != nil {
@@ -81,7 +79,7 @@ func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 		s5Session.AddTEID(it, teid)
 	} else {
 		s5cConn.RemoveSession(s5Session)
-		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
+		return &gtpv2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
 
 	if brCtxIE := csRspFromPGW.BearerContextsCreated; brCtxIE != nil {
@@ -92,9 +90,9 @@ func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 				if err != nil {
 					return err
 				}
-				if cause != v2.CauseRequestAccepted {
+				if cause != gtpv2.CauseRequestAccepted {
 					s5cConn.RemoveSession(s5Session)
-					return &v2.CauseNotOKError{
+					return &gtpv2.CauseNotOKError{
 						MsgType: csRspFromPGW.MessageTypeName(),
 						Cause:   cause,
 						Msg:     fmt.Sprintf("subscriber: %s", s5Session.IMSI),
@@ -120,7 +118,7 @@ func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 		}
 	} else {
 		s5cConn.RemoveSession(s5Session)
-		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
+		return &gtpv2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
 	if err := s5Session.Activate(); err != nil {
@@ -133,14 +131,14 @@ func (s *sgw) handleCreateSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 		return err
 	}
 
-	if err := v2.PassMessageTo(s11Session, csRspFromPGW, 5*time.Second); err != nil {
+	if err := gtpv2.PassMessageTo(s11Session, csRspFromPGW, 5*time.Second); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *sgw) handleDeleteSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, msg message.Message) error {
+func (s *sgw) handleDeleteSessionResponse(s5cConn *gtpv2.Conn, pgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
 	if s.mc != nil {
 		s.mc.messagesReceived.WithLabelValues(pgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -156,7 +154,7 @@ func (s *sgw) handleDeleteSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 		return err
 	}
 
-	if err := v2.PassMessageTo(s11Session, msg, 5*time.Second); err != nil {
+	if err := gtpv2.PassMessageTo(s11Session, msg, 5*time.Second); err != nil {
 		return err
 	}
 
@@ -166,7 +164,7 @@ func (s *sgw) handleDeleteSessionResponse(s5cConn *v2.Conn, pgwAddr net.Addr, ms
 	return nil
 }
 
-func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg message.Message) error {
+func (s *sgw) handleDeleteBearerRequest(s5cConn *gtpv2.Conn, pgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), pgwAddr)
 	if s.mc != nil {
 		s.mc.messagesReceived.WithLabelValues(pgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -182,12 +180,12 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 		return err
 	}
 
-	s5cpgwTEID, err := s5Session.GetTEID(v2.IFTypeS5S8PGWGTPC)
+	s5cpgwTEID, err := s5Session.GetTEID(gtpv2.IFTypeS5S8PGWGTPC)
 	if err != nil {
 		return err
 	}
 
-	s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
+	s11mmeTEID, err := s11Session.GetTEID(gtpv2.IFTypeS11MMEGTPC)
 	if err != nil {
 		return err
 	}
@@ -209,22 +207,19 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 		if ebi != nil {
 			dbRspFromSGW = message.NewDeleteBearerResponse(
 				s5cpgwTEID, 0,
-				ie.NewCause(v2.CauseContextNotFound, 0, 0, 0, ebiIE),
+				ie.NewCause(gtpv2.CauseContextNotFound, 0, 0, 0, ebiIE),
 			)
 			if err := s5cConn.RespondTo(pgwAddr, dbReqFromPGW, dbRspFromSGW); err != nil {
 				return err
 			}
-			return errors.Errorf(
-				"%T from %s had both Linked EBI and EBIs IE",
-				dbReqFromPGW, pgwAddr,
-			)
+			return fmt.Errorf("%T from %s had both Linked EBI and EBIs IE", dbReqFromPGW, pgwAddr)
 		}
 		ebi = ebiIE
 	}
 
 	if ebi == nil {
 		dbRspFromSGW = message.NewDeleteBearerResponse(
-			s5cpgwTEID, 0, ie.NewCause(v2.CauseMandatoryIEMissing,
+			s5cpgwTEID, 0, ie.NewCause(gtpv2.CauseMandatoryIEMissing,
 				0, 0, 0, ie.NewEPSBearerID(0),
 			),
 		)
@@ -242,7 +237,7 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 	if err != nil {
 		dbRspFromSGW = message.NewDeleteBearerResponse(
 			s5cpgwTEID, 0,
-			ie.NewCause(v2.CauseContextNotFound, 0, 0, 0, nil),
+			ie.NewCause(gtpv2.CauseContextNotFound, 0, 0, 0, nil),
 		)
 		if err := s5cConn.RespondTo(pgwAddr, dbReqFromPGW, dbRspFromSGW); err != nil {
 			return err
@@ -264,7 +259,7 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 	if err != nil {
 		dbRspFromSGW = message.NewDeleteBearerResponse(
 			s5cpgwTEID, 0,
-			ie.NewCause(v2.CauseNoResourcesAvailable, 0, 0, 0, nil),
+			ie.NewCause(gtpv2.CauseNoResourcesAvailable, 0, 0, 0, nil),
 		)
 
 		if err := s5cConn.RespondTo(pgwAddr, dbReqFromPGW, dbRspFromSGW); err != nil {
@@ -285,7 +280,7 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *v2.Conn, pgwAddr net.Addr, msg 
 		// move forward
 		dbRspFromSGW = m
 	default:
-		return &v2.UnexpectedTypeError{Msg: incomingMessage}
+		return &gtpv2.UnexpectedTypeError{Msg: incomingMessage}
 	}
 
 	dbRspFromSGW.SetTEID(s5cpgwTEID)

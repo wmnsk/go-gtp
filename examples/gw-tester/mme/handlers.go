@@ -6,15 +6,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/wmnsk/go-gtp/gtpv2/ie"
-	"github.com/wmnsk/go-gtp/gtpv2/message"
 	"log"
 	"net"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/ie"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
-func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
+func (m *mme) handleCreateSessionResponse(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if m.mc != nil {
 		m.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -39,16 +39,16 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 		if err != nil {
 			return err
 		}
-		if cause != v2.CauseRequestAccepted {
+		if cause != gtpv2.CauseRequestAccepted {
 			c.RemoveSession(session)
-			return &v2.CauseNotOKError{
+			return &gtpv2.CauseNotOKError{
 				MsgType: csRspFromSGW.MessageTypeName(),
 				Cause:   cause,
 				Msg:     fmt.Sprintf("subscriber: %s", session.IMSI),
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: msg.MessageType()}
+		return &gtpv2.RequiredIEMissingError{Type: msg.MessageType()}
 	}
 
 	if paaIE := csRspFromSGW.PAA; paaIE != nil {
@@ -62,17 +62,17 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 		if err != nil {
 			return err
 		}
-		session.AddTEID(v2.IFTypeS11S4SGWGTPC, teid)
+		session.AddTEID(gtpv2.IFTypeS11S4SGWGTPC, teid)
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
+		return &gtpv2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
 
-	s11sgwTEID, err := session.GetTEID(v2.IFTypeS11S4SGWGTPC)
+	s11sgwTEID, err := session.GetTEID(gtpv2.IFTypeS11S4SGWGTPC)
 	if err != nil {
 		c.RemoveSession(session)
 		return err
 	}
-	s11mmeTEID, err := session.GetTEID(v2.IFTypeS11MMEGTPC)
+	s11mmeTEID, err := session.GetTEID(gtpv2.IFTypeS11MMEGTPC)
 	if err != nil {
 		c.RemoveSession(session)
 		return err
@@ -102,7 +102,7 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
+		return &gtpv2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
 	if err := session.Activate(); err != nil {
@@ -118,7 +118,7 @@ func (m *mme) handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg mess
 	return nil
 }
 
-func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
+func (m *mme) handleModifyBearerResponse(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if m.mc != nil {
 		m.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -135,15 +135,15 @@ func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messa
 		if err != nil {
 			return err
 		}
-		if cause != v2.CauseRequestAccepted {
-			return &v2.CauseNotOKError{
+		if cause != gtpv2.CauseRequestAccepted {
+			return &gtpv2.CauseNotOKError{
 				MsgType: msg.MessageTypeName(),
 				Cause:   cause,
 				Msg:     fmt.Sprintf("subscriber: %s", session.IMSI),
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.Cause}
+		return &gtpv2.RequiredIEMissingError{Type: ie.Cause}
 	}
 
 	if brCtxIE := mbRspFromSGW.BearerContextsModified; brCtxIE != nil {
@@ -170,7 +170,7 @@ func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messa
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
+		return &gtpv2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
 	log.Printf("Bearer modified with S-GW for Subscriber: %s", session.IMSI)
@@ -178,7 +178,7 @@ func (m *mme) handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg messa
 	return nil
 }
 
-func (m *mme) handleDeleteSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
+func (m *mme) handleDeleteSessionResponse(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if m.mc != nil {
 		m.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()

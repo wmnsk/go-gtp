@@ -6,17 +6,17 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 
 	"github.com/wmnsk/go-gtp/examples/gw-tester/s1mme"
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
@@ -36,7 +36,7 @@ type mme struct {
 	s1mmeListener net.Listener
 	s11Addr       net.Addr
 	s11IP         string
-	s11Conn       *v2.Conn
+	s11Conn       *gtpv2.Conn
 
 	created  chan struct{}
 	modified chan struct{}
@@ -83,7 +83,7 @@ func newMME(cfg *Config) (*mme, error) {
 
 	// setup S11 conn
 	var err error
-	m.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11IP+v2.GTPCPort)
+	m.s11Addr, err = net.ResolveUDPAddr("udp", cfg.LocalAddrs.S11IP+gtpv2.GTPCPort)
 	if err != nil {
 		return nil, err
 	}
@@ -113,13 +113,13 @@ func (m *mme) run(ctx context.Context) error {
 	s1mme.RegisterAttacherServer(srv, m)
 	go func() {
 		if err := srv.Serve(m.s1mmeListener); err != nil {
-			fatalCh <- errors.Errorf("error on serving gRPC: %s", err)
+			fatalCh <- fmt.Errorf("error on serving gRPC: %w", err)
 			return
 		}
 	}()
 	log.Printf("Started serving S1-MME on: %s", m.s1mmeListener.Addr())
 
-	m.s11Conn = v2.NewConn(m.s11Addr, v2.IFTypeS11MMEGTPC, 0)
+	m.s11Conn = gtpv2.NewConn(m.s11Addr, gtpv2.IFTypeS11MMEGTPC, 0)
 	go func() {
 		if err := m.s11Conn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
@@ -128,7 +128,7 @@ func (m *mme) run(ctx context.Context) error {
 	}()
 	log.Printf("Started serving S11 on: %s", m.s11Addr)
 
-	m.s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
+	m.s11Conn.AddHandlers(map[uint8]gtpv2.HandlerFunc{
 		message.MsgTypeCreateSessionResponse: m.handleCreateSessionResponse,
 		message.MsgTypeModifyBearerResponse:  m.handleModifyBearerResponse,
 		message.MsgTypeDeleteSessionResponse: m.handleDeleteSessionResponse,
@@ -203,7 +203,7 @@ func (m *mme) Attach(ctx context.Context, req *s1mme.AttachRequest) (*s1mme.Atta
 		case <-m.created:
 			// go forward
 		case <-time.After(5 * time.Second):
-			errCh <- errors.Errorf("timed out: %s", session.IMSI)
+			errCh <- fmt.Errorf("timed out: %s", session.IMSI)
 		}
 
 		if _, err = m.ModifyBearer(session, sess); err != nil {
@@ -216,10 +216,10 @@ func (m *mme) Attach(ctx context.Context, req *s1mme.AttachRequest) (*s1mme.Atta
 		case <-m.modified:
 			// go forward
 		case <-time.After(5 * time.Second):
-			errCh <- errors.Errorf("timed out: %s", session.IMSI)
+			errCh <- fmt.Errorf("timed out: %s", session.IMSI)
 		}
 
-		s1teid, err := session.GetTEID(v2.IFTypeS1USGWGTPU)
+		s1teid, err := session.GetTEID(gtpv2.IFTypeS1USGWGTPU)
 		if err != nil {
 			errCh <- err
 			return
@@ -227,7 +227,7 @@ func (m *mme) Attach(ctx context.Context, req *s1mme.AttachRequest) (*s1mme.Atta
 
 		rspCh <- &s1mme.AttachResponse{
 			Cause:   s1mme.Cause_SUCCESS,
-			SgwAddr: m.sgw.s1uIP + v2.GTPUPort,
+			SgwAddr: m.sgw.s1uIP + gtpv2.GTPUPort,
 			OTei:    s1teid,
 		}
 	}()
@@ -246,8 +246,8 @@ func (m *mme) Detach(ctx context.Context, req *s1mme.DetachRequest) (*s1mme.Deta
 	return nil, nil
 }
 
-func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
-	br := v2.NewBearer(5, "", &v2.QoSProfile{
+func (m *mme) CreateSession(sess *Session) (*gtpv2.Session, error) {
+	br := gtpv2.NewBearer(5, "", &gtpv2.QoSProfile{
 		PL: 2, QCI: 255, MBRUL: 0xffffffff, MBRDL: 0xffffffff, GBRUL: 0xffffffff, GBRDL: 0xffffffff,
 	})
 	var pci, pvi uint8
@@ -258,7 +258,7 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 		pvi = 1
 	}
 
-	raddr, err := net.ResolveUDPAddr("udp", m.sgw.s11IP+v2.GTPCPort)
+	raddr, err := net.ResolveUDPAddr("udp", m.sgw.s11IP+gtpv2.GTPCPort)
 	if err != nil {
 		return nil, err
 	}
@@ -272,15 +272,15 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 			0, 0, 0, 1, 1, 0, 0, 0,
 			m.enb.mcc, m.enb.mnc, 0, 0, 0, 0, 1, 1, 0, 0,
 		),
-		ie.NewRATType(v2.RATTypeEUTRAN),
+		ie.NewRATType(gtpv2.RATTypeEUTRAN),
 		ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 		m.s11Conn.NewSenderFTEID(m.s11IP, ""),
-		ie.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0, m.pgw.s5cIP, "").WithInstance(1),
+		ie.NewFullyQualifiedTEID(gtpv2.IFTypeS5S8PGWGTPC, 0, m.pgw.s5cIP, "").WithInstance(1),
 		ie.NewAccessPointName(m.apn),
-		ie.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
-		ie.NewPDNType(v2.PDNTypeIPv4),
+		ie.NewSelectionMode(gtpv2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
+		ie.NewPDNType(gtpv2.PDNTypeIPv4),
 		ie.NewPDNAddressAllocation(sess.SrcIP),
-		ie.NewAPNRestriction(v2.APNRestrictionNoExistingContextsorRestriction),
+		ie.NewAPNRestriction(gtpv2.APNRestrictionNoExistingContextsorRestriction),
 		ie.NewAggregateMaximumBitRate(0, 0),
 		ie.NewBearerContext(
 			ie.NewEPSBearerID(br.EBI),
@@ -300,13 +300,13 @@ func (m *mme) CreateSession(sess *Session) (*v2.Session, error) {
 	return session, nil
 }
 
-func (m *mme) ModifyBearer(sess *v2.Session, sub *Session) (*v2.Bearer, error) {
-	teid, err := sess.GetTEID(v2.IFTypeS11S4SGWGTPC)
+func (m *mme) ModifyBearer(sess *gtpv2.Session, sub *Session) (*gtpv2.Bearer, error) {
+	teid, err := sess.GetTEID(gtpv2.IFTypeS11S4SGWGTPC)
 	if err != nil {
 		return nil, err
 	}
 
-	fteid := ie.NewFullyQualifiedTEID(v2.IFTypeS1UeNodeBGTPU, sub.itei, m.enb.s1uIP, "")
+	fteid := ie.NewFullyQualifiedTEID(gtpv2.IFTypeS1UeNodeBGTPU, sub.itei, m.enb.s1uIP, "")
 	if _, err = m.s11Conn.ModifyBearer(
 		teid, sess, ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 		ie.NewBearerContext(ie.NewEPSBearerID(sess.GetDefaultBearer().EBI), fteid, ie.NewPortNumber(2125)),

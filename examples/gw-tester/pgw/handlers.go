@@ -5,17 +5,17 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"strings"
 
-	"github.com/pkg/errors"
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
-func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
+func (p *pgw) handleCreateSessionRequest(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if p.mc != nil {
 		p.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -27,7 +27,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	csReqFromSGW := msg.(*message.CreateSessionRequest)
 
 	// keep session information retrieved from the message.
-	session := v2.NewSession(sgwAddr, &v2.Subscriber{Location: &v2.Location{}})
+	session := gtpv2.NewSession(sgwAddr, &gtpv2.Subscriber{Location: &gtpv2.Location{}})
 	bearer := session.GetDefaultBearer()
 	var err error
 	if imsiIE := csReqFromSGW.IMSI; imsiIE != nil {
@@ -41,16 +41,16 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 		sess, err := c.GetSessionByIMSI(imsi)
 		if err != nil {
 			switch err.(type) {
-			case *v2.UnknownIMSIError:
+			case *gtpv2.UnknownIMSIError:
 				// whole new session. just ignore.
 			default:
-				return errors.Wrap(err, "got something unexpected")
+				return fmt.Errorf("got something unexpected: %w", err)
 			}
 		} else {
 			c.RemoveSession(sess)
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.IMSI}
+		return &gtpv2.RequiredIEMissingError{Type: ie.IMSI}
 	}
 	if msisdnIE := csReqFromSGW.MSISDN; msisdnIE != nil {
 		session.MSISDN, err = msisdnIE.MSISDN()
@@ -58,7 +58,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.MSISDN}
+		return &gtpv2.RequiredIEMissingError{Type: ie.MSISDN}
 	}
 	if meiIE := csReqFromSGW.MEI; meiIE != nil {
 		session.IMEI, err = meiIE.MobileEquipmentIdentity()
@@ -66,7 +66,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.MobileEquipmentIdentity}
+		return &gtpv2.RequiredIEMissingError{Type: ie.MobileEquipmentIdentity}
 	}
 	if apnIE := csReqFromSGW.APN; apnIE != nil {
 		bearer.APN, err = apnIE.AccessPointName()
@@ -74,7 +74,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.AccessPointName}
+		return &gtpv2.RequiredIEMissingError{Type: ie.AccessPointName}
 	}
 	if netIE := csReqFromSGW.ServingNetwork; netIE != nil {
 		session.MCC, err = netIE.MCC()
@@ -86,7 +86,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.ServingNetwork}
+		return &gtpv2.RequiredIEMissingError{Type: ie.ServingNetwork}
 	}
 	if ratIE := csReqFromSGW.RATType; ratIE != nil {
 		session.RATType, err = ratIE.RATType()
@@ -94,16 +94,16 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.RATType}
+		return &gtpv2.RequiredIEMissingError{Type: ie.RATType}
 	}
 	if fteidcIE := csReqFromSGW.SenderFTEIDC; fteidcIE != nil {
 		teid, err := fteidcIE.TEID()
 		if err != nil {
 			return err
 		}
-		session.AddTEID(v2.IFTypeS5S8SGWGTPC, teid)
+		session.AddTEID(gtpv2.IFTypeS5S8SGWGTPC, teid)
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
+		return &gtpv2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
 
 	var s5sgwuIP string
@@ -134,7 +134,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
+		return &gtpv2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
 	if paaIE := csReqFromSGW.PAA; paaIE != nil {
@@ -143,25 +143,25 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.PDNAddressAllocation}
+		return &gtpv2.RequiredIEMissingError{Type: ie.PDNAddressAllocation}
 	}
 
 	cIP := strings.Split(c.LocalAddr().String(), ":")[0]
 	uIP := strings.Split(p.s5u, ":")[0]
 	s5cFTEID := c.NewSenderFTEID(cIP, "").WithInstance(1)
-	s5uFTEID := p.uConn.NewFTEID(v2.IFTypeS5S8PGWGTPU, uIP, "").WithInstance(2)
-	s5sgwTEID, err := session.GetTEID(v2.IFTypeS5S8SGWGTPC)
+	s5uFTEID := p.uConn.NewFTEID(gtpv2.IFTypeS5S8PGWGTPU, uIP, "").WithInstance(2)
+	s5sgwTEID, err := session.GetTEID(gtpv2.IFTypeS5S8SGWGTPC)
 	if err != nil {
 		return err
 	}
 	csRspFromPGW := message.NewCreateSessionResponse(
 		s5sgwTEID, 0,
-		ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+		ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 		s5cFTEID,
 		ie.NewPDNAddressAllocation(bearer.SubscriberIP),
-		ie.NewAPNRestriction(v2.APNRestrictionPublic2),
+		ie.NewAPNRestriction(gtpv2.APNRestrictionPublic2),
 		ie.NewBearerContext(
-			ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+			ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 			ie.NewEPSBearerID(bearer.EBI),
 			s5uFTEID,
 			ie.NewChargingID(bearer.ChargingID),
@@ -170,8 +170,8 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	if csReqFromSGW.SGWFQCSID != nil {
 		csRspFromPGW.PGWFQCSID = ie.NewFullyQualifiedCSID(cIP, 1)
 	}
-	session.AddTEID(v2.IFTypeS5S8PGWGTPC, s5cFTEID.MustTEID())
-	session.AddTEID(v2.IFTypeS5S8PGWGTPU, s5uFTEID.MustTEID())
+	session.AddTEID(gtpv2.IFTypeS5S8PGWGTPC, s5cFTEID.MustTEID())
+	session.AddTEID(gtpv2.IFTypeS5S8PGWGTPU, s5uFTEID.MustTEID())
 
 	if err := c.RespondTo(sgwAddr, csReqFromSGW, csRspFromPGW); err != nil {
 		return err
@@ -180,7 +180,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 		p.mc.messagesSent.WithLabelValues(sgwAddr.String(), csRspFromPGW.MessageTypeName()).Inc()
 	}
 
-	s5pgwTEID, err := session.GetTEID(v2.IFTypeS5S8PGWGTPC)
+	s5pgwTEID, err := session.GetTEID(gtpv2.IFTypeS5S8PGWGTPC)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func (p *pgw) handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	return nil
 }
 
-func (p *pgw) handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
+func (p *pgw) handleDeleteSessionRequest(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	log.Printf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 	if p.mc != nil {
 		p.mc.messagesReceived.WithLabelValues(sgwAddr.String(), msg.MessageTypeName()).Inc()
@@ -214,7 +214,7 @@ func (p *pgw) handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	if err != nil {
 		dsr := message.NewDeleteSessionResponse(
 			0, 0,
-			ie.NewCause(v2.CauseIMSIIMEINotKnown, 0, 0, 0, nil),
+			ie.NewCause(gtpv2.CauseIMSIIMEINotKnown, 0, 0, 0, nil),
 		)
 		if err := c.RespondTo(sgwAddr, msg, dsr); err != nil {
 			return err
@@ -224,14 +224,14 @@ func (p *pgw) handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg messa
 	}
 
 	// respond to S-GW with DeleteSessionResponse.
-	teid, err := session.GetTEID(v2.IFTypeS5S8SGWGTPC)
+	teid, err := session.GetTEID(gtpv2.IFTypeS5S8SGWGTPC)
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
 	dsr := message.NewDeleteSessionResponse(
 		teid, 0,
-		ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+		ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 	)
 	if err := c.RespondTo(sgwAddr, msg, dsr); err != nil {
 		return err
