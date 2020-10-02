@@ -6,12 +6,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 
@@ -113,7 +113,7 @@ func (m *mme) run(ctx context.Context) error {
 	s1mme.RegisterAttacherServer(srv, m)
 	go func() {
 		if err := srv.Serve(m.s1mmeListener); err != nil {
-			fatalCh <- errors.Errorf("error on serving gRPC: %s", err)
+			fatalCh <- fmt.Errorf("error on serving gRPC: %w", err)
 			return
 		}
 	}()
@@ -203,7 +203,7 @@ func (m *mme) Attach(ctx context.Context, req *s1mme.AttachRequest) (*s1mme.Atta
 		case <-m.created:
 			// go forward
 		case <-time.After(5 * time.Second):
-			errCh <- errors.Errorf("timed out: %s", session.IMSI)
+			errCh <- fmt.Errorf("timed out: %s", session.IMSI)
 		}
 
 		if _, err = m.ModifyBearer(session, sess); err != nil {
@@ -216,7 +216,7 @@ func (m *mme) Attach(ctx context.Context, req *s1mme.AttachRequest) (*s1mme.Atta
 		case <-m.modified:
 			// go forward
 		case <-time.After(5 * time.Second):
-			errCh <- errors.Errorf("timed out: %s", session.IMSI)
+			errCh <- fmt.Errorf("timed out: %s", session.IMSI)
 		}
 
 		s1teid, err := session.GetTEID(v2.IFTypeS1USGWGTPU)
