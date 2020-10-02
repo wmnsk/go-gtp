@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -13,10 +14,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 	v1 "github.com/wmnsk/go-gtp/gtpv1"
-	"github.com/wmnsk/go-gtp/gtpv2/message"
-
-	"github.com/pkg/errors"
 	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
 type pgw struct {
@@ -153,7 +152,7 @@ func (p *pgw) close() error {
 	close(p.errCh)
 
 	if len(errs) > 0 {
-		return errors.Errorf("errors while closing S-GW: %v", errs)
+		return fmt.Errorf("errors while closing S-GW: %+v", errs)
 	}
 	return nil
 }
