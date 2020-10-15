@@ -3,7 +3,7 @@ module github.com/wmnsk/go-gtp
 go 1.15
 
 require (
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.2
 	github.com/pascaldekloe/goe v0.1.0
 	github.com/pkg/errors v0.9.1
