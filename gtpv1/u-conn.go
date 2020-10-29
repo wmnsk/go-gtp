@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"os"
 	"sync"
 	"time"
 
@@ -42,6 +43,7 @@ type UPlaneConn struct {
 
 	// for Linux kernel GTP with netlink
 	kernGTPEnabled bool
+	kernGTPFile    *os.File
 	errIndEnabled  bool
 	GTPLink        *netlink.GTP
 }
@@ -303,6 +305,9 @@ func (u *UPlaneConn) Close() error {
 
 	// u.pktConn.Close() may block for some reason in case kernel GTP-U is enabled...
 	if u.kernGTPEnabled {
+		if err := u.kernGTPFile.Close(); err != nil {
+			logf("error closing GTPFile: %s", err)
+		}
 		if err := netlink.LinkDel(u.GTPLink); err != nil {
 			logf("error deleting GTPLink: %s", err)
 		}

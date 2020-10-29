@@ -59,14 +59,18 @@ func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
 	}
 
 	if err := netlink.LinkAdd(u.GTPLink); err != nil {
+		_ = f.Close()
 		return errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
 	}
 	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
+		_ = f.Close()
 		return errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
 	}
 	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
+		_ = f.Close()
 		return errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
 	}
+	u.kernGTPFile = f
 	u.kernGTPEnabled = true
 
 	// remove relayed userland tunnels if exists
