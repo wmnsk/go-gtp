@@ -100,11 +100,10 @@ func TestGetIMSIByTEID(t *testing.T) {
 }
 
 func TestRemoveSession(t *testing.T) {
-	conn := *testConn // copy testConn
-	conn.RemoveSession(sessions[0])
+	testConn.RemoveSession(sessions[0])
 
-	if conn.SessionCount() != len(sessions)-1 {
-		t.Errorf("Session not removed expectedly: %d, %v", conn.SessionCount(), conn.Sessions())
+	if testConn.SessionCount() != len(sessions)-1 {
+		t.Errorf("Session not removed expectedly: %d, %v", testConn.SessionCount(), testConn.Sessions())
 	}
 
 	for i := 2; i <= testConn.SessionCount(); i++ {
@@ -118,14 +117,19 @@ func TestRemoveSession(t *testing.T) {
 			t.Errorf("Got wrong session at %d, %s", i, sess.IMSI)
 		}
 	}
+
+	// add the session again
+	s := gtpv2.NewSession(dummyAddr, &gtpv2.Subscriber{IMSI: "001011234567891"})
+	_ = s.Activate()
+	s.AddTEID(gtpv2.IFTypeS11MMEGTPC, uint32(0))
+	testConn.RegisterSession(0, s)
 }
 
 func TestRemoveSessionByIMSI(t *testing.T) {
-	conn := *testConn // copy testConn
-	conn.RemoveSessionByIMSI("001011234567891")
+	testConn.RemoveSessionByIMSI("001011234567891")
 
-	if conn.SessionCount() != len(sessions)-1 {
-		t.Errorf("Session not removed expectedly: %d, %v", conn.SessionCount(), conn.Sessions())
+	if testConn.SessionCount() != len(sessions)-1 {
+		t.Errorf("Session not removed expectedly: %d, %v", testConn.SessionCount(), testConn.Sessions())
 	}
 
 	for i := 2; i <= testConn.SessionCount(); i++ {
@@ -139,4 +143,10 @@ func TestRemoveSessionByIMSI(t *testing.T) {
 			t.Errorf("Got wrong session at %d, %s", i, sess.IMSI)
 		}
 	}
+
+	// add the session again
+	s := gtpv2.NewSession(dummyAddr, &gtpv2.Subscriber{IMSI: "001011234567891"})
+	_ = s.Activate()
+	s.AddTEID(gtpv2.IFTypeS11MMEGTPC, uint32(0))
+	testConn.RegisterSession(0, s)
 }
