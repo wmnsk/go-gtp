@@ -50,7 +50,7 @@ func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
 		return errors.Wrapf(err, "failed to retrieve file from conn")
 	}
 
-	u.GTPLink = &netlink.GTP{
+	u.KernelGTP.Link = &netlink.GTP{
 		LinkAttrs: netlink.LinkAttrs{
 			Name: devname,
 		},
@@ -58,20 +58,20 @@ func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
 		Role: int(role),
 	}
 
-	if err := netlink.LinkAdd(u.GTPLink); err != nil {
+	if err := netlink.LinkAdd(u.KernelGTP.Link); err != nil {
 		_ = f.Close()
-		return errors.Wrapf(err, "failed to add device: %s", u.GTPLink.Name)
+		return errors.Wrapf(err, "failed to add device: %s", u.KernelGTP.Link.Name)
 	}
-	if err := netlink.LinkSetUp(u.GTPLink); err != nil {
+	if err := netlink.LinkSetUp(u.KernelGTP.Link); err != nil {
 		_ = f.Close()
-		return errors.Wrapf(err, "failed to setup device: %s", u.GTPLink.Name)
+		return errors.Wrapf(err, "failed to setup device: %s", u.KernelGTP.Link.Name)
 	}
-	if err := netlink.LinkSetMTU(u.GTPLink, 1500); err != nil {
+	if err := netlink.LinkSetMTU(u.KernelGTP.Link, 1500); err != nil {
 		_ = f.Close()
-		return errors.Wrapf(err, "failed to set MTU for device: %s", u.GTPLink.Name)
+		return errors.Wrapf(err, "failed to set MTU for device: %s", u.KernelGTP.Link.Name)
 	}
-	u.kernGTPFile = f
-	u.kernGTPEnabled = true
+	u.KernelGTP.connFile = f
+	u.KernelGTP.enabled = true
 
 	// remove relayed userland tunnels if exists
 	if len(u.relayMap) != 0 {
@@ -85,7 +85,7 @@ func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
 
 // AddTunnel adds a GTP-U tunnel with Linux Kernel GTP-U via netlink.
 func (u *UPlaneConn) AddTunnel(peerIP, msIP net.IP, otei, itei uint32) error {
-	if !u.kernGTPEnabled {
+	if !u.KernelGTP.enabled {
 		return errors.New("cannot call AddTunnel when not using Kernel GTP-U")
 	}
 
@@ -96,7 +96,7 @@ func (u *UPlaneConn) AddTunnel(peerIP, msIP net.IP, otei, itei uint32) error {
 		OTEI:        otei,
 		ITEI:        itei,
 	}
-	if err := netlink.GTPPDPAdd(u.GTPLink, pdp); err != nil {
+	if err := netlink.GTPPDPAdd(u.KernelGTP.Link, pdp); err != nil {
 		return errors.Wrapf(err, "failed to add tunnel for %s with %s", msIP, peerIP)
 	}
 	return nil
@@ -106,17 +106,17 @@ func (u *UPlaneConn) AddTunnel(peerIP, msIP net.IP, otei, itei uint32) error {
 // If there is already an existing tunnel that has the same msIP and/or incoming TEID,
 // this deletes it before adding the tunnel.
 func (u *UPlaneConn) AddTunnelOverride(peerIP, msIP net.IP, otei, itei uint32) error {
-	if !u.kernGTPEnabled {
+	if !u.KernelGTP.enabled {
 		return errors.New("cannot call AddTunnelOverride when not using Kernel GTP-U")
 	}
 
-	if pdp, _ := netlink.GTPPDPByMSAddress(u.GTPLink, msIP); pdp != nil {
+	if pdp, _ := netlink.GTPPDPByMSAddress(u.KernelGTP.Link, msIP); pdp != nil {
 		// do nothing even this fails
-		_ = netlink.GTPPDPDel(u.GTPLink, pdp)
+		_ = netlink.GTPPDPDel(u.KernelGTP.Link, pdp)
 	}
-	if pdp, _ := netlink.GTPPDPByITEI(u.GTPLink, int(itei)); pdp != nil {
+	if pdp, _ := netlink.GTPPDPByITEI(u.KernelGTP.Link, int(itei)); pdp != nil {
 		// do nothing even this fails
-		_ = netlink.GTPPDPDel(u.GTPLink, pdp)
+		_ = netlink.GTPPDPDel(u.KernelGTP.Link, pdp)
 	}
 
 	return u.AddTunnel(peerIP, msIP, otei, itei)
@@ -124,16 +124,16 @@ func (u *UPlaneConn) AddTunnelOverride(peerIP, msIP net.IP, otei, itei uint32) e
 
 // DelTunnelByITEI deletes a Linux Kernel GTP-U tunnel specified with the incoming TEID.
 func (u *UPlaneConn) DelTunnelByITEI(itei uint32) error {
-	if !u.kernGTPEnabled {
+	if !u.KernelGTP.enabled {
 		return errors.New("cannot call DelTunnel when not using Kernel GTP-U")
 	}
 
-	pdp, err := netlink.GTPPDPByITEI(u.GTPLink, int(itei))
+	pdp, err := netlink.GTPPDPByITEI(u.KernelGTP.Link, int(itei))
 	if err != nil {
 		return errors.Wrapf(err, "failed to delete tunnel with %d", itei)
 	}
 
-	if err := netlink.GTPPDPDel(u.GTPLink, pdp); err != nil {
+	if err := netlink.GTPPDPDel(u.KernelGTP.Link, pdp); err != nil {
 		return errors.Wrapf(err, "failed to delete tunnel for %s", pdp)
 	}
 
@@ -143,17 +143,17 @@ func (u *UPlaneConn) DelTunnelByITEI(itei uint32) error {
 
 // DelTunnelByMSAddress deletes a Linux Kernel GTP-U tunnel specified with the subscriber's IP.
 func (u *UPlaneConn) DelTunnelByMSAddress(msIP net.IP) error {
-	if !u.kernGTPEnabled {
+	if !u.KernelGTP.enabled {
 		return errors.New("cannot call DelTunnel when not using Kernel GTP-U")
 	}
 
-	pdp, err := netlink.GTPPDPByMSAddress(u.GTPLink, msIP)
+	pdp, err := netlink.GTPPDPByMSAddress(u.KernelGTP.Link, msIP)
 	if err != nil {
 		return errors.Wrapf(err, "failed to delete tunnel with %s", msIP)
 	}
 	itei := pdp.ITEI
 
-	if err := netlink.GTPPDPDel(u.GTPLink, pdp); err != nil {
+	if err := netlink.GTPPDPDel(u.KernelGTP.Link, pdp); err != nil {
 		return errors.Wrapf(err, "failed to delete tunnel for %s", pdp)
 	}
 
