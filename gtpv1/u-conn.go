@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"os"
 	"sync"
 	"time"
 
@@ -40,10 +41,17 @@ type UPlaneConn struct {
 
 	relayMap map[uint32]*peer
 
+	errIndEnabled bool
+
 	// for Linux kernel GTP with netlink
-	kernGTPEnabled bool
-	errIndEnabled  bool
-	GTPLink        *netlink.GTP
+	KernelGTP
+}
+
+// KernelGTP consists of the Linux Kernel GTP-U related objects.
+type KernelGTP struct {
+	enabled  bool
+	connFile *os.File
+	Link     *netlink.GTP
 }
 
 // NewUPlaneConn creates a new UPlaneConn used for server. On client side, use DialUPlane instead.
@@ -302,8 +310,11 @@ func (u *UPlaneConn) Close() error {
 	close(u.closeCh)
 
 	// u.pktConn.Close() may block for some reason in case kernel GTP-U is enabled...
-	if u.kernGTPEnabled {
-		if err := netlink.LinkDel(u.GTPLink); err != nil {
+	if u.KernelGTP.enabled {
+		if err := u.KernelGTP.connFile.Close(); err != nil {
+			logf("error closing GTPFile: %s", err)
+		}
+		if err := netlink.LinkDel(u.KernelGTP.Link); err != nil {
 			logf("error deleting GTPLink: %s", err)
 		}
 		go func() {

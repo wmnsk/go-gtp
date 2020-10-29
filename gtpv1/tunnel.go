@@ -19,7 +19,7 @@ type peer struct {
 //
 // By using this, owner of UPlaneConn won't be able to Read and Write the packets that has teidIn.
 func (u *UPlaneConn) RelayTo(c *UPlaneConn, teidIn, teidOut uint32, raddr net.Addr) error {
-	if u.kernGTPEnabled {
+	if u.KernelGTP.enabled {
 		return errors.New("cannot call RelayTo when using Kernel GTP-U")
 	}
 
@@ -34,7 +34,7 @@ func (u *UPlaneConn) RelayTo(c *UPlaneConn, teidIn, teidOut uint32, raddr net.Ad
 
 // CloseRelay stops relaying T-PDU from a conn to conn.
 func (u *UPlaneConn) CloseRelay(teidIn uint32) error {
-	if u.kernGTPEnabled {
+	if u.KernelGTP.enabled {
 		return errors.New("cannot call CloseRelay when using Kernel GTP-U")
 	}
 
