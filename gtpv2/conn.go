@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -153,20 +154,27 @@ func (c *Conn) closed() <-chan struct{} {
 }
 
 func (c *Conn) serve(ctx context.Context) error {
-	buf := make([]byte, 1500)
-	for {
-		select {
+	go func() {
+		select { // ctx is canceled or Close() is called
 		case <-ctx.Done():
-			return nil
 		case <-c.closed():
-			return nil
-		default:
-			// do nothing and go forward.
 		}
 
+		if err := c.pktConn.Close(); err != nil {
+			logf("error closing the underlying conn: %s", err)
+		}
+	}()
+
+	buf := make([]byte, 1500)
+	for {
 		n, raddr, err := c.pktConn.ReadFrom(buf)
 		if err != nil {
 			if err == io.EOF {
+				return nil
+			}
+			// TODO: Use net.ErrClosed instead (available from Go 1.16).
+			// https://github.com/golang/go/commit/e9ad52e46dee4b4f9c73ff44f44e1e234815800f
+			if strings.Contains(err.Error(), "use of closed network connection") {
 				return nil
 			}
 			return errors.Errorf("error reading from Conn %s: %s", c.LocalAddr(), err)
@@ -217,14 +225,8 @@ func (c *Conn) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.msgHandlerMap = newMsgHandlerMap(
-		map[uint8]HandlerFunc{},
-	)
 	close(c.closeCh)
 
-	if err := c.pktConn.Close(); err != nil {
-		logf("error closing the underlying conn: %s", err)
-	}
 	return nil
 }
 
