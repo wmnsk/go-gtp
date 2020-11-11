@@ -5,9 +5,10 @@
 package gtpv1
 
 import (
+	"errors"
+	"fmt"
 	"net"
 
-	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 )
 
@@ -47,7 +48,7 @@ func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
 
 	f, err := u.pktConn.(*net.UDPConn).File()
 	if err != nil {
-		return errors.Wrapf(err, "failed to retrieve file from conn")
+		return fmt.Errorf("failed to retrieve file from conn: %w", err)
 	}
 
 	u.KernelGTP.Link = &netlink.GTP{
@@ -60,15 +61,15 @@ func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
 
 	if err := netlink.LinkAdd(u.KernelGTP.Link); err != nil {
 		_ = f.Close()
-		return errors.Wrapf(err, "failed to add device: %s", u.KernelGTP.Link.Name)
+		return fmt.Errorf("failed to add device %s: %w", u.KernelGTP.Link.Name, err)
 	}
 	if err := netlink.LinkSetUp(u.KernelGTP.Link); err != nil {
 		_ = f.Close()
-		return errors.Wrapf(err, "failed to setup device: %s", u.KernelGTP.Link.Name)
+		return fmt.Errorf("failed to setup device %s: %w", u.KernelGTP.Link.Name, err)
 	}
 	if err := netlink.LinkSetMTU(u.KernelGTP.Link, 1500); err != nil {
 		_ = f.Close()
-		return errors.Wrapf(err, "failed to set MTU for device: %s", u.KernelGTP.Link.Name)
+		return fmt.Errorf("failed to set MTU for device %s: %w", u.KernelGTP.Link.Name, err)
 	}
 	u.KernelGTP.connFile = f
 	u.KernelGTP.enabled = true
@@ -97,7 +98,7 @@ func (u *UPlaneConn) AddTunnel(peerIP, msIP net.IP, otei, itei uint32) error {
 		ITEI:        itei,
 	}
 	if err := netlink.GTPPDPAdd(u.KernelGTP.Link, pdp); err != nil {
-		return errors.Wrapf(err, "failed to add tunnel for %s with %s", msIP, peerIP)
+		return fmt.Errorf("failed to add tunnel for %s with %s: %w", msIP, peerIP, err)
 	}
 	return nil
 }
@@ -130,11 +131,11 @@ func (u *UPlaneConn) DelTunnelByITEI(itei uint32) error {
 
 	pdp, err := netlink.GTPPDPByITEI(u.KernelGTP.Link, int(itei))
 	if err != nil {
-		return errors.Wrapf(err, "failed to delete tunnel with %d", itei)
+		return fmt.Errorf("failed to delete tunnel with %d: %w", itei, err)
 	}
 
 	if err := netlink.GTPPDPDel(u.KernelGTP.Link, pdp); err != nil {
-		return errors.Wrapf(err, "failed to delete tunnel for %s", pdp)
+		return fmt.Errorf("failed to delete tunnel for %s: %w", pdp, err)
 	}
 
 	u.iteiMap.delete(itei)
@@ -149,12 +150,12 @@ func (u *UPlaneConn) DelTunnelByMSAddress(msIP net.IP) error {
 
 	pdp, err := netlink.GTPPDPByMSAddress(u.KernelGTP.Link, msIP)
 	if err != nil {
-		return errors.Wrapf(err, "failed to delete tunnel with %s", msIP)
+		return fmt.Errorf("failed to delete tunnel with %s: %w", msIP, err)
 	}
 	itei := pdp.ITEI
 
 	if err := netlink.GTPPDPDel(u.KernelGTP.Link, pdp); err != nil {
-		return errors.Wrapf(err, "failed to delete tunnel for %s", pdp)
+		return fmt.Errorf("failed to delete tunnel for %s: %w", pdp, err)
 	}
 
 	u.iteiMap.delete(itei)

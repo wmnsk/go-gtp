@@ -8,12 +8,13 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
@@ -153,23 +154,30 @@ func (c *Conn) closed() <-chan struct{} {
 }
 
 func (c *Conn) serve(ctx context.Context) error {
-	buf := make([]byte, 1500)
-	for {
-		select {
+	go func() {
+		select { // ctx is canceled or Close() is called
 		case <-ctx.Done():
-			return nil
 		case <-c.closed():
-			return nil
-		default:
-			// do nothing and go forward.
 		}
 
+		if err := c.pktConn.Close(); err != nil {
+			logf("error closing the underlying conn: %s", err)
+		}
+	}()
+
+	buf := make([]byte, 1500)
+	for {
 		n, raddr, err := c.pktConn.ReadFrom(buf)
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil
 			}
-			return errors.Errorf("error reading from Conn %s: %s", c.LocalAddr(), err)
+			// TODO: Use net.ErrClosed instead (available from Go 1.16).
+			// https://github.com/golang/go/commit/e9ad52e46dee4b4f9c73ff44f44e1e234815800f
+			if strings.Contains(err.Error(), "use of closed network connection") {
+				return nil
+			}
+			return fmt.Errorf("error reading from Conn %s: %s", c.LocalAddr(), err)
 		}
 
 		raw := make([]byte, n)
@@ -217,14 +225,8 @@ func (c *Conn) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.msgHandlerMap = newMsgHandlerMap(
-		map[uint8]HandlerFunc{},
-	)
 	close(c.closeCh)
 
-	if err := c.pktConn.Close(); err != nil {
-		logf("error closing the underlying conn: %s", err)
-	}
 	return nil
 }
 
@@ -302,7 +304,7 @@ func (c *Conn) AddHandlers(funcs map[uint8]HandlerFunc) {
 func (c *Conn) handleMessage(senderAddr net.Addr, msg message.Message) error {
 	if c.validationEnabled {
 		if err := c.validate(senderAddr, msg); err != nil {
-			return errors.Errorf("failed to validate %s: %v", msg.MessageTypeName(), err)
+			return fmt.Errorf("failed to validate %s: %v", msg.MessageTypeName(), err)
 		}
 	}
 
@@ -312,7 +314,7 @@ func (c *Conn) handleMessage(senderAddr net.Addr, msg message.Message) error {
 	}
 
 	if err := handle(c, senderAddr, msg); err != nil {
-		return errors.Errorf("failed to handle %s: %v", msg.MessageTypeName(), err)
+		return fmt.Errorf("failed to handle %s: %v", msg.MessageTypeName(), err)
 	}
 
 	return nil
@@ -350,9 +352,9 @@ func (c *Conn) validate(senderAddr net.Addr, msg message.Message) error {
 	// check GTP version
 	if msg.Version() != 2 {
 		if err := c.VersionNotSupportedIndication(senderAddr, msg); err != nil {
-			return errors.Errorf("failed to respond with VersionNotSupportedIndication: %s", err)
+			return fmt.Errorf("failed to respond with VersionNotSupportedIndication: %s", err)
 		}
-		return errors.Errorf("received an invalid version(%d) of message: %v", msg.Version(), msg)
+		return fmt.Errorf("received an invalid version(%d) of message: %v", msg.Version(), msg)
 	}
 
 	// check if TEID is known or not
@@ -373,12 +375,12 @@ func (c *Conn) SendMessageTo(msg message.Message, addr net.Addr) (uint32, error)
 	payload, err := message.Marshal(msg)
 	if err != nil {
 		seq = c.DecSequence()
-		return seq, errors.Wrapf(err, "failed to send %T", msg)
+		return seq, fmt.Errorf("failed to send %T: %w", msg, err)
 	}
 
 	if _, err := c.WriteTo(payload, addr); err != nil {
 		seq = c.DecSequence()
-		return seq, errors.Wrapf(err, "failed to send %T", msg)
+		return seq, fmt.Errorf("failed to send %T: %w", msg, err)
 	}
 	return seq, nil
 }

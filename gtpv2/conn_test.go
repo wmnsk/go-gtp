@@ -6,12 +6,12 @@ package gtpv2_test
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
@@ -43,7 +43,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *gtpv2.C
 						return err
 					}
 					if imsi != "123451234567890" {
-						return errors.Errorf("unexpected IMSI: %s", imsi)
+						return fmt.Errorf("unexpected IMSI: %s", imsi)
 					}
 					session.IMSI = imsi
 				} else {
@@ -56,7 +56,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *gtpv2.C
 						return err
 					}
 					if ip != "127.0.0.1" {
-						return errors.Errorf("unexpected IP in F-TEID: %s", ip)
+						return fmt.Errorf("unexpected IP in F-TEID: %s", ip)
 					}
 
 					ifType, err := fteidcIE.InterfaceType()
@@ -155,7 +155,7 @@ func TestCreateSession(t *testing.T) {
 					return err
 				}
 				if it != gtpv2.IFTypeS11S4SGWGTPC {
-					return errors.Errorf("invalid InterfaceType: %v", it)
+					return fmt.Errorf("invalid InterfaceType: %v", it)
 				}
 				otei, err := fteidIE.TEID()
 				if err != nil {
@@ -168,7 +168,7 @@ func TestCreateSession(t *testing.T) {
 					return err
 				}
 				if ip != "127.0.0.2" {
-					return errors.Errorf("unexpected IP in F-TEID: %s", ip)
+					return fmt.Errorf("unexpected IP in F-TEID: %s", ip)
 				}
 			} else {
 				return &gtpv2.RequiredIEMissingError{Type: ie.Cause}

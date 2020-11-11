@@ -4,7 +4,7 @@
 
 package message
 
-import "github.com/pkg/errors"
+import "errors"
 
 // Error definitions.
 var (
