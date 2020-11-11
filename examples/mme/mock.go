@@ -5,12 +5,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 
 	v1 "github.com/wmnsk/go-gtp/gtpv1"
 	v2 "github.com/wmnsk/go-gtp/gtpv2"
@@ -58,7 +57,7 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 		case *v2.UnknownIMSIError:
 			// whole new session. just ignore.
 		default:
-			return errors.Wrap(err, "got something unexpected")
+			return fmt.Errorf("got something unexpected: %w", err)
 		}
 	} else {
 		teid, err := sess.GetTEID(v2.IFTypeS11S4SGWGTPC)
@@ -67,7 +66,7 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 		}
 		// send Delete Session Request to cleanup sessions in S/P-GW.
 		if _, err := c.DeleteSession(teid, sess); err != nil {
-			return errors.Wrap(err, "got something unexpected")
+			return fmt.Errorf("got something unexpected: %w", err)
 		}
 		c.RemoveSession(sess)
 	}

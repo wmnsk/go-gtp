@@ -5,7 +5,8 @@
 package message
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/wmnsk/go-gtp/gtpv0/ie"
 )
 
@@ -93,7 +94,7 @@ func (d *DeletePDPContextRequest) UnmarshalBinary(b []byte) error {
 	var err error
 	d.Header, err = ParseHeader(b)
 	if err != nil {
-		return errors.Wrap(err, "failed to Parse Header:")
+		return fmt.Errorf("failed to Parse Header: %w", err)
 	}
 	if len(d.Header.Payload) < 2 {
 		return nil

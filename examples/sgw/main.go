@@ -31,8 +31,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/pkg/errors"
-
 	v1 "github.com/wmnsk/go-gtp/gtpv1"
 	v2 "github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
@@ -114,7 +112,7 @@ func (s *sGateway) run() error {
 		case str := <-s.loggerCh:
 			log.Println(str)
 		case err := <-s.errCh:
-			log.Printf("Warning: %s", errors.WithStack(err))
+			log.Printf("Warning: %v", err)
 		case <-time.After(10 * time.Second):
 			var activeIMSIs []string
 			for _, sess := range s.s11Conn.Sessions() {

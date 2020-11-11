@@ -5,9 +5,8 @@
 package ie
 
 import (
+	"errors"
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 // Error definitions.

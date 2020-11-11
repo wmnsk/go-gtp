@@ -7,9 +7,7 @@ Package message provides encoding/decoding feature of GTPv2 protocol.
 */
 package message
 
-import (
-	"github.com/pkg/errors"
-)
+import "fmt"
 
 // Message Type definitions.
 const (
@@ -382,7 +380,7 @@ func Parse(b []byte) (Message, error) {
 	}
 
 	if err := m.UnmarshalBinary(b); err != nil {
-		return nil, errors.Wrap(err, "failed to decode GTPv2 Message")
+		return nil, fmt.Errorf("failed to decode GTPv2 Message: %w", err)
 	}
 	return m, nil
 }

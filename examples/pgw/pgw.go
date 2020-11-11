@@ -10,8 +10,6 @@ import (
 	"strings"
 
 	v1 "github.com/wmnsk/go-gtp/gtpv1"
-
-	"github.com/pkg/errors"
 	v2 "github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
@@ -70,7 +68,7 @@ func handleCreateSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg message.Messag
 			case *v2.UnknownIMSIError:
 				// whole new session. just ignore.
 			default:
-				return errors.Wrap(err, "got something unexpected")
+				return fmt.Errorf("got something unexpected: %w", err)
 			}
 		} else {
 			c.RemoveSession(sess)
@@ -251,7 +249,7 @@ func handleDeleteSessionRequest(c *v2.Conn, sgwAddr net.Addr, msg message.Messag
 	// respond to S-GW with DeleteSessionResponse.
 	teid, err := session.GetTEID(v2.IFTypeS5S8SGWGTPC)
 	if err != nil {
-		loggerCh <- errors.Wrap(err, "Error").Error()
+		loggerCh <- fmt.Sprintf("Error: %v", err)
 		return nil
 	}
 	dsr := message.NewDeleteSessionResponse(

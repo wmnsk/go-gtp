@@ -8,7 +8,7 @@ Package message provides encoding/decoding feature of GTPv0 protocol.
 package message
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 )
 
 // MessageType definitions.
@@ -184,7 +184,7 @@ func Parse(b []byte) (Message, error) {
 	}
 
 	if err := g.UnmarshalBinary(b); err != nil {
-		return nil, errors.Wrap(err, "failed to Parse Message:")
+		return nil, fmt.Errorf("failed to Parse Message: %w", err)
 	}
 	return g, nil
 }

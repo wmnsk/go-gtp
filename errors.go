@@ -4,7 +4,7 @@
 
 package gtp
 
-import "github.com/pkg/errors"
+import "errors"
 
 // Common error definitions.
 var (

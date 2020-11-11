@@ -8,6 +8,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -15,7 +17,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
 	"github.com/wmnsk/go-gtp/gtpv1/message"
@@ -196,7 +197,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 
 		n, raddr, err := u.pktConn.ReadFrom(buf)
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil
 			}
 			// TODO: Use net.ErrClosed instead (available from Go 1.16).
@@ -204,7 +205,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				return nil
 			}
-			return errors.Errorf("error reading from UPlaneConn %s: %v", u.LocalAddr(), err)
+			return fmt.Errorf("error reading from UPlaneConn %s: %v", u.LocalAddr(), err)
 		}
 
 		raw := make([]byte, n)
@@ -408,7 +409,7 @@ func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg message.Message) err
 	}
 
 	if err := handle(u, senderAddr, msg); err != nil {
-		return errors.Errorf("failed to handle %s: %v", msg.MessageTypeName(), err)
+		return fmt.Errorf("failed to handle %s: %v", msg.MessageTypeName(), err)
 	}
 
 	return nil

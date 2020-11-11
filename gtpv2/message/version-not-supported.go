@@ -5,6 +5,8 @@
 package message
 
 import (
+	"errors"
+
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
@@ -87,7 +89,7 @@ func (v *VersionNotSupportedIndication) UnmarshalBinary(b []byte) error {
 
 	decodedIEs, err := ie.ParseMultiIEs(v.Header.Payload)
 	if err != nil {
-		if err == ErrTooShortToParse {
+		if errors.Is(err, ErrTooShortToParse) {
 			return nil
 		}
 		return err

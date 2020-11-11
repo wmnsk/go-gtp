@@ -10,7 +10,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/pkg/errors"
 	v2 "github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
@@ -77,7 +76,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 			case *v2.UnknownIMSIError:
 				// whole new session. just ignore.
 			default:
-				return errors.Wrap(err, "got something unexpected")
+				return fmt.Errorf("got something unexpected: %w", err)
 			}
 		} else {
 			s11Conn.RemoveSession(sess)
@@ -134,7 +133,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 
 	s11IP, _, err := net.SplitHostPort(*s11 + v2.GTPCPort)
 	if err != nil {
-		return errors.Wrap(err, "failed to get IP for S11")
+		return fmt.Errorf("failed to get IP for S11: %w", err)
 	}
 	senderFTEID := s11Conn.NewSenderFTEID(s11IP, "")
 	s11sgwTEID := senderFTEID.MustTEID()
@@ -207,7 +206,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	// if everything in CreateSessionResponse seems OK, relay it to MME.
 	s1uIP, _, err := net.SplitHostPort(*s1u + v2.GTPCPort)
 	if err != nil {
-		return errors.Wrap(err, "failed to get IP for S1-U")
+		return fmt.Errorf("failed to get IP for S1-U: %w", err)
 	}
 	s1usgwFTEID := sgw.s1uConn.NewFTEID(v2.IFTypeS1USGWGTPU, s1uIP, "")
 	csRspFromSGW = csRspFromPGW
@@ -237,7 +236,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	}
 
 	if err := s11Session.Activate(); err != nil {
-		sgw.loggerCh <- errors.Wrap(err, "Error").Error()
+		sgw.loggerCh <- fmt.Sprintf("Error: %v", err)
 		s11Conn.RemoveSession(s11Session)
 		return err
 	}
