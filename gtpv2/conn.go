@@ -78,6 +78,7 @@ func NewConn(laddr net.Addr, localIfType, counter uint8) *Conn {
 func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8) (*Conn, error) {
 	c := &Conn{
 		mu:                sync.Mutex{},
+		laddr:             laddr,
 		imsiSessionMap:    newimsiSessionMap(),
 		iteiSessionMap:    newiteiSessionMap(),
 		localIfType:       localIfType,
@@ -92,7 +93,7 @@ func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8
 	// not using net.Dial, as it binds src/dst IP:Port, which makes it harder to
 	// handle multiple connections with a Conn.
 	var err error
-	c.pktConn, err = net.ListenPacket(raddr.Network(), laddr.String())
+	c.pktConn, err = net.ListenPacket(c.laddr.Network(), c.laddr.String())
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +137,9 @@ func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8
 // ListenAndServe creates a new GTPv2-C Conn and start serving background.
 func (c *Conn) ListenAndServe(ctx context.Context) error {
 	var err error
+	c.mu.Lock()
 	c.pktConn, err = net.ListenPacket(c.laddr.Network(), c.laddr.String())
+	c.mu.Unlock()
 	if err != nil {
 		return err
 	}

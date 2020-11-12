@@ -88,7 +88,7 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 	// setup UDPConn first.
 	if u.pktConn == nil {
 		var err error
-		u.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
+		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +148,9 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 func (u *UPlaneConn) ListenAndServe(ctx context.Context) error {
 	if u.pktConn == nil {
 		var err error
+		u.mu.Lock()
 		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+		u.mu.Unlock()
 		if err != nil {
 			return err
 		}
