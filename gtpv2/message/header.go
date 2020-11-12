@@ -93,7 +93,7 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 		h.SequenceNumber = utils.Uint24To32(b[8:11])
 		h.Spare = b[11]
 
-		if int(h.Length)+12 != l {
+		if int(h.Length)+12 > l {
 			h.Payload = b[12:]
 			return nil
 		}
@@ -103,7 +103,7 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 	h.SequenceNumber = utils.Uint24To32(b[4:7])
 	h.Spare = b[7]
 
-	if int(h.Length)+8 != l {
+	if int(h.Length)+8 > l {
 		h.Payload = b[8:]
 		return nil
 	}

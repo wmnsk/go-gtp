@@ -101,7 +101,7 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 		offset += 4
 	}
 
-	if int(h.Length)+8 != l {
+	if int(h.Length)+8 > l {
 		h.Payload = b[offset:]
 		return nil
 	}
