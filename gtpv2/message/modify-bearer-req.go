@@ -20,7 +20,7 @@ type ModifyBearerRequest struct {
 	AMBR                                   *ie.IE
 	DelayDownlinkPacketNotificationRequest *ie.IE
 	BearerContextsToBeModified             *ie.IE
-	BearerContextsTobeRemoved              *ie.IE
+	BearerContextsToBeRemoved              *ie.IE
 	Recovery                               *ie.IE
 	UETimeZone                             *ie.IE
 	MMEFQCSID                              *ie.IE
@@ -91,7 +91,7 @@ func NewModifyBearerRequest(teid, seq uint32, IEs ...*ie.IE) *ModifyBearerReques
 			case 0:
 				m.BearerContextsToBeModified = i
 			case 1:
-				m.BearerContextsTobeRemoved = i
+				m.BearerContextsToBeRemoved = i
 			default:
 				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
@@ -248,7 +248,7 @@ func (m *ModifyBearerRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsTobeRemoved; ie != nil {
+	if ie := m.BearerContextsToBeRemoved; ie != nil {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -477,7 +477,7 @@ func (m *ModifyBearerRequest) UnmarshalBinary(b []byte) error {
 			case 0:
 				m.BearerContextsToBeModified = i
 			case 1:
-				m.BearerContextsTobeRemoved = i
+				m.BearerContextsToBeRemoved = i
 			default:
 				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
@@ -593,7 +593,7 @@ func (m *ModifyBearerRequest) MarshalLen() int {
 	if ie := m.BearerContextsToBeModified; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsTobeRemoved; ie != nil {
+	if ie := m.BearerContextsToBeRemoved; ie != nil {
 		l += ie.MarshalLen()
 	}
 	if ie := m.Recovery; ie != nil {
