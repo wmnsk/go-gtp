@@ -114,7 +114,7 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 		h.Payload = b[offset:]
 		return nil
 	}
-	if fixedHeaderSize+h.Length > uint16(offset) {
+	if fixedHeaderSize+h.Length >= uint16(offset) {
 		h.Payload = b[offset : fixedHeaderSize+h.Length]
 	} else {
 		return ErrInvalidLength
