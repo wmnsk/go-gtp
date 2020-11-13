@@ -111,9 +111,10 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 			h.Payload = b[teidHeaderSize:]
 			return nil
 		}
-		h.Payload = nil
 		if fixedHeaderSize+h.Length > teidHeaderSize {
 			h.Payload = b[teidHeaderSize : fixedHeaderSize+h.Length]
+		} else {
+			return ErrInvalidLength
 		}
 		return nil
 	}
@@ -124,9 +125,10 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 		h.Payload = b[noTeidHeaderSize:]
 		return nil
 	}
-	h.Payload = nil
 	if fixedHeaderSize+h.Length > noTeidHeaderSize {
 		h.Payload = b[noTeidHeaderSize : fixedHeaderSize+h.Length]
+	} else {
+		return ErrInvalidLength
 	}
 
 	return nil
