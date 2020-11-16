@@ -15,8 +15,8 @@ const (
 	fixedHeaderSize  = 4
 	seqSpareSize     = 4
 	teidSize         = 4
-	noTeidHeaderSize = fixedHeaderSize + seqSpareSize
-	teidHeaderSize   = noTeidHeaderSize + teidSize
+	noTEIDHeaderSize = fixedHeaderSize + seqSpareSize
+	teidHeaderSize   = noTEIDHeaderSize + teidSize
 )
 
 // Header is a GTPv2 common header
@@ -122,11 +122,11 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 	h.Spare = b[7]
 
 	if int(h.Length)+fixedHeaderSize > l {
-		h.Payload = b[noTeidHeaderSize:]
+		h.Payload = b[noTEIDHeaderSize:]
 		return nil
 	}
-	if fixedHeaderSize+h.Length >= noTeidHeaderSize {
-		h.Payload = b[noTeidHeaderSize : fixedHeaderSize+h.Length]
+	if fixedHeaderSize+h.Length >= noTEIDHeaderSize {
+		h.Payload = b[noTEIDHeaderSize : fixedHeaderSize+h.Length]
 	} else {
 		return ErrInvalidLength
 	}
