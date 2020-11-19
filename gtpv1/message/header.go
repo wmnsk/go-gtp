@@ -9,6 +9,12 @@ import (
 	"fmt"
 )
 
+const (
+	fixedHeaderSize = 8
+	// sequence number and padding size
+	seqSize = 4
+)
+
 // Header is a GTPv1 common header.
 type Header struct {
 	Flags          uint8
@@ -96,16 +102,24 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 	h.TEID = binary.BigEndian.Uint32(b[4:8])
 	offset += 4
 	if h.HasSequence() {
+		if h.Length < seqSize {
+			return ErrTooShortToParse
+		}
 		h.SequenceNumber = binary.BigEndian.Uint16(b[offset : offset+2])
 		// two bytes of padding before payload.
 		offset += 4
 	}
 
-	if int(h.Length)+8 != l {
+	if int(h.Length)+fixedHeaderSize > l {
 		h.Payload = b[offset:]
 		return nil
 	}
-	h.Payload = b[offset : 8+h.Length]
+	if fixedHeaderSize+h.Length >= uint16(offset) {
+		h.Payload = b[offset : fixedHeaderSize+h.Length]
+	} else {
+		return ErrInvalidLength
+	}
+
 	return nil
 }
 

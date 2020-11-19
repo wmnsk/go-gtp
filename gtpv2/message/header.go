@@ -11,6 +11,14 @@ import (
 	"github.com/wmnsk/go-gtp/utils"
 )
 
+const (
+	fixedHeaderSize  = 4
+	seqSpareSize     = 4
+	teidSize         = 4
+	noTEIDHeaderSize = fixedHeaderSize + seqSpareSize
+	teidHeaderSize   = noTEIDHeaderSize + teidSize
+)
+
 // Header is a GTPv2 common header
 type Header struct {
 	Flags          uint8
@@ -88,26 +96,40 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 	h.Flags = b[0]
 	h.Type = b[1]
 	h.Length = binary.BigEndian.Uint16(b[2:4])
+	if h.Length < seqSpareSize {
+		return ErrTooShortToParse
+	}
 	if h.HasTEID() {
+		if h.Length < seqSpareSize+teidSize {
+			return ErrTooShortToParse
+		}
 		h.TEID = binary.BigEndian.Uint32(b[4:8])
 		h.SequenceNumber = utils.Uint24To32(b[8:11])
 		h.Spare = b[11]
 
-		if int(h.Length)+12 != l {
-			h.Payload = b[12:]
+		if int(h.Length)+fixedHeaderSize > l {
+			h.Payload = b[teidHeaderSize:]
 			return nil
 		}
-		h.Payload = b[12 : 12+h.Length]
+		if fixedHeaderSize+h.Length >= teidHeaderSize {
+			h.Payload = b[teidHeaderSize : fixedHeaderSize+h.Length]
+		} else {
+			return ErrInvalidLength
+		}
 		return nil
 	}
 	h.SequenceNumber = utils.Uint24To32(b[4:7])
 	h.Spare = b[7]
 
-	if int(h.Length)+8 != l {
-		h.Payload = b[8:]
+	if int(h.Length)+fixedHeaderSize > l {
+		h.Payload = b[noTEIDHeaderSize:]
 		return nil
 	}
-	h.Payload = b[8 : 8+h.Length]
+	if fixedHeaderSize+h.Length >= noTEIDHeaderSize {
+		h.Payload = b[noTEIDHeaderSize : fixedHeaderSize+h.Length]
+	} else {
+		return ErrInvalidLength
+	}
 
 	return nil
 }
