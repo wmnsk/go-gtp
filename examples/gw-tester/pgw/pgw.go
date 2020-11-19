@@ -138,7 +138,7 @@ func (p *pgw) close() error {
 	}
 
 	if p.uConn != nil {
-		if err := netlink.LinkDel(p.uConn.GTPLink); err != nil {
+		if err := netlink.LinkDel(p.uConn.KernelGTP.Link); err != nil {
 			errs = append(errs, err)
 		}
 		if err := p.uConn.Close(); err != nil {
@@ -165,12 +165,12 @@ func (p *pgw) setupUPlane(peerIP, msIP net.IP, otei, itei uint32) error {
 
 	ms32 := &net.IPNet{IP: msIP, Mask: net.CIDRMask(32, 32)}
 	dlroute := &netlink.Route{ // ip route replace
-		Dst:       ms32,                          // UE's IP
-		LinkIndex: p.uConn.GTPLink.Attrs().Index, // dev gtp-pgw
-		Scope:     netlink.SCOPE_LINK,            // scope link
-		Protocol:  4,                             // proto static
-		Priority:  1,                             // metric 1
-		Table:     3001,                          // table 3001
+		Dst:       ms32,                                 // UE's IP
+		LinkIndex: p.uConn.KernelGTP.Link.Attrs().Index, // dev gtp-pgw
+		Scope:     netlink.SCOPE_LINK,                   // scope link
+		Protocol:  4,                                    // proto static
+		Priority:  1,                                    // metric 1
+		Table:     3001,                                 // table 3001
 	}
 	if err := netlink.RouteReplace(dlroute); err != nil {
 		return err
