@@ -225,12 +225,12 @@ func (s *sgw) close() error {
 func (s *sgw) addRoutes() error {
 	defnet := &net.IPNet{IP: net.IPv4zero, Mask: net.CIDRMask(0, 32)}
 	s1route := &netlink.Route{ // ip route replace
-		Dst:       defnet,                  // default
-		LinkIndex: s.s5uConn.GTPLink.Index, // dev gtp-s5
-		Scope:     netlink.SCOPE_LINK,      // scope link
-		Protocol:  4,                       // proto static
-		Priority:  1,                       // metric 1
-		Table:     2001,                    // table 2001
+		Dst:       defnet,                         // default
+		LinkIndex: s.s5uConn.KernelGTP.Link.Index, // dev gtp-s5
+		Scope:     netlink.SCOPE_LINK,             // scope link
+		Protocol:  4,                              // proto static
+		Priority:  1,                              // metric 1
+		Table:     2001,                           // table 2001
 	}
 
 	if err := netlink.RouteReplace(s1route); err != nil {
@@ -239,12 +239,12 @@ func (s *sgw) addRoutes() error {
 	s.addedRoutes = append(s.addedRoutes, s1route)
 
 	s5route := &netlink.Route{ // ip route replace
-		Dst:       defnet,                          // default
-		LinkIndex: s.s1uConn.GTPLink.Attrs().Index, // dev gtp-s1
-		Scope:     netlink.SCOPE_LINK,              // scope link
-		Protocol:  4,                               // proto static
-		Priority:  1,                               // metric 1
-		Table:     2005,                            // table 2005
+		Dst:       defnet,                                 // default
+		LinkIndex: s.s1uConn.KernelGTP.Link.Attrs().Index, // dev gtp-s1
+		Scope:     netlink.SCOPE_LINK,                     // scope link
+		Protocol:  4,                                      // proto static
+		Priority:  1,                                      // metric 1
+		Table:     2005,                                   // table 2005
 	}
 
 	if err := netlink.RouteReplace(s5route); err != nil {
@@ -263,17 +263,17 @@ func (s *sgw) addRoutes() error {
 			break
 		}
 
-		if r.IifName == s.s1uConn.GTPLink.Name && r.Table == 2001 {
+		if r.IifName == s.s1uConn.KernelGTP.Link.Name && r.Table == 2001 {
 			s1found = true
 		}
-		if r.IifName == s.s5uConn.GTPLink.Name && r.Table == 2005 {
+		if r.IifName == s.s5uConn.KernelGTP.Link.Name && r.Table == 2005 {
 			s5found = true
 		}
 	}
 
 	if !s1found {
 		rule := netlink.NewRule()
-		rule.IifName = s.s1uConn.GTPLink.Name
+		rule.IifName = s.s1uConn.KernelGTP.Link.Name
 		rule.Table = 2001
 
 		if err := netlink.RuleAdd(rule); err != nil {
@@ -284,7 +284,7 @@ func (s *sgw) addRoutes() error {
 
 	if !s5found {
 		rule := netlink.NewRule()
-		rule.IifName = s.s5uConn.GTPLink.Name
+		rule.IifName = s.s5uConn.KernelGTP.Link.Name
 		rule.Table = 2005
 
 		if err := netlink.RuleAdd(rule); err != nil {

@@ -340,7 +340,7 @@ func (e *enb) setupUPlane(ctx context.Context, sub *Subscriber) error {
 func (e *enb) addRoute() error {
 	route := &netlink.Route{
 		Dst:       &net.IPNet{IP: net.IPv4zero, Mask: net.CIDRMask(0, 32)}, // default
-		LinkIndex: e.uConn.GTPLink.Attrs().Index,                           // dev gtp-<ECI>
+		LinkIndex: e.uConn.KernelGTP.Link.Attrs().Index,                    // dev gtp-<ECI>
 		Scope:     netlink.SCOPE_LINK,                                      // scope link
 		Protocol:  4,                                                       // proto static
 		Priority:  1,                                                       // metric 1
