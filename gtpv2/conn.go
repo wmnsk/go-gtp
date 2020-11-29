@@ -776,7 +776,7 @@ func generateRandomUint32() uint32 {
 	return binary.BigEndian.Uint32(b)
 }
 
-// Bearers returns all the bearers registered in Session.
+// Sessions returns all the sessions registered in Conn.
 func (c *Conn) Sessions() []*Session {
 	var ss []*Session
 	c.imsiSessionMap.rangeWithFunc(func(k, v interface{}) bool {
