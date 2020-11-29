@@ -128,9 +128,10 @@ func handleErrorIndication(c Conn, senderAddr net.Addr, msg message.Message) err
 		return ErrUnexpectedType
 	}
 
-	// let's just return err anyway.
-	return &ErrorIndicatedError{
+	// just log and return
+	logf("Ignored Error Indication: %v", &ErrorIndicatedError{
 		TEID: ind.TEIDDataI.MustTEID(),
 		Peer: ind.GTPUPeerAddress.MustIPAddress(),
-	}
+	})
+	return nil
 }
