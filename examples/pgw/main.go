@@ -27,8 +27,8 @@ import (
 	"net"
 	"time"
 
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
@@ -42,7 +42,7 @@ func main() {
 	flag.Parse()
 	log.SetPrefix("[P-GW] ")
 
-	s5cAddr, err := net.ResolveUDPAddr("udp", *s5c+v2.GTPCPort)
+	s5cAddr, err := net.ResolveUDPAddr("udp", *s5c+gtpv2.GTPCPort)
 	if err != nil {
 		log.Println(err)
 		return
@@ -52,7 +52,7 @@ func main() {
 	defer cancel()
 
 	// start listening on the specified IP:Port.
-	s5cConn := v2.NewConn(s5cAddr, v2.IFTypeS5S8PGWGTPC, 0)
+	s5cConn := gtpv2.NewConn(s5cAddr, gtpv2.IFTypeS5S8PGWGTPC, 0)
 	go func() {
 		if err := s5cConn.ListenAndServe(ctx); err != nil {
 			log.Println(err)
@@ -62,18 +62,18 @@ func main() {
 	log.Printf("Started serving C-Plane on %s", s5cAddr)
 
 	// register handlers for ALL the message you expect remote endpoint to send.
-	s5cConn.AddHandlers(map[uint8]v2.HandlerFunc{
+	s5cConn.AddHandlers(map[uint8]gtpv2.HandlerFunc{
 		message.MsgTypeCreateSessionRequest: handleCreateSessionRequest,
 		message.MsgTypeDeleteSessionRequest: handleDeleteSessionRequest,
 	})
 
-	s5uAddr, err := net.ResolveUDPAddr("udp", *s5u+v2.GTPUPort)
+	s5uAddr, err := net.ResolveUDPAddr("udp", *s5u+gtpv2.GTPUPort)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	uConn = v1.NewUPlaneConn(s5uAddr)
+	uConn = gtpv1.NewUPlaneConn(s5uAddr)
 	defer uConn.Close()
 
 	go func() {

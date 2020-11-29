@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
@@ -33,7 +33,7 @@ func getPGWIP(apn string) (string, error) {
 }
 
 // dispatch sends subscribers to attachCh, which will be handled in handleAttach().
-func dispatch(subs []*v2.Subscriber) {
+func dispatch(subs []*gtpv2.Subscriber) {
 	for _, sub := range subs {
 		// wait for 0-255ms before sending request (just for a little bit of reality)
 		/*
@@ -49,20 +49,20 @@ func dispatch(subs []*v2.Subscriber) {
 
 // handleAttach is to start the session creation on S11.
 // in the real case this should be called after the procedure on S1AP/NAS has been done.
-func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer) error {
+func handleAttach(raddr net.Addr, c *gtpv2.Conn, sub *gtpv2.Subscriber, br *gtpv2.Bearer) error {
 	// remove previous session for the same subscriber if exists.
 	sess, err := c.GetSessionByIMSI(sub.IMSI)
 	if err != nil {
 		switch err.(type) {
-		case *v2.UnknownIMSIError:
+		case *gtpv2.UnknownIMSIError:
 			// whole new session. just ignore.
 		default:
 			return fmt.Errorf("got something unexpected: %w", err)
 		}
 	} else {
-		teid, err := sess.GetTEID(v2.IFTypeS11S4SGWGTPC)
+		teid, err := sess.GetTEID(gtpv2.IFTypeS11S4SGWGTPC)
 		if err != nil {
-			return v2.ErrTEIDNotFound
+			return gtpv2.ErrTEIDNotFound
 		}
 		// send Delete Session Request to cleanup sessions in S/P-GW.
 		if _, err := c.DeleteSession(teid, sess); err != nil {
@@ -96,12 +96,12 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 		ie.NewRATType(sub.RATType),
 		ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 		c.NewSenderFTEID(localIP, ""),
-		ie.NewFullyQualifiedTEID(v2.IFTypeS5S8PGWGTPC, 0, pgwAddr, "").WithInstance(1),
+		ie.NewFullyQualifiedTEID(gtpv2.IFTypeS5S8PGWGTPC, 0, pgwAddr, "").WithInstance(1),
 		ie.NewAccessPointName(br.APN),
-		ie.NewSelectionMode(v2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
-		ie.NewPDNType(v2.PDNTypeIPv4),
+		ie.NewSelectionMode(gtpv2.SelectionModeMSorNetworkProvidedAPNSubscribedVerified),
+		ie.NewPDNType(gtpv2.PDNTypeIPv4),
 		ie.NewPDNAddressAllocation("0.0.0.0"),
-		ie.NewAPNRestriction(v2.APNRestrictionNoExistingContextsorRestriction),
+		ie.NewAPNRestriction(gtpv2.APNRestrictionNoExistingContextsorRestriction),
 		ie.NewAggregateMaximumBitRate(0, 0),
 		ie.NewBearerContext(
 			ie.NewEPSBearerID(br.EBI),
@@ -119,7 +119,7 @@ func handleAttach(raddr net.Addr, c *v2.Conn, sub *v2.Subscriber, br *v2.Bearer)
 }
 
 var (
-	uConn   *v1.UPlaneConn
+	uConn   *gtpv1.UPlaneConn
 	payload = []byte{ // ICMP Echo to 8.8.8.8 over IP(src will be replaced), checksum is invalid.
 		// IP
 		0x45, 0x00, 0x00, 0x54, 0x00, 0x01, 0x40, 0x00, 0x3f, 0x01, 0x00, 0x00, 0xde, 0xad, 0xbe, 0xef,
