@@ -10,15 +10,15 @@ import (
 	"net"
 	"time"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
-func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.Message) error {
+func handleCreateSessionRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, msg message.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
-	s11Session := v2.NewSession(mmeAddr, &v2.Subscriber{Location: &v2.Location{}})
+	s11Session := gtpv2.NewSession(mmeAddr, &gtpv2.Subscriber{Location: &gtpv2.Location{}})
 	s11Bearer := s11Session.GetDefaultBearer()
 
 	// assert type to refer to the struct field specific to the message.
@@ -32,27 +32,27 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 		if err != nil {
 			return err
 		}
-		pgwAddrString = ip + v2.GTPCPort
+		pgwAddrString = ip + gtpv2.GTPCPort
 
 		teid, err := teidIE.TEID()
 		if err != nil {
 			return err
 		}
-		s11Session.AddTEID(v2.IFTypeS5S8PGWGTPC, teid)
+		s11Session.AddTEID(gtpv2.IFTypeS5S8PGWGTPC, teid)
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
+		return &gtpv2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
 	if senderIE := csReqFromMME.SenderFTEIDC; senderIE != nil {
 		teid, err := senderIE.TEID()
 		if err != nil {
 			return err
 		}
-		s11Session.AddTEID(v2.IFTypeS11MMEGTPC, teid)
+		s11Session.AddTEID(gtpv2.IFTypeS11MMEGTPC, teid)
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
+		return &gtpv2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
 
-	laddr, err := net.ResolveUDPAddr("udp", *s5c+v2.GTPCPort)
+	laddr, err := net.ResolveUDPAddr("udp", *s5c+gtpv2.GTPCPort)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 		sess, err := s11Conn.GetSessionByIMSI(imsi)
 		if err != nil {
 			switch err.(type) {
-			case *v2.UnknownIMSIError:
+			case *gtpv2.UnknownIMSIError:
 				// whole new session. just ignore.
 			default:
 				return fmt.Errorf("got something unexpected: %w", err)
@@ -84,7 +84,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 
 		s11Session.IMSI = imsi
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.IMSI}
+		return &gtpv2.RequiredIEMissingError{Type: ie.IMSI}
 	}
 	if msisdnIE := csReqFromMME.MSISDN; msisdnIE != nil {
 		s11Session.MSISDN, err = msisdnIE.MSISDN()
@@ -92,7 +92,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.MSISDN}
+		return &gtpv2.RequiredIEMissingError{Type: ie.MSISDN}
 	}
 	if meiIE := csReqFromMME.MEI; meiIE != nil {
 		s11Session.IMEI, err = meiIE.MobileEquipmentIdentity()
@@ -100,7 +100,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.MobileEquipmentIdentity}
+		return &gtpv2.RequiredIEMissingError{Type: ie.MobileEquipmentIdentity}
 	}
 	if apnIE := csReqFromMME.APN; apnIE != nil {
 		s11Bearer.APN, err = apnIE.AccessPointName()
@@ -108,7 +108,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.AccessPointName}
+		return &gtpv2.RequiredIEMissingError{Type: ie.AccessPointName}
 	}
 	if netIE := csReqFromMME.ServingNetwork; netIE != nil {
 		s11Session.MCC, err = netIE.MCC()
@@ -120,7 +120,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.ServingNetwork}
+		return &gtpv2.RequiredIEMissingError{Type: ie.ServingNetwork}
 	}
 	if ratIE := csReqFromMME.RATType; ratIE != nil {
 		s11Session.RATType, err = ratIE.RATType()
@@ -128,10 +128,10 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 			return err
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.RATType}
+		return &gtpv2.RequiredIEMissingError{Type: ie.RATType}
 	}
 
-	s11IP, _, err := net.SplitHostPort(*s11 + v2.GTPCPort)
+	s11IP, _, err := net.SplitHostPort(*s11 + gtpv2.GTPCPort)
 	if err != nil {
 		return fmt.Errorf("failed to get IP for S11: %w", err)
 	}
@@ -140,12 +140,12 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	s11Conn.RegisterSession(s11sgwTEID, s11Session)
 
 	s5cIP := laddr.IP.String()
-	s5uIP, _, err := net.SplitHostPort(*s5u + v2.GTPCPort)
+	s5uIP, _, err := net.SplitHostPort(*s5u + gtpv2.GTPCPort)
 	if err != nil {
 		return err
 	}
 	s5cFTEID := sgw.s5cConn.NewSenderFTEID(s5cIP, "")
-	s5uFTEID := sgw.s5uConn.NewFTEID(v2.IFTypeS5S8SGWGTPU, s5uIP, "").WithInstance(2)
+	s5uFTEID := sgw.s5uConn.NewFTEID(gtpv2.IFTypeS5S8SGWGTPU, s5uIP, "").WithInstance(2)
 
 	s5Session, seq, err := sgw.s5cConn.CreateSession(
 		raddr,
@@ -170,7 +170,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	sgw.loggerCh <- fmt.Sprintf("Sent Create Session Request to %s for %s", pgwAddrString, s5Session.IMSI)
 
 	var csRspFromSGW *message.CreateSessionResponse
-	s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
+	s11mmeTEID, err := s11Session.GetTEID(gtpv2.IFTypeS11MMEGTPC)
 	if err != nil {
 		s11Conn.RemoveSession(s11Session)
 		return err
@@ -179,7 +179,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	if err != nil {
 		csRspFromSGW = message.NewCreateSessionResponse(
 			s11mmeTEID, 0,
-			ie.NewCause(v2.CauseNoResourcesAvailable, 0, 0, 0, nil),
+			ie.NewCause(gtpv2.CauseNoResourcesAvailable, 0, 0, 0, nil),
 		)
 
 		if err := s11Conn.RespondTo(mmeAddr, csReqFromMME, csRspFromSGW); err != nil {
@@ -188,7 +188,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 		}
 		sgw.loggerCh <- fmt.Sprintf(
 			"Sent %s with failure code: %d, target subscriber: %s",
-			csRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI,
+			csRspFromSGW.MessageTypeName(), gtpv2.CausePGWNotResponding, s11Session.IMSI,
 		)
 		s11Conn.RemoveSession(s11Session)
 		return err
@@ -201,14 +201,14 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 		csRspFromPGW = m
 	default:
 		s11Conn.RemoveSession(s11Session)
-		return &v2.UnexpectedTypeError{Msg: incomingMsg}
+		return &gtpv2.UnexpectedTypeError{Msg: incomingMsg}
 	}
 	// if everything in CreateSessionResponse seems OK, relay it to MME.
-	s1uIP, _, err := net.SplitHostPort(*s1u + v2.GTPCPort)
+	s1uIP, _, err := net.SplitHostPort(*s1u + gtpv2.GTPCPort)
 	if err != nil {
 		return fmt.Errorf("failed to get IP for S1-U: %w", err)
 	}
-	s1usgwFTEID := sgw.s1uConn.NewFTEID(v2.IFTypeS1USGWGTPU, s1uIP, "")
+	s1usgwFTEID := sgw.s1uConn.NewFTEID(gtpv2.IFTypeS1USGWGTPU, s1uIP, "")
 	csRspFromSGW = csRspFromPGW
 	csRspFromSGW.SenderFTEIDC = senderFTEID
 	csRspFromSGW.SGWFQCSID = ie.NewFullyQualifiedCSID(s1uIP, 1).WithInstance(1)
@@ -224,12 +224,12 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	s11Session.AddTEID(senderFTEID.MustInterfaceType(), s11sgwTEID)
 	s11Session.AddTEID(s1usgwFTEID.MustInterfaceType(), s1usgwFTEID.MustTEID())
 
-	s5cpgwTEID, err := s5Session.GetTEID(v2.IFTypeS5S8PGWGTPC)
+	s5cpgwTEID, err := s5Session.GetTEID(gtpv2.IFTypeS5S8PGWGTPC)
 	if err != nil {
 		s11Conn.RemoveSession(s11Session)
 		return err
 	}
-	s5csgwTEID, err := s5Session.GetTEID(v2.IFTypeS5S8SGWGTPC)
+	s5csgwTEID, err := s5Session.GetTEID(gtpv2.IFTypeS5S8SGWGTPC)
 	if err != nil {
 		s11Conn.RemoveSession(s11Session)
 		return err
@@ -248,7 +248,7 @@ func handleCreateSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	return nil
 }
 
-func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.Message) error {
+func handleModifyBearerRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, msg message.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
 	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID(), mmeAddr)
@@ -282,15 +282,15 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.M
 		}
 	}
 
-	s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
+	s11mmeTEID, err := s11Session.GetTEID(gtpv2.IFTypeS11MMEGTPC)
 	if err != nil {
 		return err
 	}
-	s1usgwTEID, err := s11Session.GetTEID(v2.IFTypeS1USGWGTPU)
+	s1usgwTEID, err := s11Session.GetTEID(gtpv2.IFTypeS1USGWGTPU)
 	if err != nil {
 		return err
 	}
-	s5usgwTEID, err := s5cSession.GetTEID(v2.IFTypeS5S8SGWGTPU)
+	s5usgwTEID, err := s5cSession.GetTEID(gtpv2.IFTypeS5S8SGWGTPU)
 	if err != nil {
 		return err
 	}
@@ -305,17 +305,17 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.M
 		return err
 	}
 
-	s1uIP, _, err := net.SplitHostPort(*s1u + v2.GTPCPort)
+	s1uIP, _, err := net.SplitHostPort(*s1u + gtpv2.GTPCPort)
 	if err != nil {
 		return err
 	}
 	mbRspFromSGW := message.NewModifyBearerResponse(
 		s11mmeTEID, 0,
-		ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+		ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 		ie.NewBearerContext(
-			ie.NewCause(v2.CauseRequestAccepted, 0, 0, 0, nil),
+			ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 			ie.NewEPSBearerID(s1uBearer.EBI),
-			ie.NewFullyQualifiedTEID(v2.IFTypeS1USGWGTPU, s1usgwTEID, s1uIP, ""),
+			ie.NewFullyQualifiedTEID(gtpv2.IFTypeS1USGWGTPU, s1usgwTEID, s1uIP, ""),
 		),
 	)
 
@@ -330,7 +330,7 @@ func handleModifyBearerRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.M
 	return nil
 }
 
-func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.Message) error {
+func handleDeleteSessionRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, msg message.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
 	// assert type to refer to the struct field specific to the message.
@@ -348,7 +348,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 		return err
 	}
 
-	s5cpgwTEID, err := s5Session.GetTEID(v2.IFTypeS5S8PGWGTPC)
+	s5cpgwTEID, err := s5Session.GetTEID(gtpv2.IFTypeS5S8PGWGTPC)
 	if err != nil {
 		return err
 	}
@@ -362,7 +362,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	}
 
 	var dsRspFromSGW *message.DeleteSessionResponse
-	s11mmeTEID, err := s11Session.GetTEID(v2.IFTypeS11MMEGTPC)
+	s11mmeTEID, err := s11Session.GetTEID(gtpv2.IFTypeS11MMEGTPC)
 	if err != nil {
 		return err
 	}
@@ -371,7 +371,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	if err != nil {
 		dsRspFromSGW = message.NewDeleteSessionResponse(
 			s11mmeTEID, 0,
-			ie.NewCause(v2.CausePGWNotResponding, 0, 0, 0, nil),
+			ie.NewCause(gtpv2.CausePGWNotResponding, 0, 0, 0, nil),
 		)
 
 		if err := s11Conn.RespondTo(mmeAddr, dsReqFromMME, dsRspFromSGW); err != nil {
@@ -379,7 +379,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 		}
 		sgw.loggerCh <- fmt.Sprintf(
 			"Sent %s with failure code: %d, target subscriber: %s",
-			dsRspFromSGW.MessageTypeName(), v2.CausePGWNotResponding, s11Session.IMSI,
+			dsRspFromSGW.MessageTypeName(), gtpv2.CausePGWNotResponding, s11Session.IMSI,
 		)
 		return err
 	}
@@ -390,7 +390,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 		// move forward
 		dsRspFromSGW = m
 	default:
-		return &v2.UnexpectedTypeError{Msg: incomingMsg}
+		return &gtpv2.UnexpectedTypeError{Msg: incomingMsg}
 	}
 
 	dsRspFromSGW.SetTEID(s11mmeTEID)
@@ -404,7 +404,7 @@ func handleDeleteSessionRequest(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	return nil
 }
 
-func handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.Message) error {
+func handleDeleteBearerResponse(s11Conn *gtpv2.Conn, mmeAddr net.Addr, msg message.Message) error {
 	sgw.loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), mmeAddr)
 
 	s11Session, err := s11Conn.GetSessionByTEID(msg.TEID(), mmeAddr)
@@ -417,7 +417,7 @@ func handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 		return err
 	}
 
-	if err := v2.PassMessageTo(s5Session, msg, 5*time.Second); err != nil {
+	if err := gtpv2.PassMessageTo(s5Session, msg, 5*time.Second); err != nil {
 		return err
 	}
 
@@ -426,16 +426,16 @@ func handleDeleteBearerResponse(s11Conn *v2.Conn, mmeAddr net.Addr, msg message.
 	return nil
 }
 
-func handleFTEIDU(fteiduIE *ie.IE, session *v2.Session, bearer *v2.Bearer) error {
+func handleFTEIDU(fteiduIE *ie.IE, session *gtpv2.Session, bearer *gtpv2.Bearer) error {
 	if fteiduIE.Type != ie.FullyQualifiedTEID {
-		return &v2.UnexpectedIEError{IEType: fteiduIE.Type}
+		return &gtpv2.UnexpectedIEError{IEType: fteiduIE.Type}
 	}
 
 	ip, err := fteiduIE.IPAddress()
 	if err != nil {
 		return err
 	}
-	addr, err := net.ResolveUDPAddr("udp", ip+v2.GTPUPort)
+	addr, err := net.ResolveUDPAddr("udp", ip+gtpv2.GTPUPort)
 	if err != nil {
 		return err
 	}

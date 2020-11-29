@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"net"
 
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
 
-func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
+func handleCreateSessionResponse(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 
 	// find the session associated with TEID
@@ -35,16 +35,16 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Messa
 		if err != nil {
 			return err
 		}
-		if cause != v2.CauseRequestAccepted {
+		if cause != gtpv2.CauseRequestAccepted {
 			c.RemoveSession(session)
-			return &v2.CauseNotOKError{
+			return &gtpv2.CauseNotOKError{
 				MsgType: csRspFromSGW.MessageTypeName(),
 				Cause:   cause,
 				Msg:     fmt.Sprintf("subscriber: %s", session.IMSI),
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: msg.MessageType()}
+		return &gtpv2.RequiredIEMissingError{Type: msg.MessageType()}
 	}
 
 	if ie := csRspFromSGW.PAA; ie != nil {
@@ -58,17 +58,17 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Messa
 		if err != nil {
 			return err
 		}
-		session.AddTEID(v2.IFTypeS11S4SGWGTPC, teid)
+		session.AddTEID(gtpv2.IFTypeS11S4SGWGTPC, teid)
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
+		return &gtpv2.RequiredIEMissingError{Type: ie.FullyQualifiedTEID}
 	}
 
-	s11sgwTEID, err := session.GetTEID(v2.IFTypeS11S4SGWGTPC)
+	s11sgwTEID, err := session.GetTEID(gtpv2.IFTypeS11S4SGWGTPC)
 	if err != nil {
 		c.RemoveSession(session)
 		return err
 	}
-	s11mmeTEID, err := session.GetTEID(v2.IFTypeS11MMEGTPC)
+	s11mmeTEID, err := session.GetTEID(gtpv2.IFTypeS11MMEGTPC)
 	if err != nil {
 		c.RemoveSession(session)
 		return err
@@ -98,7 +98,7 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Messa
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
+		return &gtpv2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
 	if err := session.Activate(); err != nil {
@@ -114,7 +114,7 @@ func handleCreateSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Messa
 	return nil
 }
 
-func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
+func handleModifyBearerResponse(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 
 	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)
@@ -128,15 +128,15 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Messag
 		if err != nil {
 			return err
 		}
-		if cause != v2.CauseRequestAccepted {
-			return &v2.CauseNotOKError{
+		if cause != gtpv2.CauseRequestAccepted {
+			return &gtpv2.CauseNotOKError{
 				MsgType: msg.MessageTypeName(),
 				Cause:   cause,
 				Msg:     fmt.Sprintf("subscriber: %s", session.IMSI),
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.Cause}
+		return &gtpv2.RequiredIEMissingError{Type: ie.Cause}
 	}
 
 	mock := &mockUEeNB{
@@ -164,7 +164,7 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Messag
 				if err != nil {
 					return err
 				}
-				sgwUAddr, err := net.ResolveUDPAddr("udp", ip+v2.GTPUPort)
+				sgwUAddr, err := net.ResolveUDPAddr("udp", ip+gtpv2.GTPUPort)
 				if err != nil {
 					return err
 				}
@@ -173,7 +173,7 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Messag
 			}
 		}
 	} else {
-		return &v2.RequiredIEMissingError{Type: ie.BearerContext}
+		return &gtpv2.RequiredIEMissingError{Type: ie.BearerContext}
 	}
 
 	go mock.run(errCh)
@@ -182,7 +182,7 @@ func handleModifyBearerResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Messag
 	return nil
 }
 
-func handleDeleteSessionResponse(c *v2.Conn, sgwAddr net.Addr, msg message.Message) error {
+func handleDeleteSessionResponse(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Message) error {
 	loggerCh <- fmt.Sprintf("Received %s from %s", msg.MessageTypeName(), sgwAddr)
 
 	session, err := c.GetSessionByTEID(msg.TEID(), sgwAddr)

@@ -35,8 +35,8 @@ import (
 	"sync"
 	"time"
 
-	v1 "github.com/wmnsk/go-gtp/gtpv1"
-	v2 "github.com/wmnsk/go-gtp/gtpv2"
+	"github.com/wmnsk/go-gtp/gtpv1"
+	"github.com/wmnsk/go-gtp/gtpv2"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 	"github.com/wmnsk/go-gtp/gtpv2/message"
 )
@@ -50,7 +50,7 @@ var (
 
 // variables globally shared.
 var (
-	attachCh  = make(chan *v2.Subscriber)
+	attachCh  = make(chan *gtpv2.Subscriber)
 	createdCh = make(chan string)
 	loggerCh  = make(chan string)
 	errCh     = make(chan error)
@@ -63,12 +63,12 @@ func main() {
 	flag.Parse()
 	log.SetPrefix("[MME] ")
 
-	laddr, err := net.ResolveUDPAddr("udp", *s11mme+v2.GTPCPort)
+	laddr, err := net.ResolveUDPAddr("udp", *s11mme+gtpv2.GTPCPort)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	raddr, err := net.ResolveUDPAddr("udp", *s11sgw+v2.GTPCPort)
+	raddr, err := net.ResolveUDPAddr("udp", *s11sgw+gtpv2.GTPCPort)
 	if err != nil {
 		log.Println(err)
 		return
@@ -78,7 +78,7 @@ func main() {
 	defer cancel()
 
 	// setup *Conn first to check if the remote endpoint is awaken.
-	s11Conn, err := v2.Dial(ctx, laddr, raddr, v2.IFTypeS11MMEGTPC, 0)
+	s11Conn, err := gtpv2.Dial(ctx, laddr, raddr, gtpv2.IFTypeS11MMEGTPC, 0)
 	if err != nil {
 		log.Println(err)
 		return
@@ -88,20 +88,20 @@ func main() {
 
 	// register handlers for ALL the message you expect remote endpoint to send.
 	// by default, Echo and VersionNotsupported is handled without explicit declaration.
-	s11Conn.AddHandlers(map[uint8]v2.HandlerFunc{
+	s11Conn.AddHandlers(map[uint8]gtpv2.HandlerFunc{
 		message.MsgTypeCreateSessionResponse: handleCreateSessionResponse,
 		message.MsgTypeModifyBearerResponse:  handleModifyBearerResponse,
 		message.MsgTypeDeleteSessionResponse: handleDeleteSessionResponse,
 	})
 
 	// Listen on eNB S1-U interface.
-	enbUPlaneAddr, err := net.ResolveUDPAddr("udp", *s1enb+v2.GTPUPort)
+	enbUPlaneAddr, err := net.ResolveUDPAddr("udp", *s1enb+gtpv2.GTPUPort)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	uConn = v1.NewUPlaneConn(enbUPlaneAddr)
+	uConn = gtpv1.NewUPlaneConn(enbUPlaneAddr)
 	defer uConn.Close()
 
 	go func() {
@@ -115,30 +115,24 @@ func main() {
 	// here you should wait for UEs to come attaching to your network.
 	// in this example, the following five subscribers are to be attached.
 	// working as worker-dispatcher is preferable in the real case
-	go dispatch([]*v2.Subscriber{
-		&v2.Subscriber{
-			IMSI: "123451234567891", MSISDN: "8130900000001", IMEI: "123456780000011",
-			Location: &v2.Location{MCC: "123", MNC: "45", RATType: v2.RATTypeEUTRAN, TAI: 0x0001, ECI: 0x00000101},
-		},
-		&v2.Subscriber{
-			IMSI: "123451234567892", MSISDN: "8130900000002", IMEI: "123456780000012",
-			Location: &v2.Location{MCC: "123", MNC: "45", RATType: v2.RATTypeEUTRAN, TAI: 0x0002, ECI: 0x00000202},
-		},
-		&v2.Subscriber{
-			IMSI: "123451234567893", MSISDN: "8130900000003", IMEI: "123456780000013",
-			Location: &v2.Location{MCC: "123", MNC: "45", RATType: v2.RATTypeEUTRAN, TAI: 0x0003, ECI: 0x00000303},
-		},
-		&v2.Subscriber{
-			IMSI: "123451234567894", MSISDN: "8130900000004", IMEI: "123456780000014",
-			Location: &v2.Location{MCC: "123", MNC: "45", RATType: v2.RATTypeEUTRAN, TAI: 0x0004, ECI: 0x00000404},
-		},
-		&v2.Subscriber{
-			IMSI: "123451234567895", MSISDN: "8130900000005", IMEI: "123456780000015",
-			Location: &v2.Location{MCC: "123", MNC: "45", RATType: v2.RATTypeEUTRAN, TAI: 0x0005, ECI: 0x00000505},
-		},
-	})
+	go dispatch([]*gtpv2.Subscriber{{
+		IMSI: "123451234567891", MSISDN: "8130900000001", IMEI: "123456780000011",
+		Location: &gtpv2.Location{MCC: "123", MNC: "45", RATType: gtpv2.RATTypeEUTRAN, TAI: 0x0001, ECI: 0x00000101},
+	}, {
+		IMSI: "123451234567892", MSISDN: "8130900000002", IMEI: "123456780000012",
+		Location: &gtpv2.Location{MCC: "123", MNC: "45", RATType: gtpv2.RATTypeEUTRAN, TAI: 0x0002, ECI: 0x00000202},
+	}, {
+		IMSI: "123451234567893", MSISDN: "8130900000003", IMEI: "123456780000013",
+		Location: &gtpv2.Location{MCC: "123", MNC: "45", RATType: gtpv2.RATTypeEUTRAN, TAI: 0x0003, ECI: 0x00000303},
+	}, {
+		IMSI: "123451234567894", MSISDN: "8130900000004", IMEI: "123456780000014",
+		Location: &gtpv2.Location{MCC: "123", MNC: "45", RATType: gtpv2.RATTypeEUTRAN, TAI: 0x0004, ECI: 0x00000404},
+	}, {
+		IMSI: "123451234567895", MSISDN: "8130900000005", IMEI: "123456780000015",
+		Location: &gtpv2.Location{MCC: "123", MNC: "45", RATType: gtpv2.RATTypeEUTRAN, TAI: 0x0005, ECI: 0x00000505},
+	}})
 
-	bearer := v2.NewBearer(5, "", &v2.QoSProfile{
+	bearer := gtpv2.NewBearer(5, "", &gtpv2.QoSProfile{
 		PL: 2, QCI: 255, MBRUL: 0xffffffff, MBRDL: 0xffffffff, GBRUL: 0xffffffff, GBRDL: 0xffffffff,
 	})
 	for {
@@ -172,8 +166,8 @@ func main() {
 				}
 
 				enbIP := strings.Split(*s1enb, ":")[0]
-				enbFTEID := uConn.NewFTEID(v2.IFTypeS1UeNodeBGTPU, enbIP, "")
-				teid, err := sess.GetTEID(v2.IFTypeS11S4SGWGTPC)
+				enbFTEID := uConn.NewFTEID(gtpv2.IFTypeS1UeNodeBGTPU, enbIP, "")
+				teid, err := sess.GetTEID(gtpv2.IFTypeS11S4SGWGTPC)
 				if err != nil {
 					errCh <- err
 				}
@@ -203,9 +197,9 @@ func main() {
 		// delete all the sessions after 30 seconds
 		case <-time.After(30 * time.Second):
 			for _, sess := range s11Conn.Sessions() {
-				teid, err := sess.GetTEID(v2.IFTypeS11S4SGWGTPC)
+				teid, err := sess.GetTEID(gtpv2.IFTypeS11S4SGWGTPC)
 				if err != nil {
-					errCh <- v2.ErrTEIDNotFound
+					errCh <- gtpv2.ErrTEIDNotFound
 					return
 				}
 				if _, err := s11Conn.DeleteSession(teid, sess); err != nil {
