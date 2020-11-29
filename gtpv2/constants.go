@@ -4,6 +4,16 @@
 
 package gtpv2
 
+// Fixes for the constants with wrong names (original ones are kept for compatibility).
+const (
+	ContIDMSSupportOfNetworkRequestedBearerControlIndicator uint16 = 5  // ContIDMSSupportofNetworkRequestedBearerControlIndicator
+	ContIDIPAddressAllocationViaNASSignalling               uint16 = 10 // ContIDIPaddressAllocationViaNASSignalling
+	ContIDIPv4AddressAllocationViaDHCPv4                    uint16 = 11 // ContIDIPv4addressAllocationViaDHCPv4
+	ContID3GPPPSDataOffUEStatus                             uint16 = 23 // ContID3GPPPSDataOffUEstatus
+
+	SelectionModeMSOrNetworkProvidedAPNSubscribedVerified uint8 = 0 // SelectionModeMSorNetworkProvidedAPNSubscribedVerified
+)
+
 // Registered UDP ports
 const (
 	GTPCPort = ":2123"
