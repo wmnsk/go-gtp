@@ -27,6 +27,7 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *gtpv2.C
 		return nil, nil, err
 	}
 
+	srvCreated := make(chan struct{})
 	go func() {
 		srvConn = gtpv2.NewConn(srvAddr, gtpv2.IFTypeS11S4SGWGTPC, 0)
 		srvConn.AddHandler(
@@ -89,14 +90,22 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *gtpv2.C
 			},
 		)
 
-		if err := srvConn.ListenAndServe(ctx); err != nil {
+		if err := srvConn.Listen(ctx); err != nil {
+			log.Println(err)
+			return
+		}
+		srvCreated <- struct{}{}
+		if err := srvConn.Serve(ctx); err != nil {
 			log.Println(err)
 			return
 		}
 	}()
 
-	// XXX - waiting for server to be well-prepared, should consider better way.
-	time.Sleep(1 * time.Second)
+    select {
+    case <-srvCreated:
+    case <-time.After(2 * time.Second):
+        fmt.Println("Timeout waiting for server creation")
+    }
 	cliConn, err = gtpv2.Dial(ctx, cliAddr, srvAddr, gtpv2.IFTypeS11MMEGTPC, 0)
 	if err != nil {
 		return nil, nil, err
