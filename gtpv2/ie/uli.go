@@ -100,7 +100,7 @@ type ECGI struct {
 func NewECGI(mcc, mnc string, eci uint32) *ECGI {
 	return &ECGI{
 		PLMN: &PLMN{MCC: mcc, MNC: mnc},
-		ECI:  eci & 0xfffff,
+		ECI:  eci & 0xfffffff,
 	}
 }
 
