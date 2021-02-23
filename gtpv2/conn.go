@@ -127,7 +127,7 @@ func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8
 	}
 
 	go func() {
-		if err := c.serve(ctx); err != nil {
+		if err := c.Serve(ctx); err != nil {
 			logf("fatal error on Conn %s: %s", c.LocalAddr(), err)
 		}
 	}()
@@ -136,6 +136,15 @@ func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8
 
 // ListenAndServe creates a new GTPv2-C Conn and start serving background.
 func (c *Conn) ListenAndServe(ctx context.Context) error {
+	err := c.Listen(ctx)
+    if err != nil {
+        return err
+    }
+	return c.listenAndServe(ctx)
+}
+
+// Listen creates a new GTPv2-C Conn
+func (c *Conn) Listen(ctx context.Context) error {
 	var err error
 	c.mu.Lock()
 	c.pktConn, err = net.ListenPacket(c.laddr.Network(), c.laddr.String())
@@ -143,20 +152,19 @@ func (c *Conn) ListenAndServe(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	return c.listenAndServe(ctx)
+	return nil
 }
 
 func (c *Conn) listenAndServe(ctx context.Context) error {
 	// TODO: this func is left for future enhancement.
-	return c.serve(ctx)
+	return c.Serve(ctx)
 }
 
 func (c *Conn) closed() <-chan struct{} {
 	return c.closeCh
 }
 
-func (c *Conn) serve(ctx context.Context) error {
+func (c *Conn) Serve(ctx context.Context) error {
 	go func() {
 		select { // ctx is canceled or Close() is called
 		case <-ctx.Done():
