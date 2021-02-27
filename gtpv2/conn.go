@@ -1,4 +1,4 @@
-// Copyright 2019-2020 go-gtp authors. All rights reserved.
+// Copyright 2019-2021 go-gtp authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -164,6 +164,7 @@ func (c *Conn) closed() <-chan struct{} {
 	return c.closeCh
 }
 
+// Serve starts serving GTPv2 connection.
 func (c *Conn) Serve(ctx context.Context) error {
 	go func() {
 		select { // ctx is canceled or Close() is called

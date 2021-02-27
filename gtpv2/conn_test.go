@@ -1,4 +1,4 @@
-// Copyright 2019-2020 go-gtp authors. All rights reserved.
+// Copyright 2019-2021 go-gtp authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -101,11 +101,11 @@ func setup(ctx context.Context, doneCh chan struct{}) (cliConn, srvConn *gtpv2.C
 		}
 	}()
 
-    select {
-    case <-srvCreated:
-    case <-time.After(2 * time.Second):
-        fmt.Println("Timeout waiting for server creation")
-    }
+	select {
+	case <-srvCreated:
+	case <-time.After(2 * time.Second):
+		fmt.Println("Timeout waiting for server creation")
+	}
 	cliConn, err = gtpv2.Dial(ctx, cliAddr, srvAddr, gtpv2.IFTypeS11MMEGTPC, 0)
 	if err != nil {
 		return nil, nil, err
