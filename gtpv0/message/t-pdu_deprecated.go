@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes TPDU into bytes.
 //
-// DEPRECATED: use TPDU.Marshal instead.
+// Deprecated: use TPDU.Marshal instead.
 func (t *TPDU) Serialize() ([]byte, error) {
 	log.Println("TPDU.Serialize is deprecated. use TPDU.Marshal instead")
 	return t.Marshal()
@@ -16,7 +16,7 @@ func (t *TPDU) Serialize() ([]byte, error) {
 
 // SerializeTo serializes TPDU into bytes given as b.
 //
-// DEPRECATED: use TPDU.MarshalTo instead.
+// Deprecated: use TPDU.MarshalTo instead.
 func (t *TPDU) SerializeTo(b []byte) error {
 	log.Println("TPDU.SerializeTo is deprecated. use TPDU.MarshalTo instead")
 	return t.MarshalTo(b)
@@ -24,7 +24,7 @@ func (t *TPDU) SerializeTo(b []byte) error {
 
 // DecodeTPDU decodes bytes as TPDU.
 //
-// DEPRECATED: use ParseTPDU instead.
+// Deprecated: use ParseTPDU instead.
 func DecodeTPDU(b []byte) (*TPDU, error) {
 	log.Println("DecodeTPDU is deprecated. use ParseTPDU instead")
 	return ParseTPDU(b)
@@ -32,7 +32,7 @@ func DecodeTPDU(b []byte) (*TPDU, error) {
 
 // DecodeFromBytes decodes bytes as TPDU.
 //
-// DEPRECATED: use TPDU.UnmarshalBinary instead.
+// Deprecated: use TPDU.UnmarshalBinary instead.
 func (t *TPDU) DecodeFromBytes(b []byte) error {
 	log.Println("TPDU.DecodeFromBytes is deprecated. use TPDU.UnmarshalBinary instead")
 	return t.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (t *TPDU) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of TPDU.
 //
-// DEPRECATED: use TPDU.MarshalLen instead.
+// Deprecated: use TPDU.MarshalLen instead.
 func (t *TPDU) Len() int {
 	log.Println("TPDU.Len is deprecated. use TPDU.MarshalLen instead")
 	return t.MarshalLen()

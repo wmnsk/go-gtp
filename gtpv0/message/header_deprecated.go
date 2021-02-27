@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes Header into bytes.
 //
-// DEPRECATED: use Header.Marshal instead.
+// Deprecated: use Header.Marshal instead.
 func (h *Header) Serialize() ([]byte, error) {
 	log.Println("Header.Serialize is deprecated. use Header.Marshal instead")
 	return h.Marshal()
@@ -16,7 +16,7 @@ func (h *Header) Serialize() ([]byte, error) {
 
 // SerializeTo serializes Header into bytes given as b.
 //
-// DEPRECATED: use Header.MarshalTo instead.
+// Deprecated: use Header.MarshalTo instead.
 func (h *Header) SerializeTo(b []byte) error {
 	log.Println("Header.SerializeTo is deprecated. use Header.MarshalTo instead")
 	return h.MarshalTo(b)
@@ -24,7 +24,7 @@ func (h *Header) SerializeTo(b []byte) error {
 
 // DecodeHeader decodes bytes as Header.
 //
-// DEPRECATED: use ParseHeader instead.
+// Deprecated: use ParseHeader instead.
 func DecodeHeader(b []byte) (*Header, error) {
 	log.Println("DecodeHeader is deprecated. use ParseHeader instead")
 	return ParseHeader(b)
@@ -32,7 +32,7 @@ func DecodeHeader(b []byte) (*Header, error) {
 
 // DecodeFromBytes decodes bytes as Header.
 //
-// DEPRECATED: use Header.UnmarshalBinary instead.
+// Deprecated: use Header.UnmarshalBinary instead.
 func (h *Header) DecodeFromBytes(b []byte) error {
 	log.Println("Header.DecodeFromBytes is deprecated. use Header.UnmarshalBinary instead")
 	return h.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (h *Header) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of Header.
 //
-// DEPRECATED: use Header.MarshalLen instead.
+// Deprecated: use Header.MarshalLen instead.
 func (h *Header) Len() int {
 	log.Println("Header.Len is deprecated. use Header.MarshalLen instead")
 	return h.MarshalLen()

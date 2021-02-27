@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes UpdatePDPContextResponse into bytes.
 //
-// DEPRECATED: use UpdatePDPContextResponse.Marshal instead.
+// Deprecated: use UpdatePDPContextResponse.Marshal instead.
 func (u *UpdatePDPContextResponse) Serialize() ([]byte, error) {
 	log.Println("UpdatePDPContextResponse.Serialize is deprecated. use UpdatePDPContextResponse.Marshal instead")
 	return u.Marshal()
@@ -16,7 +16,7 @@ func (u *UpdatePDPContextResponse) Serialize() ([]byte, error) {
 
 // SerializeTo serializes UpdatePDPContextResponse into bytes given as b.
 //
-// DEPRECATED: use UpdatePDPContextResponse.MarshalTo instead.
+// Deprecated: use UpdatePDPContextResponse.MarshalTo instead.
 func (u *UpdatePDPContextResponse) SerializeTo(b []byte) error {
 	log.Println("UpdatePDPContextResponse.SerializeTo is deprecated. use UpdatePDPContextResponse.MarshalTo instead")
 	return u.MarshalTo(b)
@@ -24,7 +24,7 @@ func (u *UpdatePDPContextResponse) SerializeTo(b []byte) error {
 
 // DecodeUpdatePDPContextResponse decodes bytes as UpdatePDPContextResponse.
 //
-// DEPRECATED: use ParseUpdatePDPContextResponse instead.
+// Deprecated: use ParseUpdatePDPContextResponse instead.
 func DecodeUpdatePDPContextResponse(b []byte) (*UpdatePDPContextResponse, error) {
 	log.Println("DecodeUpdatePDPContextResponse is deprecated. use ParseUpdatePDPContextResponse instead")
 	return ParseUpdatePDPContextResponse(b)
@@ -32,7 +32,7 @@ func DecodeUpdatePDPContextResponse(b []byte) (*UpdatePDPContextResponse, error)
 
 // DecodeFromBytes decodes bytes as UpdatePDPContextResponse.
 //
-// DEPRECATED: use UpdatePDPContextResponse.UnmarshalBinary instead.
+// Deprecated: use UpdatePDPContextResponse.UnmarshalBinary instead.
 func (u *UpdatePDPContextResponse) DecodeFromBytes(b []byte) error {
 	log.Println("UpdatePDPContextResponse.DecodeFromBytes is deprecated. use UpdatePDPContextResponse.UnmarshalBinary instead")
 	return u.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (u *UpdatePDPContextResponse) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of UpdatePDPContextResponse.
 //
-// DEPRECATED: use UpdatePDPContextResponse.MarshalLen instead.
+// Deprecated: use UpdatePDPContextResponse.MarshalLen instead.
 func (u *UpdatePDPContextResponse) Len() int {
 	log.Println("UpdatePDPContextResponse.Len is deprecated. use UpdatePDPContextResponse.MarshalLen instead")
 	return u.MarshalLen()

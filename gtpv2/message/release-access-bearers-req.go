@@ -18,7 +18,7 @@ type ReleaseAccessBearersRequest struct {
 }
 
 // NewReleaseAccessBearersRequest creates a new ReleaseAccessBearersRequest.
-func NewReleaseAccessBearersRequest(teid, seq uint32, IEs ...*ie.IE) *ReleaseAccessBearersRequest {
+func NewReleaseAccessBearersRequest(teid, seq uint32, ies ...*ie.IE) *ReleaseAccessBearersRequest {
 	r := &ReleaseAccessBearersRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -26,7 +26,7 @@ func NewReleaseAccessBearersRequest(teid, seq uint32, IEs ...*ie.IE) *ReleaseAcc
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

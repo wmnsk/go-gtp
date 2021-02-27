@@ -46,12 +46,12 @@ type UpdatePDPContextRequest struct {
 }
 
 // NewUpdatePDPContextRequest creates a new GTPv1 UpdatePDPContextRequest.
-func NewUpdatePDPContextRequest(teid uint32, seq uint16, IEs ...*ie.IE) *UpdatePDPContextRequest {
+func NewUpdatePDPContextRequest(teid uint32, seq uint16, ies ...*ie.IE) *UpdatePDPContextRequest {
 	u := &UpdatePDPContextRequest{
 		Header: NewHeader(0x32, MsgTypeUpdatePDPContextRequest, teid, seq, nil),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}
@@ -368,12 +368,12 @@ func (u *UpdatePDPContextRequest) UnmarshalBinary(b []byte) error {
 		return nil
 	}
 
-	IEs, err := ie.ParseMultiIEs(u.Header.Payload)
+	ies, err := ie.ParseMultiIEs(u.Header.Payload)
 	if err != nil {
 		return err
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

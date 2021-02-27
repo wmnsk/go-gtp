@@ -33,7 +33,7 @@ type CreateBearerRequest struct {
 }
 
 // NewCreateBearerRequest creates a new CreateBearerRequest.
-func NewCreateBearerRequest(teid, seq uint32, IEs ...*ie.IE) *CreateBearerRequest {
+func NewCreateBearerRequest(teid, seq uint32, ies ...*ie.IE) *CreateBearerRequest {
 	c := &CreateBearerRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -41,7 +41,7 @@ func NewCreateBearerRequest(teid, seq uint32, IEs ...*ie.IE) *CreateBearerReques
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

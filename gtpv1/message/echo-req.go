@@ -16,12 +16,12 @@ type EchoRequest struct {
 }
 
 // NewEchoRequest creates a new GTP.
-func NewEchoRequest(seq uint16, IEs ...*ie.IE) *EchoRequest {
+func NewEchoRequest(seq uint16, ies ...*ie.IE) *EchoRequest {
 	e := &EchoRequest{
 		Header: NewHeader(0x32, MsgTypeEchoRequest, 0, seq, nil),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}
@@ -93,12 +93,12 @@ func (e *EchoRequest) UnmarshalBinary(b []byte) error {
 		return err
 	}
 
-	IEs, err := ie.ParseMultiIEs(e.Header.Payload)
+	ies, err := ie.ParseMultiIEs(e.Header.Payload)
 	if err != nil {
 		return err
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

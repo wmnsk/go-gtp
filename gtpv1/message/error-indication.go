@@ -16,12 +16,12 @@ type ErrorIndication struct {
 }
 
 // NewErrorIndication creates a new GTPv1 NewErrorIndication.
-func NewErrorIndication(teid uint32, seq uint16, IEs ...*ie.IE) *ErrorIndication {
+func NewErrorIndication(teid uint32, seq uint16, ies ...*ie.IE) *ErrorIndication {
 	e := &ErrorIndication{
 		Header: NewHeader(0x32, MsgTypeErrorIndication, teid, seq, nil),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}
@@ -112,12 +112,12 @@ func (e *ErrorIndication) UnmarshalBinary(b []byte) error {
 		return nil
 	}
 
-	IEs, err := ie.ParseMultiIEs(e.Header.Payload)
+	ies, err := ie.ParseMultiIEs(e.Header.Payload)
 	if err != nil {
 		return err
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

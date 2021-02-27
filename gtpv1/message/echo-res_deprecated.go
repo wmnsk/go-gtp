@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes EchoResponse into bytes.
 //
-// DEPRECATED: use EchoResponse.Marshal instead.
+// Deprecated: use EchoResponse.Marshal instead.
 func (e *EchoResponse) Serialize() ([]byte, error) {
 	log.Println("EchoResponse.Serialize is deprecated. use EchoResponse.Marshal instead")
 	return e.Marshal()
@@ -16,7 +16,7 @@ func (e *EchoResponse) Serialize() ([]byte, error) {
 
 // SerializeTo serializes EchoResponse into bytes given as b.
 //
-// DEPRECATED: use EchoResponse.MarshalTo instead.
+// Deprecated: use EchoResponse.MarshalTo instead.
 func (e *EchoResponse) SerializeTo(b []byte) error {
 	log.Println("EchoResponse.SerializeTo is deprecated. use EchoResponse.MarshalTo instead")
 	return e.MarshalTo(b)
@@ -24,7 +24,7 @@ func (e *EchoResponse) SerializeTo(b []byte) error {
 
 // DecodeEchoResponse decodes bytes as EchoResponse.
 //
-// DEPRECATED: use ParseEchoResponse instead.
+// Deprecated: use ParseEchoResponse instead.
 func DecodeEchoResponse(b []byte) (*EchoResponse, error) {
 	log.Println("DecodeEchoResponse is deprecated. use ParseEchoResponse instead")
 	return ParseEchoResponse(b)
@@ -32,7 +32,7 @@ func DecodeEchoResponse(b []byte) (*EchoResponse, error) {
 
 // DecodeFromBytes decodes bytes as EchoResponse.
 //
-// DEPRECATED: use EchoResponse.UnmarshalBinary instead.
+// Deprecated: use EchoResponse.UnmarshalBinary instead.
 func (e *EchoResponse) DecodeFromBytes(b []byte) error {
 	log.Println("EchoResponse.DecodeFromBytes is deprecated. use EchoResponse.UnmarshalBinary instead")
 	return e.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (e *EchoResponse) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of EchoResponse.
 //
-// DEPRECATED: use EchoResponse.MarshalLen instead.
+// Deprecated: use EchoResponse.MarshalLen instead.
 func (e *EchoResponse) Len() int {
 	log.Println("EchoResponse.Len is deprecated. use EchoResponse.MarshalLen instead")
 	return e.MarshalLen()

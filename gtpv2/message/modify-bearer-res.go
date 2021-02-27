@@ -41,7 +41,7 @@ type ModifyBearerResponse struct {
 }
 
 // NewModifyBearerResponse creates a new ModifyBearerResponse.
-func NewModifyBearerResponse(teid, seq uint32, IEs ...*ie.IE) *ModifyBearerResponse {
+func NewModifyBearerResponse(teid, seq uint32, ies ...*ie.IE) *ModifyBearerResponse {
 	m := &ModifyBearerResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -49,7 +49,7 @@ func NewModifyBearerResponse(teid, seq uint32, IEs ...*ie.IE) *ModifyBearerRespo
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

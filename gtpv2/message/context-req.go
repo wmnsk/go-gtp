@@ -35,7 +35,7 @@ type ContextRequest struct {
 }
 
 // NewContextRequest creates a new ContextRequest.
-func NewContextRequest(teid, seq uint32, IEs ...*ie.IE) *ContextRequest {
+func NewContextRequest(teid, seq uint32, ies ...*ie.IE) *ContextRequest {
 	c := &ContextRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -43,7 +43,7 @@ func NewContextRequest(teid, seq uint32, IEs ...*ie.IE) *ContextRequest {
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

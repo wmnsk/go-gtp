@@ -510,3 +510,34 @@ func TestIEs(t *testing.T) {
 		})
 	}
 }
+
+func TestIEAddRemove(t *testing.T) {
+	i := ie.NewBearerContext(
+		ie.NewIMSI("123451234567890").WithInstance(1),
+		ie.NewMSISDN("819012345678"),
+	)
+	i.Add(ie.NewAccessPointName("foo.example"))
+
+	added := ie.NewBearerContext(
+		ie.NewIMSI("123451234567890").WithInstance(1),
+		ie.NewMSISDN("819012345678"),
+		ie.NewAccessPointName("foo.example"),
+	)
+
+	opt := cmp.AllowUnexported(*i, *added)
+	if diff := cmp.Diff(i, added, opt); diff != "" {
+		t.Error(diff)
+	}
+
+	i.Remove(ie.IMSI, 1)
+
+	removed := ie.NewBearerContext(
+		ie.NewMSISDN("819012345678"),
+		ie.NewAccessPointName("foo.example"),
+	)
+
+	opt = cmp.AllowUnexported(*i, *removed)
+	if diff := cmp.Diff(i, removed, opt); diff != "" {
+		t.Error(diff)
+	}
+}

@@ -19,7 +19,7 @@ type DownlinkDataNotificationFailureIndication struct {
 }
 
 // NewDownlinkDataNotificationFailureIndication creates a new DownlinkDataNotificationFailureIndication.
-func NewDownlinkDataNotificationFailureIndication(teid, seq uint32, IEs ...*ie.IE) *DownlinkDataNotificationFailureIndication {
+func NewDownlinkDataNotificationFailureIndication(teid, seq uint32, ies ...*ie.IE) *DownlinkDataNotificationFailureIndication {
 	d := &DownlinkDataNotificationFailureIndication{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -27,7 +27,7 @@ func NewDownlinkDataNotificationFailureIndication(teid, seq uint32, IEs ...*ie.I
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

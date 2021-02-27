@@ -28,14 +28,14 @@ type CreatePDPContextResponse struct {
 }
 
 // NewCreatePDPContextResponse creates a new CreatePDPContextResponse.
-func NewCreatePDPContextResponse(seq, label uint16, tid uint64, IEs ...*ie.IE) *CreatePDPContextResponse {
+func NewCreatePDPContextResponse(seq, label uint16, tid uint64, ies ...*ie.IE) *CreatePDPContextResponse {
 	c := &CreatePDPContextResponse{
 		Header: NewHeader(
 			0x1e, MsgTypeCreatePDPContextResponse, seq, label, tid, nil,
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}
@@ -208,12 +208,12 @@ func (c *CreatePDPContextResponse) UnmarshalBinary(b []byte) error {
 		return nil
 	}
 
-	IEs, err := ie.ParseMultiIEs(c.Header.Payload)
+	ies, err := ie.ParseMultiIEs(c.Header.Payload)
 	if err != nil {
 		return err
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

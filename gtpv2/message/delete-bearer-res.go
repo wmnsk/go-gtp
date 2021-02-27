@@ -41,7 +41,7 @@ type DeleteBearerResponse struct {
 }
 
 // NewDeleteBearerResponse creates a new DeleteBearerResponse.
-func NewDeleteBearerResponse(teid, seq uint32, IEs ...*ie.IE) *DeleteBearerResponse {
+func NewDeleteBearerResponse(teid, seq uint32, ies ...*ie.IE) *DeleteBearerResponse {
 	d := &DeleteBearerResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -49,7 +49,7 @@ func NewDeleteBearerResponse(teid, seq uint32, IEs ...*ie.IE) *DeleteBearerRespo
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

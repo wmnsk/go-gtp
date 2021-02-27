@@ -18,7 +18,7 @@ type UpdatePDNConnectionSetRequest struct {
 }
 
 // NewUpdatePDNConnectionSetRequest creates a new UpdatePDNConnectionSetRequest.
-func NewUpdatePDNConnectionSetRequest(teid, seq uint32, IEs ...*ie.IE) *UpdatePDNConnectionSetRequest {
+func NewUpdatePDNConnectionSetRequest(teid, seq uint32, ies ...*ie.IE) *UpdatePDNConnectionSetRequest {
 	m := &UpdatePDNConnectionSetRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -26,7 +26,7 @@ func NewUpdatePDNConnectionSetRequest(teid, seq uint32, IEs ...*ie.IE) *UpdatePD
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

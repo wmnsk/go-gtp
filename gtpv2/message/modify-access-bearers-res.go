@@ -21,7 +21,7 @@ type ModifyAccessBearersResponse struct {
 }
 
 // NewModifyAccessBearersResponse creates a new ModifyAccessBearersResponse.
-func NewModifyAccessBearersResponse(teid, seq uint32, IEs ...*ie.IE) *ModifyAccessBearersResponse {
+func NewModifyAccessBearersResponse(teid, seq uint32, ies ...*ie.IE) *ModifyAccessBearersResponse {
 	m := &ModifyAccessBearersResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -29,7 +29,7 @@ func NewModifyAccessBearersResponse(teid, seq uint32, IEs ...*ie.IE) *ModifyAcce
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

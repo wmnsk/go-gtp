@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes IE into bytes.
 //
-// DEPRECATED: use IE.Marshal instead.
+// Deprecated: use IE.Marshal instead.
 func (i *IE) Serialize() ([]byte, error) {
 	log.Println("IE.Serialize is deprecated. use IE.Marshal instead")
 	return i.Marshal()
@@ -16,7 +16,7 @@ func (i *IE) Serialize() ([]byte, error) {
 
 // SerializeTo serializes IE into bytes given as b.
 //
-// DEPRECATED: use IE.MarshalTo instead.
+// Deprecated: use IE.MarshalTo instead.
 func (i *IE) SerializeTo(b []byte) error {
 	log.Println("IE.SerializeTo is deprecated. use IE.MarshalTo instead")
 	return i.MarshalTo(b)
@@ -24,7 +24,7 @@ func (i *IE) SerializeTo(b []byte) error {
 
 // Decode decodes bytes as IE.
 //
-// DEPRECATED: use Parse instead.
+// Deprecated: use Parse instead.
 func Decode(b []byte) (*IE, error) {
 	log.Println("Decode is deprecated. use Parse instead")
 	return Parse(b)
@@ -32,7 +32,7 @@ func Decode(b []byte) (*IE, error) {
 
 // DecodeFromBytes decodes bytes as IE.
 //
-// DEPRECATED: use IE.UnmarshalBinary instead.
+// Deprecated: use IE.UnmarshalBinary instead.
 func (i *IE) DecodeFromBytes(b []byte) error {
 	log.Println("IE.DecodeFromBytes is deprecated. use IE.UnmarshalBinary instead")
 	return i.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (i *IE) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of IE.
 //
-// DEPRECATED: use IE.MarshalLen instead.
+// Deprecated: use IE.MarshalLen instead.
 func (i *IE) Len() int {
 	log.Println("IE.Len is deprecated. use IE.MarshalLen instead")
 	return i.MarshalLen()

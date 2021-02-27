@@ -20,7 +20,7 @@ type ModifyBearerCommand struct {
 }
 
 // NewModifyBearerCommand creates a new ModifyBearerCommand.
-func NewModifyBearerCommand(teid, seq uint32, IEs ...*ie.IE) *ModifyBearerCommand {
+func NewModifyBearerCommand(teid, seq uint32, ies ...*ie.IE) *ModifyBearerCommand {
 	m := &ModifyBearerCommand{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -28,7 +28,7 @@ func NewModifyBearerCommand(teid, seq uint32, IEs ...*ie.IE) *ModifyBearerComman
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

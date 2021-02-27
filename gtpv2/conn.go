@@ -137,9 +137,9 @@ func Dial(ctx context.Context, laddr, raddr net.Addr, localIfType, counter uint8
 // ListenAndServe creates a new GTPv2-C Conn and start serving background.
 func (c *Conn) ListenAndServe(ctx context.Context) error {
 	err := c.Listen(ctx)
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 	return c.listenAndServe(ctx)
 }
 
@@ -188,7 +188,7 @@ func (c *Conn) Serve(ctx context.Context) error {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				return nil
 			}
-			return fmt.Errorf("error reading from Conn %s: %s", c.LocalAddr(), err)
+			return fmt.Errorf("error reading from Conn %s: %w", c.LocalAddr(), err)
 		}
 
 		raw := make([]byte, n)
@@ -315,7 +315,7 @@ func (c *Conn) AddHandlers(funcs map[uint8]HandlerFunc) {
 func (c *Conn) handleMessage(senderAddr net.Addr, msg message.Message) error {
 	if c.validationEnabled {
 		if err := c.validate(senderAddr, msg); err != nil {
-			return fmt.Errorf("failed to validate %s: %v", msg.MessageTypeName(), err)
+			return fmt.Errorf("failed to validate %s: %w", msg.MessageTypeName(), err)
 		}
 	}
 
@@ -325,7 +325,7 @@ func (c *Conn) handleMessage(senderAddr net.Addr, msg message.Message) error {
 	}
 
 	if err := handle(c, senderAddr, msg); err != nil {
-		return fmt.Errorf("failed to handle %s: %v", msg.MessageTypeName(), err)
+		return fmt.Errorf("failed to handle %s: %w", msg.MessageTypeName(), err)
 	}
 
 	return nil
@@ -363,7 +363,7 @@ func (c *Conn) validate(senderAddr net.Addr, msg message.Message) error {
 	// check GTP version
 	if msg.Version() != 2 {
 		if err := c.VersionNotSupportedIndication(senderAddr, msg); err != nil {
-			return fmt.Errorf("failed to respond with VersionNotSupportedIndication: %s", err)
+			return fmt.Errorf("failed to respond with VersionNotSupportedIndication: %w", err)
 		}
 		return fmt.Errorf("received an invalid version(%d) of message: %v", msg.Version(), msg)
 	}
@@ -460,12 +460,12 @@ func (c *Conn) VersionNotSupportedIndication(raddr net.Addr, req message.Message
 }
 
 // ParseCreateSession iterates through the ie and returns a session
-func (c *Conn) ParseCreateSession(raddr net.Addr, IEs ...*ie.IE) (*Session, error) {
+func (c *Conn) ParseCreateSession(raddr net.Addr, ies ...*ie.IE) (*Session, error) {
 	// retrieve values from IEs given.
 	sess := NewSession(raddr, &Subscriber{Location: &Location{}})
 	br := sess.GetDefaultBearer()
 	var err error
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}
@@ -536,8 +536,8 @@ func (c *Conn) ParseCreateSession(raddr net.Addr, IEs ...*ie.IE) (*Session, erro
 						if err != nil {
 							return nil, err
 						}
-						br.PCI = child.PreemptionCapability()
-						br.PVI = child.PreemptionVulnerability()
+						br.PCI = child.HasPCI()
+						br.PVI = child.HasPVI()
 
 						br.MBRUL, err = child.MBRForUplink()
 						if err != nil {

@@ -19,7 +19,7 @@ type ModifyBearerFailureIndication struct {
 }
 
 // NewModifyBearerFailureIndication creates a new ModifyBearerFailureIndication.
-func NewModifyBearerFailureIndication(teid, seq uint32, IEs ...*ie.IE) *ModifyBearerFailureIndication {
+func NewModifyBearerFailureIndication(teid, seq uint32, ies ...*ie.IE) *ModifyBearerFailureIndication {
 	m := &ModifyBearerFailureIndication{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -27,7 +27,7 @@ func NewModifyBearerFailureIndication(teid, seq uint32, IEs ...*ie.IE) *ModifyBe
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

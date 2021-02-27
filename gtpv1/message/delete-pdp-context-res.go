@@ -21,12 +21,12 @@ type DeletePDPContextResponse struct {
 }
 
 // NewDeletePDPContextResponse creates a new GTPv1 DeletePDPContextResponse.
-func NewDeletePDPContextResponse(teid uint32, seq uint16, IEs ...*ie.IE) *DeletePDPContextResponse {
+func NewDeletePDPContextResponse(teid uint32, seq uint16, ies ...*ie.IE) *DeletePDPContextResponse {
 	d := &DeletePDPContextResponse{
 		Header: NewHeader(0x32, MsgTypeDeletePDPContextResponse, teid, seq, nil),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}
@@ -141,12 +141,12 @@ func (d *DeletePDPContextResponse) UnmarshalBinary(b []byte) error {
 		return nil
 	}
 
-	IEs, err := ie.ParseMultiIEs(d.Header.Payload)
+	ies, err := ie.ParseMultiIEs(d.Header.Payload)
 	if err != nil {
 		return err
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

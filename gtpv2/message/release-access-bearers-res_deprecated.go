@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes ReleaseAccessBearersResponse into bytes.
 //
-// DEPRECATED: use ReleaseAccessBearersResponse.Marshal instead.
+// Deprecated: use ReleaseAccessBearersResponse.Marshal instead.
 func (r *ReleaseAccessBearersResponse) Serialize() ([]byte, error) {
 	log.Println("ReleaseAccessBearersResponse.Serialize is deprecated. use ReleaseAccessBearersResponse.Marshal instead")
 	return r.Marshal()
@@ -16,7 +16,7 @@ func (r *ReleaseAccessBearersResponse) Serialize() ([]byte, error) {
 
 // SerializeTo serializes ReleaseAccessBearersResponse into bytes given as b.
 //
-// DEPRECATED: use ReleaseAccessBearersResponse.MarshalTo instead.
+// Deprecated: use ReleaseAccessBearersResponse.MarshalTo instead.
 func (r *ReleaseAccessBearersResponse) SerializeTo(b []byte) error {
 	log.Println("ReleaseAccessBearersResponse.SerializeTo is deprecated. use ReleaseAccessBearersResponse.MarshalTo instead")
 	return r.MarshalTo(b)
@@ -24,7 +24,7 @@ func (r *ReleaseAccessBearersResponse) SerializeTo(b []byte) error {
 
 // DecodeReleaseAccessBearersResponse decodes bytes as ReleaseAccessBearersResponse.
 //
-// DEPRECATED: use ParseReleaseAccessBearersResponse instead.
+// Deprecated: use ParseReleaseAccessBearersResponse instead.
 func DecodeReleaseAccessBearersResponse(b []byte) (*ReleaseAccessBearersResponse, error) {
 	log.Println("DecodeReleaseAccessBearersResponse is deprecated. use ParseReleaseAccessBearersResponse instead")
 	return ParseReleaseAccessBearersResponse(b)
@@ -32,7 +32,7 @@ func DecodeReleaseAccessBearersResponse(b []byte) (*ReleaseAccessBearersResponse
 
 // DecodeFromBytes decodes bytes as ReleaseAccessBearersResponse.
 //
-// DEPRECATED: use ReleaseAccessBearersResponse.UnmarshalBinary instead.
+// Deprecated: use ReleaseAccessBearersResponse.UnmarshalBinary instead.
 func (r *ReleaseAccessBearersResponse) DecodeFromBytes(b []byte) error {
 	log.Println("ReleaseAccessBearersResponse.DecodeFromBytes is deprecated. use ReleaseAccessBearersResponse.UnmarshalBinary instead")
 	return r.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (r *ReleaseAccessBearersResponse) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of ReleaseAccessBearersResponse.
 //
-// DEPRECATED: use ReleaseAccessBearersResponse.MarshalLen instead.
+// Deprecated: use ReleaseAccessBearersResponse.MarshalLen instead.
 func (r *ReleaseAccessBearersResponse) Len() int {
 	log.Println("ReleaseAccessBearersResponse.Len is deprecated. use ReleaseAccessBearersResponse.MarshalLen instead")
 	return r.MarshalLen()

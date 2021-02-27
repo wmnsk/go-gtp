@@ -19,7 +19,7 @@ type PGWRestartNotification struct {
 }
 
 // NewPGWRestartNotification creates a new PGWRestartNotification.
-func NewPGWRestartNotification(teid, seq uint32, IEs ...*ie.IE) *PGWRestartNotification {
+func NewPGWRestartNotification(teid, seq uint32, ies ...*ie.IE) *PGWRestartNotification {
 	m := &PGWRestartNotification{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -27,7 +27,7 @@ func NewPGWRestartNotification(teid, seq uint32, IEs ...*ie.IE) *PGWRestartNotif
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes CreateBearerRequest into bytes.
 //
-// DEPRECATED: use CreateBearerRequest.Marshal instead.
+// Deprecated: use CreateBearerRequest.Marshal instead.
 func (c *CreateBearerRequest) Serialize() ([]byte, error) {
 	log.Println("CreateBearerRequest.Serialize is deprecated. use CreateBearerRequest.Marshal instead")
 	return c.Marshal()
@@ -16,7 +16,7 @@ func (c *CreateBearerRequest) Serialize() ([]byte, error) {
 
 // SerializeTo serializes CreateBearerRequest into bytes given as b.
 //
-// DEPRECATED: use CreateBearerRequest.MarshalTo instead.
+// Deprecated: use CreateBearerRequest.MarshalTo instead.
 func (c *CreateBearerRequest) SerializeTo(b []byte) error {
 	log.Println("CreateBearerRequest.SerializeTo is deprecated. use CreateBearerRequest.MarshalTo instead")
 	return c.MarshalTo(b)
@@ -24,7 +24,7 @@ func (c *CreateBearerRequest) SerializeTo(b []byte) error {
 
 // DecodeCreateBearerRequest decodes bytes as CreateBearerRequest.
 //
-// DEPRECATED: use ParseCreateBearerRequest instead.
+// Deprecated: use ParseCreateBearerRequest instead.
 func DecodeCreateBearerRequest(b []byte) (*CreateBearerRequest, error) {
 	log.Println("DecodeCreateBearerRequest is deprecated. use ParseCreateBearerRequest instead")
 	return ParseCreateBearerRequest(b)
@@ -32,7 +32,7 @@ func DecodeCreateBearerRequest(b []byte) (*CreateBearerRequest, error) {
 
 // DecodeFromBytes decodes bytes as CreateBearerRequest.
 //
-// DEPRECATED: use CreateBearerRequest.UnmarshalBinary instead.
+// Deprecated: use CreateBearerRequest.UnmarshalBinary instead.
 func (c *CreateBearerRequest) DecodeFromBytes(b []byte) error {
 	log.Println("CreateBearerRequest.DecodeFromBytes is deprecated. use CreateBearerRequest.UnmarshalBinary instead")
 	return c.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (c *CreateBearerRequest) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of CreateBearerRequest.
 //
-// DEPRECATED: use CreateBearerRequest.MarshalLen instead.
+// Deprecated: use CreateBearerRequest.MarshalLen instead.
 func (c *CreateBearerRequest) Len() int {
 	log.Println("CreateBearerRequest.Len is deprecated. use CreateBearerRequest.MarshalLen instead")
 	return c.MarshalLen()

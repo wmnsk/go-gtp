@@ -40,7 +40,7 @@ type HandlerNotFoundError struct {
 	MsgType string
 }
 
-//x Error returns violating message type to handle.
+// Error returns violating message type to handle.
 func (e *HandlerNotFoundError) Error() string {
 	return fmt.Sprintf("no handlers found for incoming message: %s, ignoring", e.MsgType)
 }

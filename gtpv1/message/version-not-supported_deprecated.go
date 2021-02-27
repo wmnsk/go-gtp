@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes VersionNotSupported into bytes.
 //
-// DEPRECATED: use VersionNotSupported.Marshal instead.
+// Deprecated: use VersionNotSupported.Marshal instead.
 func (v *VersionNotSupported) Serialize() ([]byte, error) {
 	log.Println("VersionNotSupported.Serialize is deprecated. use VersionNotSupported.Marshal instead")
 	return v.Marshal()
@@ -16,7 +16,7 @@ func (v *VersionNotSupported) Serialize() ([]byte, error) {
 
 // SerializeTo serializes VersionNotSupported into bytes given as b.
 //
-// DEPRECATED: use VersionNotSupported.MarshalTo instead.
+// Deprecated: use VersionNotSupported.MarshalTo instead.
 func (v *VersionNotSupported) SerializeTo(b []byte) error {
 	log.Println("VersionNotSupported.SerializeTo is deprecated. use VersionNotSupported.MarshalTo instead")
 	return v.MarshalTo(b)
@@ -24,7 +24,7 @@ func (v *VersionNotSupported) SerializeTo(b []byte) error {
 
 // DecodeVersionNotSupported decodes bytes as VersionNotSupported.
 //
-// DEPRECATED: use ParseVersionNotSupported instead.
+// Deprecated: use ParseVersionNotSupported instead.
 func DecodeVersionNotSupported(b []byte) (*VersionNotSupported, error) {
 	log.Println("DecodeVersionNotSupported is deprecated. use ParseVersionNotSupported instead")
 	return ParseVersionNotSupported(b)
@@ -32,7 +32,7 @@ func DecodeVersionNotSupported(b []byte) (*VersionNotSupported, error) {
 
 // DecodeFromBytes decodes bytes as VersionNotSupported.
 //
-// DEPRECATED: use VersionNotSupported.UnmarshalBinary instead.
+// Deprecated: use VersionNotSupported.UnmarshalBinary instead.
 func (v *VersionNotSupported) DecodeFromBytes(b []byte) error {
 	log.Println("VersionNotSupported.DecodeFromBytes is deprecated. use VersionNotSupported.UnmarshalBinary instead")
 	return v.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (v *VersionNotSupported) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of VersionNotSupported.
 //
-// DEPRECATED: use VersionNotSupported.MarshalLen instead.
+// Deprecated: use VersionNotSupported.MarshalLen instead.
 func (v *VersionNotSupported) Len() int {
 	log.Println("VersionNotSupported.Len is deprecated. use VersionNotSupported.MarshalLen instead")
 	return v.MarshalLen()

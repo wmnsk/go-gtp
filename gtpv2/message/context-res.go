@@ -46,7 +46,7 @@ type ContextResponse struct {
 }
 
 // NewContextResponse creates a new ContextResponse.
-func NewContextResponse(teid, seq uint32, IEs ...*ie.IE) *ContextResponse {
+func NewContextResponse(teid, seq uint32, ies ...*ie.IE) *ContextResponse {
 	c := &ContextResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -54,7 +54,7 @@ func NewContextResponse(teid, seq uint32, IEs ...*ie.IE) *ContextResponse {
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

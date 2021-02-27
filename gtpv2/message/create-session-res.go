@@ -49,14 +49,14 @@ type CreateSessionResponse struct {
 }
 
 // NewCreateSessionResponse creates a new CreateSessionResponse.
-func NewCreateSessionResponse(teid, seq uint32, IEs ...*ie.IE) *CreateSessionResponse {
+func NewCreateSessionResponse(teid, seq uint32, ies ...*ie.IE) *CreateSessionResponse {
 	c := &CreateSessionResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
 			MsgTypeCreateSessionResponse, teid, seq, nil,
 		),
 	}
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

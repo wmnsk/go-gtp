@@ -24,7 +24,7 @@ type ContextAcknowledge struct {
 }
 
 // NewContextAcknowledge creates a new ContextAcknowledge.
-func NewContextAcknowledge(teid, seq uint32, IEs ...*ie.IE) *ContextAcknowledge {
+func NewContextAcknowledge(teid, seq uint32, ies ...*ie.IE) *ContextAcknowledge {
 	c := &ContextAcknowledge{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -32,7 +32,7 @@ func NewContextAcknowledge(teid, seq uint32, IEs ...*ie.IE) *ContextAcknowledge 
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

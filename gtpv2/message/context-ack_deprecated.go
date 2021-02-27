@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes ContextAcknowledge into bytes.
 //
-// DEPRECATED: use ContextAcknowledge.Marshal instead.
+// Deprecated: use ContextAcknowledge.Marshal instead.
 func (c *ContextAcknowledge) Serialize() ([]byte, error) {
 	log.Println("ContextAcknowledge.Serialize is deprecated. use ContextAcknowledge.Marshal instead")
 	return c.Marshal()
@@ -16,7 +16,7 @@ func (c *ContextAcknowledge) Serialize() ([]byte, error) {
 
 // SerializeTo serializes ContextAcknowledge into bytes given as b.
 //
-// DEPRECATED: use ContextAcknowledge.MarshalTo instead.
+// Deprecated: use ContextAcknowledge.MarshalTo instead.
 func (c *ContextAcknowledge) SerializeTo(b []byte) error {
 	log.Println("ContextAcknowledge.SerializeTo is deprecated. use ContextAcknowledge.MarshalTo instead")
 	return c.MarshalTo(b)
@@ -24,7 +24,7 @@ func (c *ContextAcknowledge) SerializeTo(b []byte) error {
 
 // DecodeContextAcknowledge decodes bytes as ContextAcknowledge.
 //
-// DEPRECATED: use ParseContextAcknowledge instead.
+// Deprecated: use ParseContextAcknowledge instead.
 func DecodeContextAcknowledge(b []byte) (*ContextAcknowledge, error) {
 	log.Println("DecodeContextAcknowledge is deprecated. use ParseContextAcknowledge instead")
 	return ParseContextAcknowledge(b)
@@ -32,7 +32,7 @@ func DecodeContextAcknowledge(b []byte) (*ContextAcknowledge, error) {
 
 // DecodeFromBytes decodes bytes as ContextAcknowledge.
 //
-// DEPRECATED: use ContextAcknowledge.UnmarshalBinary instead.
+// Deprecated: use ContextAcknowledge.UnmarshalBinary instead.
 func (c *ContextAcknowledge) DecodeFromBytes(b []byte) error {
 	log.Println("ContextAcknowledge.DecodeFromBytes is deprecated. use ContextAcknowledge.UnmarshalBinary instead")
 	return c.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (c *ContextAcknowledge) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of ContextAcknowledge.
 //
-// DEPRECATED: use ContextAcknowledge.MarshalLen instead.
+// Deprecated: use ContextAcknowledge.MarshalLen instead.
 func (c *ContextAcknowledge) Len() int {
 	log.Println("ContextAcknowledge.Len is deprecated. use ContextAcknowledge.MarshalLen instead")
 	return c.MarshalLen()

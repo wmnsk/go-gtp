@@ -15,7 +15,7 @@ type StopPagingIndication struct {
 }
 
 // NewStopPagingIndication creates a new StopPagingIndication.
-func NewStopPagingIndication(teid, seq uint32, IEs ...*ie.IE) *StopPagingIndication {
+func NewStopPagingIndication(teid, seq uint32, ies ...*ie.IE) *StopPagingIndication {
 	s := &StopPagingIndication{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -23,7 +23,7 @@ func NewStopPagingIndication(teid, seq uint32, IEs ...*ie.IE) *StopPagingIndicat
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

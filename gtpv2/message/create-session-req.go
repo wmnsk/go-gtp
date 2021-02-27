@@ -80,7 +80,7 @@ type CreateSessionRequest struct {
 }
 
 // NewCreateSessionRequest creates a new CreateSessionRequest.
-func NewCreateSessionRequest(teid, seq uint32, IEs ...*ie.IE) *CreateSessionRequest {
+func NewCreateSessionRequest(teid, seq uint32, ies ...*ie.IE) *CreateSessionRequest {
 	c := &CreateSessionRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -88,7 +88,7 @@ func NewCreateSessionRequest(teid, seq uint32, IEs ...*ie.IE) *CreateSessionRequ
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

@@ -26,7 +26,7 @@ func NewGSNAddressByIP(ip net.IP) *IE {
 	if v4 != nil {
 		return New(GSNAddress, v4)
 	}
-	//IPv6
+	// IPv6
 	return New(GSNAddress, ip)
 }
 

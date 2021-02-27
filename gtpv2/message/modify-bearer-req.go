@@ -50,7 +50,7 @@ type ModifyBearerRequest struct {
 }
 
 // NewModifyBearerRequest creates a new ModifyBearerRequest.
-func NewModifyBearerRequest(teid, seq uint32, IEs ...*ie.IE) *ModifyBearerRequest {
+func NewModifyBearerRequest(teid, seq uint32, ies ...*ie.IE) *ModifyBearerRequest {
 	m := &ModifyBearerRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -58,7 +58,7 @@ func NewModifyBearerRequest(teid, seq uint32, IEs ...*ie.IE) *ModifyBearerReques
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

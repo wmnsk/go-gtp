@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes ErrorIndication into bytes.
 //
-// DEPRECATED: use ErrorIndication.Marshal instead.
+// Deprecated: use ErrorIndication.Marshal instead.
 func (e *ErrorIndication) Serialize() ([]byte, error) {
 	log.Println("ErrorIndication.Serialize is deprecated. use ErrorIndication.Marshal instead")
 	return e.Marshal()
@@ -16,7 +16,7 @@ func (e *ErrorIndication) Serialize() ([]byte, error) {
 
 // SerializeTo serializes ErrorIndication into bytes given as b.
 //
-// DEPRECATED: use ErrorIndication.MarshalTo instead.
+// Deprecated: use ErrorIndication.MarshalTo instead.
 func (e *ErrorIndication) SerializeTo(b []byte) error {
 	log.Println("ErrorIndication.SerializeTo is deprecated. use ErrorIndication.MarshalTo instead")
 	return e.MarshalTo(b)
@@ -24,7 +24,7 @@ func (e *ErrorIndication) SerializeTo(b []byte) error {
 
 // DecodeErrorIndication decodes bytes as ErrorIndication.
 //
-// DEPRECATED: use ParseErrorIndication instead.
+// Deprecated: use ParseErrorIndication instead.
 func DecodeErrorIndication(b []byte) (*ErrorIndication, error) {
 	log.Println("DecodeErrorIndication is deprecated. use ParseErrorIndication instead")
 	return ParseErrorIndication(b)
@@ -32,7 +32,7 @@ func DecodeErrorIndication(b []byte) (*ErrorIndication, error) {
 
 // DecodeFromBytes decodes bytes as ErrorIndication.
 //
-// DEPRECATED: use ErrorIndication.UnmarshalBinary instead.
+// Deprecated: use ErrorIndication.UnmarshalBinary instead.
 func (e *ErrorIndication) DecodeFromBytes(b []byte) error {
 	log.Println("ErrorIndication.DecodeFromBytes is deprecated. use ErrorIndication.UnmarshalBinary instead")
 	return e.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (e *ErrorIndication) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of ErrorIndication.
 //
-// DEPRECATED: use ErrorIndication.MarshalLen instead.
+// Deprecated: use ErrorIndication.MarshalLen instead.
 func (e *ErrorIndication) Len() int {
 	log.Println("ErrorIndication.Len is deprecated. use ErrorIndication.MarshalLen instead")
 	return e.MarshalLen()

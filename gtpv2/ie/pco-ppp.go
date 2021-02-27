@@ -173,7 +173,7 @@ func (p *PAPFields) MarshalTo(b []byte) error {
 	if l < offset+int(p.PeerIDLength) {
 		return io.ErrUnexpectedEOF
 	}
-	copy(b[offset:offset+int(p.PeerIDLength)], []byte(p.PeerID))
+	copy(b[offset:offset+int(p.PeerIDLength)], p.PeerID)
 	offset += int(p.PeerIDLength)
 
 	b[offset] = p.PasswordLength
@@ -182,7 +182,7 @@ func (p *PAPFields) MarshalTo(b []byte) error {
 	if l < offset+int(p.PasswordLength) {
 		return io.ErrUnexpectedEOF
 	}
-	copy(b[offset:offset+int(p.PasswordLength)], []byte(p.Password))
+	copy(b[offset:offset+int(p.PasswordLength)], p.Password)
 
 	return nil
 }
@@ -269,10 +269,10 @@ func (c *CHAPFields) MarshalTo(b []byte) error {
 	if l < offset+int(c.ValueSize) {
 		return io.ErrUnexpectedEOF
 	}
-	copy(b[offset:offset+int(c.ValueSize)], []byte(c.Value))
+	copy(b[offset:offset+int(c.ValueSize)], c.Value)
 	offset += int(c.ValueSize)
 
-	copy(b[offset:], []byte(c.Name))
+	copy(b[offset:], c.Name)
 
 	return nil
 }
@@ -348,7 +348,7 @@ func NewIPCPOptionIPAddress(ip net.IP) *IPCPOption {
 		return NewIPCPOption(IPCPOptionIPAddress, v4)
 	}
 
-	//IPv6
+	// IPv6
 	return NewIPCPOption(IPCPOptionIPAddress, ip)
 }
 
@@ -361,7 +361,7 @@ func NewIPCPOptionMobileIPv4(ip net.IP) *IPCPOption {
 		return NewIPCPOption(IPCPOptionMobileIPv4, v4)
 	}
 
-	//IPv6
+	// IPv6
 	return NewIPCPOption(IPCPOptionMobileIPv4, ip)
 }
 
@@ -374,7 +374,7 @@ func NewIPCPOptionPrimaryDNS(ip net.IP) *IPCPOption {
 		return NewIPCPOption(IPCPOptionPrimaryDNS, v4)
 	}
 
-	//IPv6
+	// IPv6
 	return NewIPCPOption(IPCPOptionPrimaryDNS, ip)
 }
 
@@ -387,7 +387,7 @@ func NewIPCPOptionSecondaryDNS(ip net.IP) *IPCPOption {
 		return NewIPCPOption(IPCPOptionSecondaryDNS, v4)
 	}
 
-	//IPv6
+	// IPv6
 	return NewIPCPOption(IPCPOptionSecondaryDNS, ip)
 }
 

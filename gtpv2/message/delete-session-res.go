@@ -27,7 +27,7 @@ type DeleteSessionResponse struct {
 }
 
 // NewDeleteSessionResponse creates a new DeleteSessionResponse.
-func NewDeleteSessionResponse(teid, seq uint32, IEs ...*ie.IE) *DeleteSessionResponse {
+func NewDeleteSessionResponse(teid, seq uint32, ies ...*ie.IE) *DeleteSessionResponse {
 	d := &DeleteSessionResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -35,7 +35,7 @@ func NewDeleteSessionResponse(teid, seq uint32, IEs ...*ie.IE) *DeleteSessionRes
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

@@ -234,6 +234,6 @@ func newUint32ValIE(t uint8, v uint32) *IE {
 }
 
 // left for future use.
-//func newStringIE(t uint8, str string) *IE {
-//	return New(t, []byte(str))
-//}
+// func newStringIE(t uint8, str string) *IE {
+// 	return New(t, []byte(str))
+// }

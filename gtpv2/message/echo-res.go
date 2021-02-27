@@ -18,7 +18,7 @@ type EchoResponse struct {
 }
 
 // NewEchoResponse creates a new EchoResponse.
-func NewEchoResponse(seq uint32, IEs ...*ie.IE) *EchoResponse {
+func NewEchoResponse(seq uint32, ies ...*ie.IE) *EchoResponse {
 	e := &EchoResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 0),
@@ -26,7 +26,7 @@ func NewEchoResponse(seq uint32, IEs ...*ie.IE) *EchoResponse {
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

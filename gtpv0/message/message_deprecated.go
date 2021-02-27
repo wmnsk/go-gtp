@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes Message into bytes.
 //
-// DEPRECATED: use Marshal instead.
+// Deprecated: use Marshal instead.
 func Serialize(m Message) ([]byte, error) {
 	log.Println("Serialize is deprecated. use Marshal instead")
 	return Marshal(m)
@@ -16,7 +16,7 @@ func Serialize(m Message) ([]byte, error) {
 
 // Decode decodes bytes as Message.
 //
-// DEPRECATED: use Parse instead.
+// Deprecated: use Parse instead.
 func Decode(b []byte) (Message, error) {
 	log.Println("Decode is deprecated. use Parse instead")
 	return Parse(b)

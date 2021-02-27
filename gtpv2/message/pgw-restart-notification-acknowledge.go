@@ -17,7 +17,7 @@ type PGWRestartNotificationAcknowledge struct {
 }
 
 // NewPGWRestartNotificationAcknowledge creates a new PGWRestartNotificationAcknowledge.
-func NewPGWRestartNotificationAcknowledge(teid, seq uint32, IEs ...*ie.IE) *PGWRestartNotificationAcknowledge {
+func NewPGWRestartNotificationAcknowledge(teid, seq uint32, ies ...*ie.IE) *PGWRestartNotificationAcknowledge {
 	m := &PGWRestartNotificationAcknowledge{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -25,7 +25,7 @@ func NewPGWRestartNotificationAcknowledge(teid, seq uint32, IEs ...*ie.IE) *PGWR
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

@@ -514,7 +514,7 @@ func (f *UserLocationInformationFields) MarshalLen() int {
 // The flags and corresponding fields are automatically set depending on the values given in int.
 // If a value is less than 0, the field is considered as missing.
 //
-// DEPRECATED: use NewUserLocationInformationStruct instead. At some point this will be removed.
+// Deprecated: use NewUserLocationInformationStruct instead. At some point this will be removed.
 func NewUserLocationInformationLazy(mcc, mnc string, lac, ci, sac, rac, tac, eci, menbi, emenbi int) *IE {
 	var hasCGI, hasSAI, hasRAI, hasTAI, hasECGI, hasLAI, hasMENBI, hasEMENBI uint8
 	if ci >= 0 {
@@ -551,7 +551,7 @@ func NewUserLocationInformationLazy(mcc, mnc string, lac, ci, sac, rac, tac, eci
 
 // NewUserLocationInformation creates a new UserLocationInformation IE.
 //
-// DEPRECATED: use NewUserLocationInformationStruct instead. At some point this will be removed.
+// Deprecated: use NewUserLocationInformationStruct instead. At some point this will be removed.
 func NewUserLocationInformation(
 	hasCGI, hasSAI, hasRAI, hasTAI, hasECGI, hasLAI, hasMENBI, hasEMENBI uint8,
 	mcc, mnc string, lac, ci, sac, rac, tac uint16, eci, menbi, emenbi uint32,
@@ -651,7 +651,7 @@ func uliPayloadLen(flags uint8) int {
 
 // UserLocationInfo is a getter function to parse UserLocationInformationFields
 //
-// DEPRECATED: use UserLocationInformation instead. At some point this will be removed.
+// Deprecated: use UserLocationInformation instead. At some point this will be removed.
 func (i *IE) UserLocationInfo() (*UserLocationInformationFields, error) {
 	var uli UserLocationInformationFields
 	var plmn PLMN

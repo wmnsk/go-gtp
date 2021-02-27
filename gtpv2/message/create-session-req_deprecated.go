@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes CreateSessionRequest into bytes.
 //
-// DEPRECATED: use CreateSessionRequest.Marshal instead.
+// Deprecated: use CreateSessionRequest.Marshal instead.
 func (c *CreateSessionRequest) Serialize() ([]byte, error) {
 	log.Println("CreateSessionRequest.Serialize is deprecated. use CreateSessionRequest.Marshal instead")
 	return c.Marshal()
@@ -16,7 +16,7 @@ func (c *CreateSessionRequest) Serialize() ([]byte, error) {
 
 // SerializeTo serializes CreateSessionRequest into bytes given as b.
 //
-// DEPRECATED: use CreateSessionRequest.MarshalTo instead.
+// Deprecated: use CreateSessionRequest.MarshalTo instead.
 func (c *CreateSessionRequest) SerializeTo(b []byte) error {
 	log.Println("CreateSessionRequest.SerializeTo is deprecated. use CreateSessionRequest.MarshalTo instead")
 	return c.MarshalTo(b)
@@ -24,7 +24,7 @@ func (c *CreateSessionRequest) SerializeTo(b []byte) error {
 
 // DecodeCreateSessionRequest decodes bytes as CreateSessionRequest.
 //
-// DEPRECATED: use ParseCreateSessionRequest instead.
+// Deprecated: use ParseCreateSessionRequest instead.
 func DecodeCreateSessionRequest(b []byte) (*CreateSessionRequest, error) {
 	log.Println("DecodeCreateSessionRequest is deprecated. use ParseCreateSessionRequest instead")
 	return ParseCreateSessionRequest(b)
@@ -32,7 +32,7 @@ func DecodeCreateSessionRequest(b []byte) (*CreateSessionRequest, error) {
 
 // DecodeFromBytes decodes bytes as CreateSessionRequest.
 //
-// DEPRECATED: use CreateSessionRequest.UnmarshalBinary instead.
+// Deprecated: use CreateSessionRequest.UnmarshalBinary instead.
 func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 	log.Println("CreateSessionRequest.DecodeFromBytes is deprecated. use CreateSessionRequest.UnmarshalBinary instead")
 	return c.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (c *CreateSessionRequest) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of CreateSessionRequest.
 //
-// DEPRECATED: use CreateSessionRequest.MarshalLen instead.
+// Deprecated: use CreateSessionRequest.MarshalLen instead.
 func (c *CreateSessionRequest) Len() int {
 	log.Println("CreateSessionRequest.Len is deprecated. use CreateSessionRequest.MarshalLen instead")
 	return c.MarshalLen()

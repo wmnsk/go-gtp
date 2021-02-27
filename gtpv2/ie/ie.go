@@ -469,12 +469,15 @@ func (i *IE) Remove(typ, instance uint8) {
 	}
 
 	i.Payload = nil
-	var newChildren []*IE
+	newChildren := make([]*IE, len(i.ChildIEs))
+	idx := 0
 	for _, ie := range i.ChildIEs {
 		if ie.Type == typ && ie.Instance() == instance {
+			newChildren = newChildren[:len(newChildren)-1]
 			continue
 		}
-		newChildren = append(newChildren, ie)
+		newChildren[idx] = ie
+		idx++
 
 		serialized, err := ie.Marshal()
 		if err != nil {
@@ -541,11 +544,11 @@ func newUint32ValIE(t uint8, v uint32) *IE {
 }
 
 // unused for now.
-//func newUint64ValIE(t uint8, v uint64) *IE {
-//	i := New(t, 0x00, make([]byte, 8))
-//	binary.BigEndian.PutUint64(i.Payload, v)
-//	return i
-//}
+// func newUint64ValIE(t uint8, v uint64) *IE {
+// 	i := New(t, 0x00, make([]byte, 8))
+// 	binary.BigEndian.PutUint64(i.Payload, v)
+// 	return i
+// }
 
 func newStringIE(t uint8, v string) *IE {
 	return New(t, 0x00, []byte(v))

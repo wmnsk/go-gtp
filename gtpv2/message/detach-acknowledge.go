@@ -18,7 +18,7 @@ type DetachAcknowledge struct {
 }
 
 // NewDetachAcknowledge creates a new DetachAcknowledge.
-func NewDetachAcknowledge(teid, seq uint32, IEs ...*ie.IE) *DetachAcknowledge {
+func NewDetachAcknowledge(teid, seq uint32, ies ...*ie.IE) *DetachAcknowledge {
 	m := &DetachAcknowledge{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -26,7 +26,7 @@ func NewDetachAcknowledge(teid, seq uint32, IEs ...*ie.IE) *DetachAcknowledge {
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

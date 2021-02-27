@@ -33,7 +33,7 @@ type DeleteBearerRequest struct {
 }
 
 // NewDeleteBearerRequest creates a new DeleteBearerRequest.
-func NewDeleteBearerRequest(teid, seq uint32, IEs ...*ie.IE) *DeleteBearerRequest {
+func NewDeleteBearerRequest(teid, seq uint32, ies ...*ie.IE) *DeleteBearerRequest {
 	d := &DeleteBearerRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -41,7 +41,7 @@ func NewDeleteBearerRequest(teid, seq uint32, IEs ...*ie.IE) *DeleteBearerReques
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

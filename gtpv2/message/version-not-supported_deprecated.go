@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes VersionNotSupportedIndication into bytes.
 //
-// DEPRECATED: use VersionNotSupportedIndication.Marshal instead.
+// Deprecated: use VersionNotSupportedIndication.Marshal instead.
 func (v *VersionNotSupportedIndication) Serialize() ([]byte, error) {
 	log.Println("VersionNotSupportedIndication.Serialize is deprecated. use VersionNotSupportedIndication.Marshal instead")
 	return v.Marshal()
@@ -16,7 +16,7 @@ func (v *VersionNotSupportedIndication) Serialize() ([]byte, error) {
 
 // SerializeTo serializes VersionNotSupportedIndication into bytes given as b.
 //
-// DEPRECATED: use VersionNotSupportedIndication.MarshalTo instead.
+// Deprecated: use VersionNotSupportedIndication.MarshalTo instead.
 func (v *VersionNotSupportedIndication) SerializeTo(b []byte) error {
 	log.Println("VersionNotSupportedIndication.SerializeTo is deprecated. use VersionNotSupportedIndication.MarshalTo instead")
 	return v.MarshalTo(b)
@@ -24,7 +24,7 @@ func (v *VersionNotSupportedIndication) SerializeTo(b []byte) error {
 
 // DecodeVersionNotSupportedIndication decodes bytes as VersionNotSupportedIndication.
 //
-// DEPRECATED: use ParseVersionNotSupportedIndication instead.
+// Deprecated: use ParseVersionNotSupportedIndication instead.
 func DecodeVersionNotSupportedIndication(b []byte) (*VersionNotSupportedIndication, error) {
 	log.Println("DecodeVersionNotSupportedIndication is deprecated. use ParseVersionNotSupportedIndication instead")
 	return ParseVersionNotSupportedIndication(b)
@@ -32,7 +32,7 @@ func DecodeVersionNotSupportedIndication(b []byte) (*VersionNotSupportedIndicati
 
 // DecodeFromBytes decodes bytes as VersionNotSupportedIndication.
 //
-// DEPRECATED: use VersionNotSupportedIndication.UnmarshalBinary instead.
+// Deprecated: use VersionNotSupportedIndication.UnmarshalBinary instead.
 func (v *VersionNotSupportedIndication) DecodeFromBytes(b []byte) error {
 	log.Println("VersionNotSupportedIndication.DecodeFromBytes is deprecated. use VersionNotSupportedIndication.UnmarshalBinary instead")
 	return v.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (v *VersionNotSupportedIndication) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of VersionNotSupportedIndication.
 //
-// DEPRECATED: use VersionNotSupportedIndication.MarshalLen instead.
+// Deprecated: use VersionNotSupportedIndication.MarshalLen instead.
 func (v *VersionNotSupportedIndication) Len() int {
 	log.Println("VersionNotSupportedIndication.Len is deprecated. use VersionNotSupportedIndication.MarshalLen instead")
 	return v.MarshalLen()

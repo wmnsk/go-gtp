@@ -20,7 +20,7 @@ type DeleteBearerFailureIndication struct {
 }
 
 // NewDeleteBearerFailureIndication creates a new DeleteBearerFailureIndication.
-func NewDeleteBearerFailureIndication(teid, seq uint32, IEs ...*ie.IE) *DeleteBearerFailureIndication {
+func NewDeleteBearerFailureIndication(teid, seq uint32, ies ...*ie.IE) *DeleteBearerFailureIndication {
 	d := &DeleteBearerFailureIndication{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -28,7 +28,7 @@ func NewDeleteBearerFailureIndication(teid, seq uint32, IEs ...*ie.IE) *DeleteBe
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

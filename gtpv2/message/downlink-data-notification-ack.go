@@ -23,7 +23,7 @@ type DownlinkDataNotificationAcknowledge struct {
 }
 
 // NewDownlinkDataNotificationAcknowledge creates a new DownlinkDataNotificationAcknowledge.
-func NewDownlinkDataNotificationAcknowledge(teid, seq uint32, IEs ...*ie.IE) *DownlinkDataNotificationAcknowledge {
+func NewDownlinkDataNotificationAcknowledge(teid, seq uint32, ies ...*ie.IE) *DownlinkDataNotificationAcknowledge {
 	d := &DownlinkDataNotificationAcknowledge{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -31,7 +31,7 @@ func NewDownlinkDataNotificationAcknowledge(teid, seq uint32, IEs ...*ie.IE) *Do
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

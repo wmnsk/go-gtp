@@ -22,7 +22,7 @@ type DeleteBearerCommand struct {
 }
 
 // NewDeleteBearerCommand creates a new DeleteBearerCommand.
-func NewDeleteBearerCommand(teid, seq uint32, IEs ...*ie.IE) *DeleteBearerCommand {
+func NewDeleteBearerCommand(teid, seq uint32, ies ...*ie.IE) *DeleteBearerCommand {
 	d := &DeleteBearerCommand{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -30,7 +30,7 @@ func NewDeleteBearerCommand(teid, seq uint32, IEs ...*ie.IE) *DeleteBearerComman
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

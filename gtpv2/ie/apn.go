@@ -15,7 +15,7 @@ func NewAccessPointName(apn string) *IE {
 	for _, label := range strings.Split(apn, ".") {
 		l := len(label)
 		i.Payload[offset] = uint8(l)
-		copy(i.Payload[offset+1:], []byte(label))
+		copy(i.Payload[offset+1:], label)
 		offset += l + 1
 	}
 

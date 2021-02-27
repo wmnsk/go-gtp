@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes ModifyAccessBearersResponse into bytes.
 //
-// DEPRECATED: use ModifyAccessBearersResponse.Marshal instead.
+// Deprecated: use ModifyAccessBearersResponse.Marshal instead.
 func (m *ModifyAccessBearersResponse) Serialize() ([]byte, error) {
 	log.Println("ModifyAccessBearersResponse.Serialize is deprecated. use ModifyAccessBearersResponse.Marshal instead")
 	return m.Marshal()
@@ -16,7 +16,7 @@ func (m *ModifyAccessBearersResponse) Serialize() ([]byte, error) {
 
 // SerializeTo serializes ModifyAccessBearersResponse into bytes given as b.
 //
-// DEPRECATED: use ModifyAccessBearersResponse.MarshalTo instead.
+// Deprecated: use ModifyAccessBearersResponse.MarshalTo instead.
 func (m *ModifyAccessBearersResponse) SerializeTo(b []byte) error {
 	log.Println("ModifyAccessBearersResponse.SerializeTo is deprecated. use ModifyAccessBearersResponse.MarshalTo instead")
 	return m.MarshalTo(b)
@@ -24,7 +24,7 @@ func (m *ModifyAccessBearersResponse) SerializeTo(b []byte) error {
 
 // DecodeModifyAccessBearersResponse decodes bytes as ModifyAccessBearersResponse.
 //
-// DEPRECATED: use ParseModifyAccessBearersResponse instead.
+// Deprecated: use ParseModifyAccessBearersResponse instead.
 func DecodeModifyAccessBearersResponse(b []byte) (*ModifyAccessBearersResponse, error) {
 	log.Println("DecodeModifyAccessBearersResponse is deprecated. use ParseModifyAccessBearersResponse instead")
 	return ParseModifyAccessBearersResponse(b)
@@ -32,7 +32,7 @@ func DecodeModifyAccessBearersResponse(b []byte) (*ModifyAccessBearersResponse, 
 
 // DecodeFromBytes decodes bytes as ModifyAccessBearersResponse.
 //
-// DEPRECATED: use ModifyAccessBearersResponse.UnmarshalBinary instead.
+// Deprecated: use ModifyAccessBearersResponse.UnmarshalBinary instead.
 func (m *ModifyAccessBearersResponse) DecodeFromBytes(b []byte) error {
 	log.Println("ModifyAccessBearersResponse.DecodeFromBytes is deprecated. use ModifyAccessBearersResponse.UnmarshalBinary instead")
 	return m.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (m *ModifyAccessBearersResponse) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of ModifyAccessBearersResponse.
 //
-// DEPRECATED: use ModifyAccessBearersResponse.MarshalLen instead.
+// Deprecated: use ModifyAccessBearersResponse.MarshalLen instead.
 func (m *ModifyAccessBearersResponse) Len() int {
 	log.Println("ModifyAccessBearersResponse.Len is deprecated. use ModifyAccessBearersResponse.MarshalLen instead")
 	return m.MarshalLen()

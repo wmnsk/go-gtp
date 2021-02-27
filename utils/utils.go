@@ -48,10 +48,10 @@ func SwappedBytesToStr(raw []byte, cutLastDigit bool) string {
 }
 
 func swap(raw []byte) []byte {
-	var swapped []byte
+	swapped := make([]byte, len(raw))
 	for n := range raw {
 		t := ((raw[n] >> 4) & 0xf) + ((raw[n] << 4) & 0xf0)
-		swapped = append(swapped, t)
+		swapped[n] = t
 	}
 	return swapped
 }
@@ -128,7 +128,7 @@ func DecodePLMN(b []byte) (mcc, mnc string, err error) {
 func ParseECI(eci uint32) (enbID uint32, cellID uint8, err error) {
 	buf := make([]byte, 4)
 	binary.BigEndian.PutUint32(buf, eci)
-	cellID = uint8(buf[3])
+	cellID = buf[3]
 	enbID = binary.BigEndian.Uint32([]byte{0, buf[0], buf[1], buf[2]})
 	return
 }

@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes StopPagingIndication into bytes.
 //
-// DEPRECATED: use StopPagingIndication.Marshal instead.
+// Deprecated: use StopPagingIndication.Marshal instead.
 func (s *StopPagingIndication) Serialize() ([]byte, error) {
 	log.Println("StopPagingIndication.Serialize is deprecated. use StopPagingIndication.Marshal instead")
 	return s.Marshal()
@@ -16,7 +16,7 @@ func (s *StopPagingIndication) Serialize() ([]byte, error) {
 
 // SerializeTo serializes StopPagingIndication into bytes given as b.
 //
-// DEPRECATED: use StopPagingIndication.MarshalTo instead.
+// Deprecated: use StopPagingIndication.MarshalTo instead.
 func (s *StopPagingIndication) SerializeTo(b []byte) error {
 	log.Println("StopPagingIndication.SerializeTo is deprecated. use StopPagingIndication.MarshalTo instead")
 	return s.MarshalTo(b)
@@ -24,7 +24,7 @@ func (s *StopPagingIndication) SerializeTo(b []byte) error {
 
 // DecodeStopPagingIndication decodes bytes as StopPagingIndication.
 //
-// DEPRECATED: use ParseStopPagingIndication instead.
+// Deprecated: use ParseStopPagingIndication instead.
 func DecodeStopPagingIndication(b []byte) (*StopPagingIndication, error) {
 	log.Println("DecodeStopPagingIndication is deprecated. use ParseStopPagingIndication instead")
 	return ParseStopPagingIndication(b)
@@ -32,7 +32,7 @@ func DecodeStopPagingIndication(b []byte) (*StopPagingIndication, error) {
 
 // DecodeFromBytes decodes bytes as StopPagingIndication.
 //
-// DEPRECATED: use StopPagingIndication.UnmarshalBinary instead.
+// Deprecated: use StopPagingIndication.UnmarshalBinary instead.
 func (s *StopPagingIndication) DecodeFromBytes(b []byte) error {
 	log.Println("StopPagingIndication.DecodeFromBytes is deprecated. use StopPagingIndication.UnmarshalBinary instead")
 	return s.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (s *StopPagingIndication) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of StopPagingIndication.
 //
-// DEPRECATED: use StopPagingIndication.MarshalLen instead.
+// Deprecated: use StopPagingIndication.MarshalLen instead.
 func (s *StopPagingIndication) Len() int {
 	log.Println("StopPagingIndication.Len is deprecated. use StopPagingIndication.MarshalLen instead")
 	return s.MarshalLen()

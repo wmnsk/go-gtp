@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes ModifyBearerRequest into bytes.
 //
-// DEPRECATED: use ModifyBearerRequest.Marshal instead.
+// Deprecated: use ModifyBearerRequest.Marshal instead.
 func (m *ModifyBearerRequest) Serialize() ([]byte, error) {
 	log.Println("ModifyBearerRequest.Serialize is deprecated. use ModifyBearerRequest.Marshal instead")
 	return m.Marshal()
@@ -16,7 +16,7 @@ func (m *ModifyBearerRequest) Serialize() ([]byte, error) {
 
 // SerializeTo serializes ModifyBearerRequest into bytes given as b.
 //
-// DEPRECATED: use ModifyBearerRequest.MarshalTo instead.
+// Deprecated: use ModifyBearerRequest.MarshalTo instead.
 func (m *ModifyBearerRequest) SerializeTo(b []byte) error {
 	log.Println("ModifyBearerRequest.SerializeTo is deprecated. use ModifyBearerRequest.MarshalTo instead")
 	return m.MarshalTo(b)
@@ -24,7 +24,7 @@ func (m *ModifyBearerRequest) SerializeTo(b []byte) error {
 
 // DecodeModifyBearerRequest decodes bytes as ModifyBearerRequest.
 //
-// DEPRECATED: use ParseModifyBearerRequest instead.
+// Deprecated: use ParseModifyBearerRequest instead.
 func DecodeModifyBearerRequest(b []byte) (*ModifyBearerRequest, error) {
 	log.Println("DecodeModifyBearerRequest is deprecated. use ParseModifyBearerRequest instead")
 	return ParseModifyBearerRequest(b)
@@ -32,7 +32,7 @@ func DecodeModifyBearerRequest(b []byte) (*ModifyBearerRequest, error) {
 
 // DecodeFromBytes decodes bytes as ModifyBearerRequest.
 //
-// DEPRECATED: use ModifyBearerRequest.UnmarshalBinary instead.
+// Deprecated: use ModifyBearerRequest.UnmarshalBinary instead.
 func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 	log.Println("ModifyBearerRequest.DecodeFromBytes is deprecated. use ModifyBearerRequest.UnmarshalBinary instead")
 	return m.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (m *ModifyBearerRequest) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of ModifyBearerRequest.
 //
-// DEPRECATED: use ModifyBearerRequest.MarshalLen instead.
+// Deprecated: use ModifyBearerRequest.MarshalLen instead.
 func (m *ModifyBearerRequest) Len() int {
 	log.Println("ModifyBearerRequest.Len is deprecated. use ModifyBearerRequest.MarshalLen instead")
 	return m.MarshalLen()

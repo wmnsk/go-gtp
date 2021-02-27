@@ -18,7 +18,7 @@ func NewChargingGatewayAddress(addr string) *IE {
 	if v4 != nil {
 		return New(ChargingGatewayAddress, v4)
 	}
-	//IPv6
+	// IPv6
 	return New(ChargingGatewayAddress, ip)
 }
 

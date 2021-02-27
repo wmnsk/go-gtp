@@ -17,12 +17,12 @@ type EchoResponse struct {
 }
 
 // NewEchoResponse creates a new GTPv1 EchoResponse.
-func NewEchoResponse(seq uint16, IEs ...*ie.IE) *EchoResponse {
+func NewEchoResponse(seq uint16, ies ...*ie.IE) *EchoResponse {
 	e := &EchoResponse{
 		Header: NewHeader(0x32, MsgTypeEchoResponse, 0, seq, nil),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

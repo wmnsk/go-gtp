@@ -13,7 +13,7 @@ import (
 
 // Relay is to relay packets between two UPlaneConn.
 //
-// DEPRECATED. Use UPlaneConn.RelayTo() instead.
+// Deprecated: Use UPlaneConn.RelayTo() instead.
 type Relay struct {
 	mu                  sync.Mutex
 	closeCh             chan struct{}
@@ -23,7 +23,7 @@ type Relay struct {
 
 // NewRelay creates a new Relay.
 //
-// DEPRECATED. Use UPlaneConn.RelayTo() instead.
+// Deprecated: Use UPlaneConn.RelayTo() instead.
 func NewRelay(leftConn, rightConn *UPlaneConn) *Relay {
 	log.Println("Relay is deprecated. Use UPlaneConn.RelayTo() instead.")
 	return &Relay{
@@ -38,7 +38,7 @@ func NewRelay(leftConn, rightConn *UPlaneConn) *Relay {
 // Run starts listening on both UPlaneConn.
 // Until peer information is registered by AddPeer(), it just drops packets.
 //
-// DEPRECATED. Use UPlaneConn.RelayTo() instead.
+// Deprecated: Use UPlaneConn.RelayTo() instead.
 func (r *Relay) Run() {
 	// from left to right
 	go func() {
@@ -95,12 +95,12 @@ func (r *Relay) Run() {
 
 // Close closes Relay. It does not close the UPlaneConn given at first.
 //
-// DEPRECATED. Use UPlaneConn.RelayTo() instead.
+// Deprecated: Use UPlaneConn.RelayTo() instead.
 func (r *Relay) Close() error {
-	if err := r.leftConn.SetReadDeadline(time.Now().Add(time.Duration(1 * time.Millisecond))); err != nil {
+	if err := r.leftConn.SetReadDeadline(time.Now().Add(1 * time.Millisecond)); err != nil {
 		return err
 	}
-	if err := r.rightConn.SetReadDeadline(time.Now().Add(time.Duration(1 * time.Millisecond))); err != nil {
+	if err := r.rightConn.SetReadDeadline(time.Now().Add(1 * time.Millisecond)); err != nil {
 		return err
 	}
 	close(r.closeCh)
@@ -113,7 +113,7 @@ func (r *Relay) closed() <-chan struct{} {
 
 // AddPeer adds a peer information with the TEID contained in the incoming meesage.
 //
-// DEPRECATED. Use UPlaneConn.RelayTo() instead.
+// Deprecated: Use UPlaneConn.RelayTo() instead.
 func (r *Relay) AddPeer(teidIn, teidOut uint32, raddr net.Addr) {
 	r.mu.Lock()
 	defer r.mu.Unlock()

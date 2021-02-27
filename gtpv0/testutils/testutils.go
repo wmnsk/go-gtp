@@ -37,13 +37,13 @@ var TestFlow = struct {
 }
 
 // Run is just for testing gtpv2.Messages. Don't use this.
-func Run(t *testing.T, cases []TestCase, Parse ParseFunc) {
+func Run(t *testing.T, cases []TestCase, parse ParseFunc) {
 	t.Helper()
 
 	for _, c := range cases {
 		t.Run(c.Description, func(t *testing.T) {
 			t.Run("Parse", func(t *testing.T) {
-				v, err := Parse(c.Serialized)
+				v, err := parse(c.Serialized)
 				if err != nil {
 					t.Fatal(err)
 				}

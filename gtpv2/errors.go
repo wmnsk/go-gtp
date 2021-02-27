@@ -27,7 +27,7 @@ type CauseNotOKError struct {
 	Msg     string
 }
 
-//x Error returns error cause with message.
+// Error returns error cause with message.
 func (e *CauseNotOKError) Error() string {
 	return fmt.Sprintf("got non-OK Cause: %d in %s; %s", e.Cause, e.MsgType, e.Msg)
 }
@@ -37,7 +37,7 @@ type RequiredIEMissingError struct {
 	Type uint8
 }
 
-//x Error returns error with missing IE type.
+// Error returns error with missing IE type.
 func (e *RequiredIEMissingError) Error() string {
 	return fmt.Sprintf("required IE missing: %d", e.Type)
 }
@@ -47,7 +47,7 @@ type RequiredParameterMissingError struct {
 	Name, Msg string
 }
 
-//x Error returns missing parameter with message.
+// Error returns missing parameter with message.
 func (e *RequiredParameterMissingError) Error() string {
 	return fmt.Sprintf("required parameter: %s is missing. %s", e.Name, e.Msg)
 }
@@ -57,7 +57,7 @@ type UnexpectedTypeError struct {
 	Msg message.Message
 }
 
-//x Error returns violating message type.
+// Error returns violating message type.
 func (e *UnexpectedTypeError) Error() string {
 	return fmt.Sprintf("got unexpected type of message: %T", e.Msg)
 }
@@ -67,7 +67,7 @@ type UnexpectedIEError struct {
 	IEType uint8
 }
 
-//x Error returns violating message type.
+// Error returns violating message type.
 func (e *UnexpectedIEError) Error() string {
 	return fmt.Sprintf("got unexpected type of message: %T", e.IEType)
 }
@@ -78,7 +78,7 @@ type InvalidVersionError struct {
 	Version int
 }
 
-//x Error returns violationg version.
+// Error returns violationg version.
 func (e *InvalidVersionError) Error() string {
 	return fmt.Sprintf("version: %d is not acceptable for the receiver", e.Version)
 }
@@ -88,7 +88,7 @@ type InvalidSequenceError struct {
 	Seq uint32
 }
 
-//x Error returns violating Sequence Number.
+// Error returns violating Sequence Number.
 func (e *InvalidSequenceError) Error() string {
 	return fmt.Sprintf("got invalid Sequence Number: %d", e.Seq)
 }
@@ -99,7 +99,7 @@ type InvalidTEIDError struct {
 	TEID uint32
 }
 
-//x Error returns violating TEID.
+// Error returns violating TEID.
 func (e *InvalidTEIDError) Error() string {
 	return fmt.Sprintf("got invalid TEID: %#08x", e.TEID)
 }
@@ -109,7 +109,7 @@ type UnknownIMSIError struct {
 	IMSI string
 }
 
-//x Error returns violating IMSI.
+// Error returns violating IMSI.
 func (e *UnknownIMSIError) Error() string {
 	return fmt.Sprintf("got unknown IMSI: %s", e.IMSI)
 }
@@ -119,7 +119,7 @@ type UnknownAPNError struct {
 	APN string
 }
 
-//x Error returns violating APN.
+// Error returns violating APN.
 func (e *UnknownAPNError) Error() string {
 	return fmt.Sprintf("got unknown APN: %s", e.APN)
 }
@@ -129,7 +129,7 @@ type InvalidSessionError struct {
 	IMSI string
 }
 
-//x Error returns message with IMSI associated with Session if available.
+// Error returns message with IMSI associated with Session if available.
 func (e *InvalidSessionError) Error() string {
 	return fmt.Sprintf("invalid session, IMSI: %s", e.IMSI)
 }
@@ -139,7 +139,7 @@ type BearerNotFoundError struct {
 	IMSI string
 }
 
-//x Error returns message with IMSI associated with Bearer if available.
+// Error returns message with IMSI associated with Bearer if available.
 func (e *BearerNotFoundError) Error() string {
 	return fmt.Sprintf("no Bearer found: %s", e.IMSI)
 }
@@ -152,7 +152,7 @@ type HandlerNotFoundError struct {
 	MsgType string
 }
 
-//x Error returns violating message type to handle.
+// Error returns violating message type to handle.
 func (e *HandlerNotFoundError) Error() string {
 	return fmt.Sprintf("no handlers found for incoming message: %s, ignoring", e.MsgType)
 }

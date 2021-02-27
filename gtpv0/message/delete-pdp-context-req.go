@@ -18,14 +18,14 @@ type DeletePDPContextRequest struct {
 }
 
 // NewDeletePDPContextRequest creates a new DeletePDPContextRequest.
-func NewDeletePDPContextRequest(seq, label uint16, tid uint64, IEs ...*ie.IE) *DeletePDPContextRequest {
+func NewDeletePDPContextRequest(seq, label uint16, tid uint64, ies ...*ie.IE) *DeletePDPContextRequest {
 	d := &DeletePDPContextRequest{
 		Header: NewHeader(
 			0x1e, MsgTypeDeletePDPContextRequest, seq, label, tid, nil,
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}
@@ -100,12 +100,12 @@ func (d *DeletePDPContextRequest) UnmarshalBinary(b []byte) error {
 		return nil
 	}
 
-	IEs, err := ie.ParseMultiIEs(d.Header.Payload)
+	ies, err := ie.ParseMultiIEs(d.Header.Payload)
 	if err != nil {
 		return err
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

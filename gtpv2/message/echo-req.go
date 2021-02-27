@@ -18,7 +18,7 @@ type EchoRequest struct {
 }
 
 // NewEchoRequest creates a new EchoRequest.
-func NewEchoRequest(seq uint32, IEs ...*ie.IE) *EchoRequest {
+func NewEchoRequest(seq uint32, ies ...*ie.IE) *EchoRequest {
 	e := &EchoRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 0),
@@ -26,7 +26,7 @@ func NewEchoRequest(seq uint32, IEs ...*ie.IE) *EchoRequest {
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

@@ -38,7 +38,7 @@ type CreateBearerResponse struct {
 }
 
 // NewCreateBearerResponse creates a new CreateBearerResponse.
-func NewCreateBearerResponse(teid, seq uint32, IEs ...*ie.IE) *CreateBearerResponse {
+func NewCreateBearerResponse(teid, seq uint32, ies ...*ie.IE) *CreateBearerResponse {
 	c := &CreateBearerResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -46,7 +46,7 @@ func NewCreateBearerResponse(teid, seq uint32, IEs ...*ie.IE) *CreateBearerRespo
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

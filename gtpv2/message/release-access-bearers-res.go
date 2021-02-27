@@ -19,7 +19,7 @@ type ReleaseAccessBearersResponse struct {
 }
 
 // NewReleaseAccessBearersResponse creates a new ReleaseAccessBearersResponse.
-func NewReleaseAccessBearersResponse(teid, seq uint32, IEs ...*ie.IE) *ReleaseAccessBearersResponse {
+func NewReleaseAccessBearersResponse(teid, seq uint32, ies ...*ie.IE) *ReleaseAccessBearersResponse {
 	r := &ReleaseAccessBearersResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -27,7 +27,7 @@ func NewReleaseAccessBearersResponse(teid, seq uint32, IEs ...*ie.IE) *ReleaseAc
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

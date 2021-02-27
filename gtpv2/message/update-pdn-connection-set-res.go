@@ -19,7 +19,7 @@ type UpdatePDNConnectionSetResponse struct {
 }
 
 // NewUpdatePDNConnectionSetResponse creates a new UpdatePDNConnectionSetResponse.
-func NewUpdatePDNConnectionSetResponse(teid, seq uint32, IEs ...*ie.IE) *UpdatePDNConnectionSetResponse {
+func NewUpdatePDNConnectionSetResponse(teid, seq uint32, ies ...*ie.IE) *UpdatePDNConnectionSetResponse {
 	m := &UpdatePDNConnectionSetResponse{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -27,7 +27,7 @@ func NewUpdatePDNConnectionSetResponse(teid, seq uint32, IEs ...*ie.IE) *UpdateP
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

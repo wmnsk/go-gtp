@@ -19,7 +19,7 @@ func NewUETimeZone(tz time.Duration, daylightSaving uint8) *IE {
 	if min < 0 {
 		hex |= 0x08
 	}
-	i.Payload[0] = uint8(hex)
+	i.Payload[0] = hex
 	i.Payload[1] = daylightSaving & 0x03
 
 	return i

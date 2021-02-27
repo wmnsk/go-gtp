@@ -28,7 +28,7 @@ type CreatePDPContextRequest struct {
 }
 
 // NewCreatePDPContextRequest creates a new CreatePDPContextRequest.
-func NewCreatePDPContextRequest(seq, label uint16, tid uint64, IEs ...*ie.IE) *CreatePDPContextRequest {
+func NewCreatePDPContextRequest(seq, label uint16, tid uint64, ies ...*ie.IE) *CreatePDPContextRequest {
 	c := &CreatePDPContextRequest{
 		Header: NewHeader(
 			0x1e, MsgTypeCreatePDPContextRequest, seq, label, tid, nil,
@@ -36,7 +36,7 @@ func NewCreatePDPContextRequest(seq, label uint16, tid uint64, IEs ...*ie.IE) *C
 	}
 
 	// Optional IEs and Private Extensions, or any arbitrary IE.
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}
@@ -209,12 +209,12 @@ func (c *CreatePDPContextRequest) UnmarshalBinary(b []byte) error {
 		return nil
 	}
 
-	IEs, err := ie.ParseMultiIEs(c.Header.Payload)
+	ies, err := ie.ParseMultiIEs(c.Header.Payload)
 	if err != nil {
 		return err
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

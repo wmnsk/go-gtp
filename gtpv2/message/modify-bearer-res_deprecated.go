@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes ModifyBearerResponse into bytes.
 //
-// DEPRECATED: use ModifyBearerResponse.Marshal instead.
+// Deprecated: use ModifyBearerResponse.Marshal instead.
 func (m *ModifyBearerResponse) Serialize() ([]byte, error) {
 	log.Println("ModifyBearerResponse.Serialize is deprecated. use ModifyBearerResponse.Marshal instead")
 	return m.Marshal()
@@ -16,7 +16,7 @@ func (m *ModifyBearerResponse) Serialize() ([]byte, error) {
 
 // SerializeTo serializes ModifyBearerResponse into bytes given as b.
 //
-// DEPRECATED: use ModifyBearerResponse.MarshalTo instead.
+// Deprecated: use ModifyBearerResponse.MarshalTo instead.
 func (m *ModifyBearerResponse) SerializeTo(b []byte) error {
 	log.Println("ModifyBearerResponse.SerializeTo is deprecated. use ModifyBearerResponse.MarshalTo instead")
 	return m.MarshalTo(b)
@@ -24,7 +24,7 @@ func (m *ModifyBearerResponse) SerializeTo(b []byte) error {
 
 // DecodeModifyBearerResponse decodes bytes as ModifyBearerResponse.
 //
-// DEPRECATED: use ParseModifyBearerResponse instead.
+// Deprecated: use ParseModifyBearerResponse instead.
 func DecodeModifyBearerResponse(b []byte) (*ModifyBearerResponse, error) {
 	log.Println("DecodeModifyBearerResponse is deprecated. use ParseModifyBearerResponse instead")
 	return ParseModifyBearerResponse(b)
@@ -32,7 +32,7 @@ func DecodeModifyBearerResponse(b []byte) (*ModifyBearerResponse, error) {
 
 // DecodeFromBytes decodes bytes as ModifyBearerResponse.
 //
-// DEPRECATED: use ModifyBearerResponse.UnmarshalBinary instead.
+// Deprecated: use ModifyBearerResponse.UnmarshalBinary instead.
 func (m *ModifyBearerResponse) DecodeFromBytes(b []byte) error {
 	log.Println("ModifyBearerResponse.DecodeFromBytes is deprecated. use ModifyBearerResponse.UnmarshalBinary instead")
 	return m.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (m *ModifyBearerResponse) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of ModifyBearerResponse.
 //
-// DEPRECATED: use ModifyBearerResponse.MarshalLen instead.
+// Deprecated: use ModifyBearerResponse.MarshalLen instead.
 func (m *ModifyBearerResponse) Len() int {
 	log.Println("ModifyBearerResponse.Len is deprecated. use ModifyBearerResponse.MarshalLen instead")
 	return m.MarshalLen()

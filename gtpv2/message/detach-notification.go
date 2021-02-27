@@ -18,7 +18,7 @@ type DetachNotification struct {
 }
 
 // NewDetachNotification creates a new DetachNotification.
-func NewDetachNotification(teid, seq uint32, IEs ...*ie.IE) *DetachNotification {
+func NewDetachNotification(teid, seq uint32, ies ...*ie.IE) *DetachNotification {
 	m := &DetachNotification{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -26,7 +26,7 @@ func NewDetachNotification(teid, seq uint32, IEs ...*ie.IE) *DetachNotification 
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

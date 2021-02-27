@@ -21,7 +21,7 @@ type DeletePDNConnectionSetRequest struct {
 }
 
 // NewDeletePDNConnectionSetRequest creates a new DeletePDNConnectionSetRequest.
-func NewDeletePDNConnectionSetRequest(teid, seq uint32, IEs ...*ie.IE) *DeletePDNConnectionSetRequest {
+func NewDeletePDNConnectionSetRequest(teid, seq uint32, ies ...*ie.IE) *DeletePDNConnectionSetRequest {
 	m := &DeletePDNConnectionSetRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -29,7 +29,7 @@ func NewDeletePDNConnectionSetRequest(teid, seq uint32, IEs ...*ie.IE) *DeletePD
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

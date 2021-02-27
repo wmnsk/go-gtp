@@ -207,7 +207,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				return nil
 			}
-			return fmt.Errorf("error reading from UPlaneConn %s: %v", u.LocalAddr(), err)
+			return fmt.Errorf("error reading from UPlaneConn %s: %w", u.LocalAddr(), err)
 		}
 
 		raw := make([]byte, n)
@@ -411,7 +411,7 @@ func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg message.Message) err
 	}
 
 	if err := handle(u, senderAddr, msg); err != nil {
-		return fmt.Errorf("failed to handle %s: %v", msg.MessageTypeName(), err)
+		return fmt.Errorf("failed to handle %s: %w", msg.MessageTypeName(), err)
 	}
 
 	return nil

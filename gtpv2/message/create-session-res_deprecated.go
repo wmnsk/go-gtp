@@ -8,7 +8,7 @@ import "log"
 
 // Serialize serializes CreateSessionResponse into bytes.
 //
-// DEPRECATED: use CreateSessionResponse.Marshal instead.
+// Deprecated: use CreateSessionResponse.Marshal instead.
 func (c *CreateSessionResponse) Serialize() ([]byte, error) {
 	log.Println("CreateSessionResponse.Serialize is deprecated. use CreateSessionResponse.Marshal instead")
 	return c.Marshal()
@@ -16,7 +16,7 @@ func (c *CreateSessionResponse) Serialize() ([]byte, error) {
 
 // SerializeTo serializes CreateSessionResponse into bytes given as b.
 //
-// DEPRECATED: use CreateSessionResponse.MarshalTo instead.
+// Deprecated: use CreateSessionResponse.MarshalTo instead.
 func (c *CreateSessionResponse) SerializeTo(b []byte) error {
 	log.Println("CreateSessionResponse.SerializeTo is deprecated. use CreateSessionResponse.MarshalTo instead")
 	return c.MarshalTo(b)
@@ -24,7 +24,7 @@ func (c *CreateSessionResponse) SerializeTo(b []byte) error {
 
 // DecodeCreateSessionResponse decodes bytes as CreateSessionResponse.
 //
-// DEPRECATED: use ParseCreateSessionResponse instead.
+// Deprecated: use ParseCreateSessionResponse instead.
 func DecodeCreateSessionResponse(b []byte) (*CreateSessionResponse, error) {
 	log.Println("DecodeCreateSessionResponse is deprecated. use ParseCreateSessionResponse instead")
 	return ParseCreateSessionResponse(b)
@@ -32,7 +32,7 @@ func DecodeCreateSessionResponse(b []byte) (*CreateSessionResponse, error) {
 
 // DecodeFromBytes decodes bytes as CreateSessionResponse.
 //
-// DEPRECATED: use CreateSessionResponse.UnmarshalBinary instead.
+// Deprecated: use CreateSessionResponse.UnmarshalBinary instead.
 func (c *CreateSessionResponse) DecodeFromBytes(b []byte) error {
 	log.Println("CreateSessionResponse.DecodeFromBytes is deprecated. use CreateSessionResponse.UnmarshalBinary instead")
 	return c.UnmarshalBinary(b)
@@ -40,7 +40,7 @@ func (c *CreateSessionResponse) DecodeFromBytes(b []byte) error {
 
 // Len returns the actual length of CreateSessionResponse.
 //
-// DEPRECATED: use CreateSessionResponse.MarshalLen instead.
+// Deprecated: use CreateSessionResponse.MarshalLen instead.
 func (c *CreateSessionResponse) Len() int {
 	log.Println("CreateSessionResponse.Len is deprecated. use CreateSessionResponse.MarshalLen instead")
 	return c.MarshalLen()

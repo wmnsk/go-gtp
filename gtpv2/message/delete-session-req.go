@@ -38,7 +38,7 @@ type DeleteSessionRequest struct {
 }
 
 // NewDeleteSessionRequest creates a new DeleteSessionRequest.
-func NewDeleteSessionRequest(teid, seq uint32, IEs ...*ie.IE) *DeleteSessionRequest {
+func NewDeleteSessionRequest(teid, seq uint32, ies ...*ie.IE) *DeleteSessionRequest {
 	d := &DeleteSessionRequest{
 		Header: NewHeader(
 			NewHeaderFlags(2, 0, 1),
@@ -46,7 +46,7 @@ func NewDeleteSessionRequest(teid, seq uint32, IEs ...*ie.IE) *DeleteSessionRequ
 		),
 	}
 
-	for _, i := range IEs {
+	for _, i := range ies {
 		if i == nil {
 			continue
 		}

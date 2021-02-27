@@ -18,7 +18,7 @@ func NewIPAddress(addr string) *IE {
 	if v4 != nil {
 		return New(IPAddress, 0x00, v4)
 	}
-	//IPv6
+	// IPv6
 	return New(IPAddress, 0x00, ip)
 }
 
