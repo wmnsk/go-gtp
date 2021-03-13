@@ -332,6 +332,7 @@ func (u *UPlaneConn) Close() error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
+	u.pktConn.Close()
 	close(u.closeCh)
 
 	return nil

@@ -237,6 +237,7 @@ func (c *Conn) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	c.pktConn.Close()
 	close(c.closeCh)
 
 	return nil
