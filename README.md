@@ -31,6 +31,8 @@ _This project follows [the Release Policy of Go](https://golang.org/doc/devel/re
 
 Examples works as it is by `go build` and executing commands in the following way.
 
+*Note for MacOs users*: before running any go service, make sure to execute `./mac_local_host_enabler.sh` you will find at [examples/utils](examples/utils)
+
 1. Open four terminals on a machine and start capturing on loopback interface.
 
 2. Start P-GW on terminal #1 and #2
@@ -76,6 +78,14 @@ For the detailed usage of specific version, see README.md under each version's d
 | GTPv0   | [README.md](gtpv0/README.md) |
 | GTPv1   | [README.md](gtpv1/README.md) |
 | GTPv2   | [README.md](gtpv2/README.md) |
+
+And don't forget testing once you are done with your changes 
+```shell-session
+go test ./...
+```
+
+*Note for MacOs users*: the first time you run any test, make sure to execute `./mac_local_host_enabler.sh` you will find at [examples/utils](examples/utils). 
+You will have to run the script again after each reboot
 
 ## Supported Features
 
