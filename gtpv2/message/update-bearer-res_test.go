@@ -1,0 +1,36 @@
+// Copyright 2019-2021 go-gtp authors. All rights reserved.
+// Use of this source code is governed by a MIT-style license that can be
+// found in the LICENSE file.
+
+package message_test
+
+import (
+	"testing"
+
+	"github.com/wmnsk/go-gtp/gtpv2/message"
+	"github.com/wmnsk/go-gtp/gtpv2/testutils"
+)
+
+func TestUpdateBearerResponse(t *testing.T) {
+	cases := []testutils.TestCase{
+		{
+			Description: "Normal",
+			Structured: message.NewUpdateBearerResponse(
+				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
+			),
+			Serialized: []byte{
+				// Header
+				0x48, 0x62, 0x00, 0x8, 0x11, 0x22, 0x33, 0x44, 0x00, 0x00, 0x01, 0x00,
+			},
+		},
+	}
+
+	testutils.Run(t, cases, func(b []byte) (testutils.Serializable, error) {
+		v, err := message.ParseUpdateBearerResponse(b)
+		if err != nil {
+			return nil, err
+		}
+		v.Payload = nil
+		return v, nil
+	})
+}
