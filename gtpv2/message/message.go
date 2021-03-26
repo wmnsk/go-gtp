@@ -337,6 +337,10 @@ func Parse(b []byte) (Message, error) {
 		m = &ModifyBearerRequest{}
 	case MsgTypeModifyBearerResponse:
 		m = &ModifyBearerResponse{}
+	case MsgTypeUpdateBearerRequest:
+		m = &UpdateBearerRequest{}
+	case MsgTypeUpdateBearerResponse:
+		m = &UpdateBearerResponse{}
 	case MsgTypeContextRequest:
 		m = &ContextRequest{}
 	case MsgTypeContextResponse:
