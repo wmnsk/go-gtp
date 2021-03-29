@@ -139,8 +139,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 74-94   | (Spare/Reserved)                                | -         |
 | 95      | Create Bearer Request                           | Yes       |
 | 96      | Create Bearer Response                          | Yes       |
-| 97      | Update Bearer Request                           |           |
-| 98      | Update Bearer Response                          |           |
+| 97      | Update Bearer Request                           | Yes       |
+| 98      | Update Bearer Response                          | Yes       |
 | 99      | Delete Bearer Request                           | Yes       |
 | 100     | Delete Bearer Response                          | Yes       |
 | 101     | Delete PDN Connection Set Request               | Yes       |
