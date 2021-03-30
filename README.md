@@ -14,7 +14,7 @@ Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol
   * For developing testing tools like traffic simulators or fuzzers.
 * Many **helpers kind to developers** provided, like session, bearer, and TEID associations.
 * Easy handling of **multiple connections with fixed IP and Port** with UDP (or other `net.PacketConn`).
-* ~~No platform-specific codes inside, so it **works almost everywhere Golang works**.~~ _Currently it works only on Linux and macOS since netlink support is introduced. I'll make them separated from the base to let it work even on Windows in the future._
+* ~~No platform-specific codes inside, so it **works almost everywhere Golang works**.~~ _Currently, it works only on Linux and macOS since netlink support is introduced. I'll make them separated from the base to let it work even on Windows in the future._
 
 ## Getting Started
 
@@ -30,11 +30,11 @@ _This project follows [the Release Policy of Go](https://golang.org/doc/devel/re
 
 ### Running examples
 
-Examples works as it is by `go build` and executing commands in the following way.
+Examples work as it is by `go build` and executing commands in the following way.
 
 *Note for MacOs users*: before running any go service, make sure to execute `./mac_local_host_enabler.sh` you will find at [examples/utils](examples/utils)
 
-1. Open four terminals on a machine and start capturing on loopback interface.
+1. Open four terminals on a machine and start capturing on the loopback interface.
 
 2. Start P-GW on terminal #1 and #2
 ```shell-session
@@ -61,18 +61,18 @@ Examples works as it is by `go build` and executing commands in the following wa
 
 5. You will see the nodes exchanging Create Session and Modify Bearer on C-Plane, and ICMP Echo on U-Plane afterwards.
 
-_If you want to see fewer number of subscribers, please comment-out the `v2.Subscriber` definitions in `example/mme/main.go`._
+_If you want to see fewer subscribers, please comment-out the `v2.Subscriber` definitions in `example/mme/main.go`._
 
 ### Developing by your own
 
-Each version has `net.PacketConn`-like APIs and GTP-specific ones which is often version-specific.
+Each version has `net.PacketConn`-like APIs and GTP-specific ones, which are often version-specific.
 The basic idea behind the current implementation is;
 
 * `Dial` or `ListenAndServe` to create a connection(`Conn`) between nodes.
-* Register handlers to the `Conn` for specific messages with `AddHandler`, which allows users to handle the messages coming from the remote endpoint as flexible as possible, with less pain.
-* `CreateXXX` to create session or PDP context with arbitrary IEs given. Session/PDP context is structured and they also have some helpers like `AddTEID` to handle known TEID properly.
+* Register handlers to the `Conn` for specific messages with `AddHandler`, allowing users to handle the messages coming from the remote endpoint as flexible as possible, with less pain.
+* `CreateXXX` to create session or PDP context with arbitrary IEs given. Session/PDP context is structured, and they also have some helpers like `AddTEID` to handle known TEID properly.
 
-For the detailed usage of specific version, see README.md under each version's directory.
+For the detailed usage of a specific version, see README.md under each version's directory.
 
 | Version | Details                      |
 |---------|------------------------------|
@@ -86,11 +86,11 @@ go test ./...
 ```
 
 *Note for MacOs users*: the first time you run any test, make sure to execute `./mac_local_host_enabler.sh` you will find at [examples/utils](examples/utils). 
-You will have to run the script again after each reboot
+You will have to run the script again after each reboot.
 
 ## Supported Features
 
-Note that "supported" means that the package provides helpers which makes it easier to handle.
+Note that "supported" means that the package provides helpers that make it easier to handle.
 In other words, even if a message/IE is not marked as "Yes", you can make it work with some additional effort.
 
 Your contribution is welcome to implement helpers for all the types, of course!
@@ -108,7 +108,7 @@ This is still an experimental project. Any part of implementations(including exp
 
 ## Author(s)
 
-Yoshiyuki Kurauchi ([Twitter](https://twitter.com/wmnskdmms) / [LinkedIn](https://www.linkedin.com/in/yoshiyuki-kurauchi/))
+Yoshiyuki Kurauchi ([Website](https://wmnsk.com/) / [Twitter](https://twitter.com/wmnskdmms))
 
 _I'm always open to welcome co-authors! Please feel free to talk to me._
 
