@@ -2,8 +2,10 @@
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
-// Package gtpv0 provides the simple and painless handling of GTPv1-C and GTPv1-U protocol in pure Golang.
+// Package gtpv0 provides simple and painless handling of GTPv0 protocol in pure Golang.
 //
 // This package is still under construction. The networking feature would be available in the future.
-// See message and ie directory for what you can do with the current implementation.
+// Please see README.md for detailed usage of the APIs provided by this package.
+//
+// https://github.com/wmnsk/go-gtp/blob/master/gtpv0/README.md
 package gtpv0

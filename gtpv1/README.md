@@ -1,6 +1,6 @@
 # v1: GTPv1 in Golang
 
-Package v1 provides the simple and painless handling of GTPv1-C and GTPv1-U protocols in pure Golang.
+Package v1 provides simple and painless handling of GTPv1-C and GTPv1-U protocols in pure Golang.
 
 ## Getting Started
 

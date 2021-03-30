@@ -7,17 +7,18 @@ A pseudo eNB and MME as a tester for S/P-GW.
 ![diagram](./docs/diagram.png)
 
 It is a burden to use actual UE/eNB/MME just to test S/P-GW, isn't it?  
-GW Tester emulates the minimal required behavior of surrounding nodes to perform a quick and simple testing on S/P-GW.
+GW Tester emulates the minimal required behavior of surrounding nodes to perform quick and simple testing on S/P-GW.
 
-A blog post by the author is available [here](https://wmnsk.com/posts/20200116_gw-tester/) for those who are interested in :)
+A blog post by the author is available [here](https://wmnsk.com/posts/20200116_gw-tester/) for those who are interested in :)  
+_NOTE: Some of the blog post's configurations or codes might be no longer relevant in the current version._
 
 ## How it works
 
 ### Authentication
 
 Nothing!  
-Subscribers defined in `enb.yml` file can immediately attach and use the created sessions. MME accepts any subscribers without authentication procedure.
-Communication over S1-MME interface is done with protobuf/gRPC instead of S1AP protocol.
+Subscribers defined in the `enb.yml` file can immediately attach and use the created sessions. MME accepts any subscribers without an authentication procedure.
+Communication over the S1-MME interface is done with protobuf/gRPC instead of the S1AP protocol.
 
 ```
 === AD ===
@@ -37,10 +38,10 @@ MME just chooses gateways according to the mapping of source IP ranges and GW's 
 MME exchanges the real GTPv2 session establishment messages like Create/Modify/Delete Session with S-GW.
 
 * IP address assignment  
-Currently we use the IP address that is defined in `enb.yml` and the one passed by P-GW is ignored. This behavior might be changed in the future to be more practical.
+Currently, we use the IP address that is defined in `enb.yml`, and the one passed by P-GW is ignored. This behavior might be changed in the future to be more practical.
 
 * TEID allocation  
-It can be both static and dynamic. Random TEID will be allocated by enb if `i_tei` in `enb.yml` is set to `0`. For outgoing TEID, the one that is allocated by S-GW will be used.
+It can be both static and dynamic. Random TEID will be allocated by enb if `i_tei` in `enb.yml` is set to `0`. For outgoing TEID, the one that S-GW allocates will be used.
 
 ### U-Plane Data Injection
 
@@ -64,7 +65,7 @@ GTP-U feature is based on [Linux Kernel GTP-U](https://www.kernel.org/doc/Docume
 ### Run testers
 
 Just `go get` eNB and MME.
-Functional S-GW and P-GW are also available in the same directory if you need.
+Functional S-GW and P-GW are also available in the same directory if you need them.
 
 ```shell-session
 go get github.com/wmnsk/go-gtp/examples/gw-tester/enb
@@ -86,18 +87,18 @@ Then you'll see;
 * MME starts sending GTPv2 Create Session Request to S-GW after it receives subscriber information from eNB.
 * When sessions are successfully created on S/P-GW, eNB sets up GTP-U tunnels with S-GW.
 
-After successful creation of the sessions, you can inject packets externally or generate it on eNB.
+After the successful creation of the sessions, you can inject packets externally or generate them on eNB.
 
 ## Configurations
 
 Each node has a YAML file as a configuration.  
-In general, config consists of the network information of local/remote node, and some node-specific parameters.
+In general, config consists of the network information of local/remote nodes and some node-specific parameters.
 
 ### eNB
 
 #### Global
 
-These values are used to identify eNB. Some of them are just to set inside the packets, and not validated.
+These values are used to identify eNB. Some of them are just to be set inside the packets and not validated.
 
 | config      | type of value | description                                  |
 |-------------|---------------|----------------------------------------------|
@@ -111,7 +112,7 @@ These values are used to identify eNB. Some of them are just to set inside the p
 
 #### Local Addresses
 
-`local_addresses` are the IP addresses/ports to be bound on local machine.
+`local_addresses` are the IP addresses/ports to be bound on the local machine.
 
 | config   | type of value | description                   |
 |----------|---------------|-------------------------------|
@@ -122,23 +123,23 @@ These values are used to identify eNB. Some of them are just to set inside the p
 
 `subscribers` are the list of subscribers to attach.
 
-| config               | type of value | description                                                                                                                                                                 |
-|----------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `imsi`               | string        | IMSI of the subscriber                                                                                                                                                      |
-| `msisdn`             | string        | MSISDN of the subscriber                                                                                                                                                    |
-| `imeisv`             | string        | IMEISV of the subscriber                                                                                                                                                    |
-| `src_ip`             | string        | sourcce IP of the subscriber (not assigned by P-GW)                                                                                                                         |
-| `i_tei`              | uint32        | incoming TEID that S-GW should to specify this subscriber                                                                                                                   |
-| type                 | string        | `external` or `http_get`. see [U-Plane Data Injection](#u-plane-data-injection)                                                                                             |
-| `euu_if_name`        | string        | name of network interface on eUu side.</br>type=`external`: Used to receive traffic from external UE</br>type=`http_get`: Used as a source interface that `src_ip` is added |
-| `http_url`           | string        | URL to HTTP GET by built-in traffic generator                                                                                                                               |
-| `reattach_on_reload` | bool          | whether to perform attach procedure again on config reload                                                                                                                  |
+| config               | type of value | description                                                                                                                                                                     |
+|----------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `imsi`               | string        | IMSI of the subscriber                                                                                                                                                          |
+| `msisdn`             | string        | MSISDN of the subscriber                                                                                                                                                        |
+| `imeisv`             | string        | IMEISV of the subscriber                                                                                                                                                        |
+| `src_ip`             | string        | source IP of the subscriber (not assigned by P-GW)                                                                                                                              |
+| `i_tei`              | uint32        | incoming TEID that S-GW should specify the subscriber                                                                                                                           |
+| `type`               | string        | `external` or `http_get`. see [U-Plane Data Injection](#u-plane-data-injection)                                                                                                 |
+| `euu_if_name`        | string        | name of the network interface on eUu side.</br>type=`external`: Used to receive traffic from external UE</br>type=`http_get`: Used as a source interface that `src_ip` is added |
+| `http_url`           | string        | URL to HTTP GET by built-in traffic generator                                                                                                                                   |
+| `reattach_on_reload` | bool          | whether to perform the attach procedure again on config reload                                                                                                                  |
 
 ### MME
 
 #### Global
 
-These values are used to identify MME. Some of them are just to set inside the packets, and not validated.
+These values are used to identify MME. Some of them are just to be set inside the packets and not validated.
 
 | config      | type of value | description                        |
 |-------------|---------------|------------------------------------|
@@ -149,7 +150,7 @@ These values are used to identify MME. Some of them are just to set inside the p
 
 #### Local Addresses
 
-`local_addresses` are the IP addresses/ports to be bound on local machine.
+`local_addresses` are the IP addresses/ports to be bound on the local machine.
 
 | config     | type of value | description                        |
 |------------|---------------|------------------------------------|
@@ -158,7 +159,7 @@ These values are used to identify MME. Some of them are just to set inside the p
 
 #### Gateway IPs
 
-IP addresses required to know/tell S-GW. This is normally done by DNS lookup with APN, but for now it's static.
+IP addresses required to know/tell S-GW. This is typically done by DNS lookup with APN, but it's static for now.
 
 | config       | type of value | description                  |
 |--------------|---------------|------------------------------|
@@ -169,7 +170,7 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 
 #### Local Addresses
 
-`local_addresses` are the IP addresses/ports to be bound on local machine.
+`local_addresses` are the IP addresses/ports to be bound on the local machine.
 
 | config      | type of value | description                        |
 |-------------|---------------|------------------------------------|
@@ -183,15 +184,15 @@ IP addresses required to know/tell S-GW. This is normally done by DNS lookup wit
 
 #### Global
 
-| config         | type of value | description                                                            |
-|----------------|---------------|------------------------------------------------------------------------|
-| `sgi_if_name`  | string        | name of network interface on SGi side. Used to downlink route traffic. |
-| `route_subnet` | string        | IP subnet of UEs that should be routed properly.                       |
-| `prom_addr`    | string        | IP/Port of MME to serve Prometheus                                     |
+| config         | type of value | description                                                                |
+|----------------|---------------|----------------------------------------------------------------------------|
+| `sgi_if_name`  | string        | name of the network interface on SGi side. Used to downlink route traffic. |
+| `route_subnet` | string        | IP subnet of UEs that should be routed properly.                           |
+| `prom_addr`    | string        | IP/Port of MME to serve Prometheus                                         |
 
 #### Local Addresses
 
-`local_addresses` are the IP addresses/ports to be bound on local machine.
+`local_addresses` are the IP addresses/ports to be bound on the local machine.
 
 | config   | type of value | description                 |
 |----------|---------------|-----------------------------|
@@ -208,7 +209,7 @@ The programs can handle `SIGHUP` to reload config without deleting sessions. Upd
 ### Instrumentation
 
 GW Tester nodes expose some metrics for Prometheus if `prom_addr` is given in each config. You can see the sample response from each node in [this Gist](https://gist.github.com/wmnsk/72f6d2d2450452090cd6351ffe63f660).  
-I'm planning to add some more metrics like "success rate of HTTP probe" etc.
+I'm planning to add some more metrics like "success rate of HTTP probe", etc.
 
 | Metrics           | Name                                  | Description                                   |
 |-------------------|---------------------------------------|-----------------------------------------------|
