@@ -67,8 +67,8 @@ const (
 	GUTI                                                 uint8 = 117
 	FContainer                                           uint8 = 118
 	FCause                                               uint8 = 119
-	PLMNID                                               uint8 = 121
-	TargetIdentification                                 uint8 = 122
+	PLMNID                                               uint8 = 120
+	TargetIdentification                                 uint8 = 121
 	PacketFlowID                                         uint8 = 123
 	RABContext                                           uint8 = 124
 	SourceRNCPDCPContextInfo                             uint8 = 125
@@ -76,7 +76,6 @@ const (
 	APNRestriction                                       uint8 = 127
 	SelectionMode                                        uint8 = 128
 	SourceIdentification                                 uint8 = 129
-	Reserved                                             uint8 = 130
 	ChangeReportingAction                                uint8 = 131
 	FullyQualifiedCSID                                   uint8 = 132
 	ChannelNeeded                                        uint8 = 133
