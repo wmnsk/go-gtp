@@ -13,8 +13,6 @@ import (
 	"io"
 )
 
-//
-
 // IE definitions.
 const (
 	IMSI                                                 uint8 = 1
