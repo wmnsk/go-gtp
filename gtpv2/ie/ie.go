@@ -13,264 +13,154 @@ import (
 	"io"
 )
 
+//
+
 // IE definitions.
 const (
-	_ uint8 = iota
-	IMSI
-	Cause
-	Recovery
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_ // 4-34: Reserved for S101 interface
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_ // 35-50:  Reserved for S101 interface
-	STNSR
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_ // 52-70: Reserved for Sv interface
-	AccessPointName
-	AggregateMaximumBitRate
-	EPSBearerID
-	IPAddress
-	MobileEquipmentIdentity
-	MSISDN
-	Indication
-	ProtocolConfigurationOptions
-	PDNAddressAllocation
-	BearerQoS
-	FlowQoS
-	RATType
-	ServingNetwork
-	BearerTFT
-	TrafficAggregateDescription
-	UserLocationInformation
-	FullyQualifiedTEID
-	TMSI
-	GlobalCNID
-	S103PDNDataForwardingInfo
-	S1UDataForwarding
-	DelayValue
-	BearerContext
-	ChargingID
-	ChargingCharacteristics
-	TraceInformation
-	BearerFlags
-	_
-	PDNType
-	ProcedureTransactionID
-	_
-	_
-	MMContextGSMKeyAndTriplets
-	MMContextUMTSKeyUsedCipherAndQuintuplets
-	MMContextGSMKeyUsedCipherAndQuintuplets
-	MMContextUMTSKeyAndQuintuplets
-	MMContextEPSSecurityContextQuadrupletsAndQuintuplets
-	MMContextUMTSKeyQuadrupletsAndQuintuplets
-	PDNConnection
-	PDUNumbers
-	PacketTMSI
-	PTMSISignature
-	HopCounter
-	UETimeZone
-	TraceReference
-	CompleteRequestMessage
-	GUTI
-	FContainer
-	FCause
-	PLMNID
-	TargetIdentification
-	_
-	PacketFlowID
-	RABContext
-	SourceRNCPDCPContextInfo
-	PortNumber
-	APNRestriction
-	SelectionMode
-	SourceIdentification
-	Reserved
-	ChangeReportingAction
-	FullyQualifiedCSID
-	ChannelNeeded
-	EMLPPPriority
-	NodeType
-	FullyQualifiedDomainName
-	TI
-	MBMSSessionDuration
-	MBMSServiceArea
-	MBMSSessionIdentifier
-	MBMSFlowIdentifier
-	MBMSIPMulticastDistribution
-	MBMSDistributionAcknowledge
-	RFSPIndex
-	UserCSGInformation
-	CSGInformationReportingAction
-	CSGID
-	CSGMembershipIndication
-	ServiceIndicator
-	DetachType
-	LocalDistinguishedName
-	NodeFeatures
-	MBMSTimeToDataTransfer
-	Throttling
-	AllocationRetensionPriority
-	EPCTimer
-	SignallingPriorityIndication
-	TMGI
-	AdditionalMMContextForSRVCC
-	AdditionalFlagsForSRVCC
-	_
-	MDTConfiguration
-	AdditionalProtocolConfigurationOptions
-	AbsoluteTimeofMBMSDataTransfer
-	HeNBInformationReporting
-	IPv4ConfigurationParameters
-	ChangeToReportFlags
-	ActionIndication
-	TWANIdentifier
-	ULITimestamp
-	MBMSFlags
-	RANNASCause
-	CNOperatorSelectionEntity
-	TrustedWLANModeIndication
-	NodeNumber
-	NodeIdentifier
-	PresenceReportingAreaAction
-	PresenceReportingAreaInformation
-	TWANIdentifierTimestamp
-	OverloadControlInformation
-	LoadControlInformation
-	Metric
-	SequenceNumber
-	APNAndRelativeCapacity
-	WLANOffloadabilityIndication
-	PagingAndServiceInformation
-	IntegerNumber
-	MillisecondTimeStamp
-	MonitoringEventInformation
-	ECGIList
-	RemoteUEContext
-	RemoteUserID
-	RemoteUEIPinformation
-	CIoTOptimizationsSupportIndication
-	SCEFPDNConnection
-	HeaderCompressionConfiguration
-	ExtendedProtocolConfigurationOptions
-	ServingPLMNRateControl
-	Counter
-	MappedUEUsageType
-	SecondaryRATUsageDataReport
-	UPFunctionSelectionIndicationFlags
-	MaximumPacketLossRate
-	APNRateControlStatus
-	ExtendedTraceInformation
-	MonitoringEventExtensionInformation
-	AdditionalRRMPolicyIndex
-	V2XContext
-	PC5QoSParameters
-	ServicesAuthorized
-	BitRate
-	PC5QoSFlow
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_
-	_ // 206-253: Spare for future use
-	SpecialIETypeForIETypeExtension
-	PrivateExtension
+	IMSI                                                 uint8 = 1
+	Cause                                                uint8 = 2
+	Recovery                                             uint8 = 3
+	STNSR                                                uint8 = 51
+	AccessPointName                                      uint8 = 71
+	AggregateMaximumBitRate                              uint8 = 72
+	EPSBearerID                                          uint8 = 73
+	IPAddress                                            uint8 = 74
+	MobileEquipmentIdentity                              uint8 = 75
+	MSISDN                                               uint8 = 76
+	Indication                                           uint8 = 77
+	ProtocolConfigurationOptions                         uint8 = 78
+	PDNAddressAllocation                                 uint8 = 79
+	BearerQoS                                            uint8 = 80
+	FlowQoS                                              uint8 = 81
+	RATType                                              uint8 = 82
+	ServingNetwork                                       uint8 = 83
+	BearerTFT                                            uint8 = 84
+	TrafficAggregateDescription                          uint8 = 85
+	UserLocationInformation                              uint8 = 86
+	FullyQualifiedTEID                                   uint8 = 87
+	TMSI                                                 uint8 = 88
+	GlobalCNID                                           uint8 = 89
+	S103PDNDataForwardingInfo                            uint8 = 90
+	S1UDataForwarding                                    uint8 = 91
+	DelayValue                                           uint8 = 92
+	BearerContext                                        uint8 = 93
+	ChargingID                                           uint8 = 94
+	ChargingCharacteristics                              uint8 = 95
+	TraceInformation                                     uint8 = 96
+	BearerFlags                                          uint8 = 97
+	PDNType                                              uint8 = 99
+	ProcedureTransactionID                               uint8 = 100
+	MMContextGSMKeyAndTriplets                           uint8 = 103
+	MMContextUMTSKeyUsedCipherAndQuintuplets             uint8 = 104
+	MMContextGSMKeyUsedCipherAndQuintuplets              uint8 = 105
+	MMContextUMTSKeyAndQuintuplets                       uint8 = 106
+	MMContextEPSSecurityContextQuadrupletsAndQuintuplets uint8 = 107
+	MMContextUMTSKeyQuadrupletsAndQuintuplets            uint8 = 108
+	PDNConnection                                        uint8 = 109
+	PDUNumbers                                           uint8 = 110
+	PacketTMSI                                           uint8 = 111
+	PTMSISignature                                       uint8 = 112
+	HopCounter                                           uint8 = 113
+	UETimeZone                                           uint8 = 114
+	TraceReference                                       uint8 = 115
+	CompleteRequestMessage                               uint8 = 116
+	GUTI                                                 uint8 = 117
+	FContainer                                           uint8 = 118
+	FCause                                               uint8 = 119
+	PLMNID                                               uint8 = 121
+	TargetIdentification                                 uint8 = 122
+	PacketFlowID                                         uint8 = 123
+	RABContext                                           uint8 = 124
+	SourceRNCPDCPContextInfo                             uint8 = 125
+	PortNumber                                           uint8 = 126
+	APNRestriction                                       uint8 = 127
+	SelectionMode                                        uint8 = 128
+	SourceIdentification                                 uint8 = 129
+	Reserved                                             uint8 = 130
+	ChangeReportingAction                                uint8 = 131
+	FullyQualifiedCSID                                   uint8 = 132
+	ChannelNeeded                                        uint8 = 133
+	EMLPPPriority                                        uint8 = 134
+	NodeType                                             uint8 = 135
+	FullyQualifiedDomainName                             uint8 = 136
+	TI                                                   uint8 = 137
+	MBMSSessionDuration                                  uint8 = 138
+	MBMSServiceArea                                      uint8 = 139
+	MBMSSessionIdentifier                                uint8 = 140
+	MBMSFlowIdentifier                                   uint8 = 141
+	MBMSIPMulticastDistribution                          uint8 = 142
+	MBMSDistributionAcknowledge                          uint8 = 143
+	RFSPIndex                                            uint8 = 144
+	UserCSGInformation                                   uint8 = 145
+	CSGInformationReportingAction                        uint8 = 146
+	CSGID                                                uint8 = 147
+	CSGMembershipIndication                              uint8 = 148
+	ServiceIndicator                                     uint8 = 149
+	DetachType                                           uint8 = 150
+	LocalDistinguishedName                               uint8 = 151
+	NodeFeatures                                         uint8 = 152
+	MBMSTimeToDataTransfer                               uint8 = 153
+	Throttling                                           uint8 = 154
+	AllocationRetensionPriority                          uint8 = 155
+	EPCTimer                                             uint8 = 156
+	SignallingPriorityIndication                         uint8 = 157
+	TMGI                                                 uint8 = 158
+	AdditionalMMContextForSRVCC                          uint8 = 159
+	AdditionalFlagsForSRVCC                              uint8 = 160
+	MDTConfiguration                                     uint8 = 162
+	AdditionalProtocolConfigurationOptions               uint8 = 163
+	AbsoluteTimeofMBMSDataTransfer                       uint8 = 164
+	HeNBInformationReporting                             uint8 = 165
+	IPv4ConfigurationParameters                          uint8 = 166
+	ChangeToReportFlags                                  uint8 = 167
+	ActionIndication                                     uint8 = 168
+	TWANIdentifier                                       uint8 = 169
+	ULITimestamp                                         uint8 = 170
+	MBMSFlags                                            uint8 = 171
+	RANNASCause                                          uint8 = 172
+	CNOperatorSelectionEntity                            uint8 = 173
+	TrustedWLANModeIndication                            uint8 = 174
+	NodeNumber                                           uint8 = 175
+	NodeIdentifier                                       uint8 = 176
+	PresenceReportingAreaAction                          uint8 = 177
+	PresenceReportingAreaInformation                     uint8 = 178
+	TWANIdentifierTimestamp                              uint8 = 179
+	OverloadControlInformation                           uint8 = 180
+	LoadControlInformation                               uint8 = 181
+	Metric                                               uint8 = 182
+	SequenceNumber                                       uint8 = 183
+	APNAndRelativeCapacity                               uint8 = 184
+	WLANOffloadabilityIndication                         uint8 = 185
+	PagingAndServiceInformation                          uint8 = 186
+	IntegerNumber                                        uint8 = 187
+	MillisecondTimeStamp                                 uint8 = 188
+	MonitoringEventInformation                           uint8 = 189
+	ECGIList                                             uint8 = 190
+	RemoteUEContext                                      uint8 = 191
+	RemoteUserID                                         uint8 = 192
+	RemoteUEIPinformation                                uint8 = 193
+	CIoTOptimizationsSupportIndication                   uint8 = 194
+	SCEFPDNConnection                                    uint8 = 195
+	HeaderCompressionConfiguration                       uint8 = 196
+	ExtendedProtocolConfigurationOptions                 uint8 = 197
+	ServingPLMNRateControl                               uint8 = 198
+	Counter                                              uint8 = 199
+	MappedUEUsageType                                    uint8 = 200
+	SecondaryRATUsageDataReport                          uint8 = 201
+	UPFunctionSelectionIndicationFlags                   uint8 = 202
+	MaximumPacketLossRate                                uint8 = 203
+	APNRateControlStatus                                 uint8 = 204
+	ExtendedTraceInformation                             uint8 = 205
+	MonitoringEventExtensionInformation                  uint8 = 206
+	AdditionalRRMPolicyIndex                             uint8 = 207
+	V2XContext                                           uint8 = 208
+	PC5QoSParameters                                     uint8 = 209
+	ServicesAuthorized                                   uint8 = 210
+	BitRate                                              uint8 = 211
+	PC5QoSFlow                                           uint8 = 212
+	SGiPtPTunnelAddress                                  uint8 = 213
+	SpecialIETypeForIETypeExtension                      uint8 = 254
+	PrivateExtension                                     uint8 = 255
 )
 
 // IE is a GTPv2 Information Element.
