@@ -304,7 +304,9 @@ func (i *IE) SetLength() {
 // String returns the GTPv2 IE values in human readable format.
 func (i *IE) String() string {
 	name := "Undefined"
-	name = ieTypeNameMap[i.Type]
+	if n, ok := ieTypeNameMap[i.Type]; ok {
+		name = n
+	}
 
 	return fmt.Sprintf("{%s: {Type: %d, Length: %d, Instance: %#x, Payload: %#v}}",
 		name,
