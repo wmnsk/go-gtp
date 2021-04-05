@@ -14,40 +14,37 @@ import (
 
 // TV IE definitions.
 const (
-	_ uint8 = iota
-	Cause
-	IMSI
-	RouteingAreaIdentity
-	TemporaryLogicalLinkIdentity
-	PacketTMSI
-	QualityOfServiceProfile
-	_
-	ReorderingRequired
-	AuthenticationTriplet // 9
-	_
-	MAPCause // 11
-	PTMSISignature
-	MSValidated
-	Recovery
-	SelectionMode
-	FlowLabelDataI
-	FlowLabelSignalling
-	FlowLabelDataII
-	MSNotReachableReason
-	ChargingID uint8 = 127
+	Cause                        uint8 = 1
+	IMSI                         uint8 = 2
+	RouteingAreaIdentity         uint8 = 3
+	TemporaryLogicalLinkIdentity uint8 = 4
+	PacketTMSI                   uint8 = 5
+	QualityOfServiceProfile      uint8 = 6
+	ReorderingRequired           uint8 = 8
+	AuthenticationTriplet        uint8 = 9
+	MAPCause                     uint8 = 11
+	PTMSISignature               uint8 = 12
+	MSValidated                  uint8 = 13
+	Recovery                     uint8 = 14
+	SelectionMode                uint8 = 15
+	FlowLabelDataI               uint8 = 16
+	FlowLabelSignalling          uint8 = 17
+	FlowLabelDataII              uint8 = 18
+	MSNotReachableReason         uint8 = 19
+	ChargingID                   uint8 = 127
 )
 
 // TLV IE definitions.
 const (
-	EndUserAddress uint8 = iota + 128
-	MMContext
-	PDPContext
-	AccessPointName
-	ProtocolConfigurationOptions
-	GSNAddress
-	MSISDN
-	ChargingGatewayAddress uint8 = 251
-	PrivateExtension       uint8 = 255
+	EndUserAddress               uint8 = 128
+	MMContext                    uint8 = 129
+	PDPContext                   uint8 = 130
+	AccessPointName              uint8 = 131
+	ProtocolConfigurationOptions uint8 = 132
+	GSNAddress                   uint8 = 133
+	MSISDN                       uint8 = 134
+	ChargingGatewayAddress       uint8 = 251
+	PrivateExtension             uint8 = 255
 )
 
 // IE is a GTPv0 Information Element.
@@ -190,7 +187,13 @@ func (i *IE) SetLength() {
 
 // String returns the GTPv0 IE values in human readable format.
 func (i *IE) String() string {
-	return fmt.Sprintf("{Type: %d, Length: %d, Payload: %#v}",
+	name := "Undefined"
+	if n, ok := ieTypeNameMap[i.Type]; ok {
+		name = n
+	}
+
+	return fmt.Sprintf("{%s: {Type: %d, Length: %d, Payload: %#v}}",
+		name,
 		i.Type,
 		i.Length,
 		i.Payload,
@@ -237,3 +240,33 @@ func newUint32ValIE(t uint8, v uint32) *IE {
 // func newStringIE(t uint8, str string) *IE {
 // 	return New(t, []byte(str))
 // }
+
+var ieTypeNameMap = map[uint8]string{
+	1:   "Cause",
+	2:   "IMSI",
+	3:   "RouteingAreaIdentity",
+	4:   "TemporaryLogicalLinkIdentity",
+	5:   "PacketTMSI",
+	6:   "QualityOfServiceProfile",
+	8:   "ReorderingRequired",
+	9:   "AuthenticationTriplet",
+	11:  "MAPCause",
+	12:  "PTMSISignature",
+	13:  "MSValidated",
+	14:  "Recovery",
+	15:  "SelectionMode",
+	16:  "FlowLabelDataI",
+	17:  "FlowLabelSignalling",
+	18:  "FlowLabelDataII",
+	19:  "MSNotReachableReason",
+	127: "ChargingID",
+	128: "EndUserAddress",
+	129: "MMContext",
+	130: "PDPContext",
+	131: "AccessPointName",
+	132: "ProtocolConfigurationOptions",
+	133: "GSNAddress",
+	134: "MSISDN",
+	251: "ChargingGatewayAddress",
+	255: "PrivateExtension",
+}
