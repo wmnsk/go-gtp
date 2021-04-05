@@ -426,6 +426,7 @@ func prettifyFields(fields []*field) []string {
 			continue
 		}
 
+		// TODO: do this recursively?
 		v, ok := field.maybeIE.(*ie.IE)
 		if !ok {
 			// only for AdditionalIEs field
@@ -434,7 +435,7 @@ func prettifyFields(fields []*field) []string {
 				for i, val := range ies {
 					vals[i] = fmt.Sprint(val)
 				}
-				ret = append(ret, fmt.Sprintf("%s: [%v]", field.name, strings.Join(vals, ", ")))
+				ret = append(ret, fmt.Sprintf("{%s: [%v]}", field.name, strings.Join(vals, ", ")))
 			}
 			continue
 		}
@@ -447,7 +448,7 @@ func prettifyFields(fields []*field) []string {
 
 func prettifyIE(name string, i *ie.IE) string {
 	if i == nil {
-		return fmt.Sprintf("%s: %v", name, i)
+		return fmt.Sprintf("{%s: %v}", name, i)
 	}
 
 	if i.IsGrouped() {
@@ -455,8 +456,8 @@ func prettifyIE(name string, i *ie.IE) string {
 		for i, val := range i.ChildIEs {
 			vals[i] = fmt.Sprint(val)
 		}
-		return fmt.Sprintf("%s: [%v]", name, strings.Join(vals, ", "))
+		return fmt.Sprintf("{%s: [%v]}", name, strings.Join(vals, ", "))
 	}
 
-	return fmt.Sprintf("%s: %v", name, i)
+	return fmt.Sprintf("{%s: %v}", name, i)
 }
