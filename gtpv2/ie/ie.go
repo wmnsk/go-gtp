@@ -251,7 +251,7 @@ func Parse(b []byte) (*IE, error) {
 // UnmarshalBinary sets the values retrieved from byte sequence in GTPv2 IE.
 func (i *IE) UnmarshalBinary(b []byte) error {
 	l := len(b)
-	if l < 5 {
+	if l < 4 {
 		return io.ErrUnexpectedEOF
 	}
 
@@ -299,15 +299,18 @@ func (i *IE) SetLength() {
 	i.Length = uint16(len(i.Payload))
 }
 
+// Name returns the name of IE in string.
+func (i *IE) Name() string {
+	if n, ok := ieTypeNameMap[i.Type]; ok {
+		return n
+	}
+	return "Undefined"
+}
+
 // String returns the GTPv2 IE values in human readable format.
 func (i *IE) String() string {
-	name := "Undefined"
-	if n, ok := ieTypeNameMap[i.Type]; ok {
-		name = n
-	}
-
 	return fmt.Sprintf("{%s: {Type: %d, Length: %d, Instance: %#x, Payload: %#v}}",
-		name,
+		i.Name(),
 		i.Type,
 		i.Length,
 		i.Instance(),
