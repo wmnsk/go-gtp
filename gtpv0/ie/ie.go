@@ -195,6 +195,9 @@ func (i *IE) Name() string {
 
 // String returns the GTPv0 IE values in human readable format.
 func (i *IE) String() string {
+	if i == nil {
+		return "nil"
+	}
 	return fmt.Sprintf("{%s: {Type: %d, Length: %d, Payload: %#v}}",
 		i.Name(),
 		i.Type,
