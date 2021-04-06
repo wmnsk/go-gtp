@@ -167,3 +167,25 @@ func (i *IE) IsPDNConnectionIEError() bool {
 	}
 	return false
 }
+
+// OffendingIE returns OffendingIE in *IE if the type of IE matches.
+//
+// Note that the returned IE has no payload (cf. §8.4, TS29.274).
+func (i *IE) OffendingIE() (*IE, error) {
+	if i.Type != Cause {
+		return nil, &InvalidTypeError{Type: i.Type}
+	}
+
+	if len(i.Payload) < 6 {
+		return nil, io.ErrUnexpectedEOF
+	}
+
+	return Parse(i.Payload[2:6])
+}
+
+// MustOffendingIE returns OffendingIE in *IE, ignoring errors.
+// This should only be used if it is assured to have the value.
+func (i *IE) MustOffendingIE() *IE {
+	v, _ := i.OffendingIE()
+	return v
+}

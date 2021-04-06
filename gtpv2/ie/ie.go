@@ -251,7 +251,7 @@ func Parse(b []byte) (*IE, error) {
 // UnmarshalBinary sets the values retrieved from byte sequence in GTPv2 IE.
 func (i *IE) UnmarshalBinary(b []byte) error {
 	l := len(b)
-	if l < 5 {
+	if l < 4 {
 		return io.ErrUnexpectedEOF
 	}
 
