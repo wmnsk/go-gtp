@@ -185,15 +185,18 @@ func (i *IE) SetLength() {
 	i.Length = uint16(len(i.Payload))
 }
 
+// Name returns the name of IE in string.
+func (i *IE) Name() string {
+	if n, ok := ieTypeNameMap[i.Type]; ok {
+		return n
+	}
+	return "Undefined"
+}
+
 // String returns the GTPv0 IE values in human readable format.
 func (i *IE) String() string {
-	name := "Undefined"
-	if n, ok := ieTypeNameMap[i.Type]; ok {
-		name = n
-	}
-
 	return fmt.Sprintf("{%s: {Type: %d, Length: %d, Payload: %#v}}",
-		name,
+		i.Name(),
 		i.Type,
 		i.Length,
 		i.Payload,
