@@ -32,7 +32,7 @@ func getSubscriberIP(sub *gtpv2.Subscriber) (string, error) {
 	if ip, ok := subIPMap[sub.IMSI]; ok {
 		return ip, nil
 	}
-	return "", fmt.Errorf("Subscriber %s not found", sub.IMSI)
+	return "", fmt.Errorf("subscriber %s not found", sub.IMSI)
 }
 
 var (

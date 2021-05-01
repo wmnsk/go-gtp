@@ -8,7 +8,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -312,8 +311,6 @@ func (e *enb) newTEID() uint32 {
 
 func (e *enb) setupUPlane(ctx context.Context, sub *Subscriber) error {
 	switch sub.TrafficType {
-	case "ping":
-		return errors.New("ICMP probe not implemented yet!")
 	case "http_get":
 		if err := e.addIP(sub); err != nil {
 			return err
@@ -331,7 +328,7 @@ func (e *enb) setupUPlane(ctx context.Context, sub *Subscriber) error {
 			return err
 		}
 	default:
-		return errors.New("unknown type specified for 'type' in subscriber")
+		return fmt.Errorf("unknown/unimplemented type: %s specified for 'type' in subscriber", sub.TrafficType)
 	}
 
 	return nil
