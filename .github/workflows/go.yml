@@ -35,9 +35,9 @@ jobs:
           sudo ifconfig lo0 alias 127.0.0.11
           sudo ifconfig lo0 alias 127.0.0.12
       - name: Test
-        run: go test ./...
+        run: go test $(go list ./... | grep -v '/examples')
       - name: Bench
-        run: go test -benchmem -bench . ./...
+        run: go test -benchmem -bench . $(go list ./... | grep -v '/examples')
   # test-windows:
   #   strategy:
   #     matrix:
