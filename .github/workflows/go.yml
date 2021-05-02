@@ -25,6 +25,7 @@ jobs:
           go build -o enb examples/gw-tester/enb/*.go
       - name: Run GW Tester
         run: |
+          modprobe gtp
           sudo ./sgw -config examples/gw-tester/sgw/sgw.yml &
           sleep 1
           sudo ./pgw -config examples/gw-tester/pgw/pgw.yml &
