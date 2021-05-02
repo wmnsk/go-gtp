@@ -309,15 +309,28 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, m
 		return err
 	}
 
-	if err := s.s1uConn.AddTunnelOverride(
-		net.ParseIP(enbIP), net.ParseIP(s1uBearer.SubscriberIP), s1uBearer.OutgoingTEID(), s1usgwTEID,
-	); err != nil {
-		return err
-	}
-	if err := s.s5uConn.AddTunnelOverride(
-		net.ParseIP(pgwIP), net.ParseIP(s5uBearer.SubscriberIP), s5uBearer.OutgoingTEID(), s5usgwTEID,
-	); err != nil {
-		return err
+	if s.useKernelGTP {
+		if err := s.s1uConn.AddTunnelOverride(
+			net.ParseIP(enbIP), net.ParseIP(s1uBearer.SubscriberIP), s1uBearer.OutgoingTEID(), s1usgwTEID,
+		); err != nil {
+			return err
+		}
+		if err := s.s5uConn.AddTunnelOverride(
+			net.ParseIP(pgwIP), net.ParseIP(s5uBearer.SubscriberIP), s5uBearer.OutgoingTEID(), s5usgwTEID,
+		); err != nil {
+			return err
+		}
+	} else {
+		if err := s.s1uConn.RelayTo(
+			s.s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress(),
+		); err != nil {
+			return err
+		}
+		if err := s.s5uConn.RelayTo(
+			s.s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress(),
+		); err != nil {
+			return err
+		}
 	}
 
 	mbRspFromSGW := message.NewModifyBearerResponse(
