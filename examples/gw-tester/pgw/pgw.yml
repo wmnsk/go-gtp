@@ -1,7 +1,7 @@
 local_addresses:
-  s5c_ip: "127.0.0.14"
-  s5u_ip: "127.0.1.14"
-  sgi_ip: "127.0.0.254"
-sgi_if_name: "enp0s9"
+  s5c_ip: "127.0.1.15"
+  s5u_ip: "127.0.0.15"
+  sgi_ip: "127.0.1.254"
+sgi_if_name: "lo"
 route_subnet: "192.168.101.0/24"
 prom_addr: "127.0.10.4:58080"
