@@ -21,12 +21,13 @@ type Config struct {
 	MMEAddr  string `yaml:"mme_addr"`
 	PromAddr string `yaml:"prom_addr"`
 
-	MCC         string        `yaml:"mcc"`
-	MNC         string        `yaml:"mnc"`
-	RATType     uint8         `yaml:"rat_type"`
-	TAI         uint16        `yaml:"tai"`
-	ECI         uint32        `yaml:"eci"`
-	Subscribers []*Subscriber `yaml:"subscribers"`
+	MCC          string        `yaml:"mcc"`
+	MNC          string        `yaml:"mnc"`
+	RATType      uint8         `yaml:"rat_type"`
+	TAI          uint16        `yaml:"tai"`
+	ECI          uint32        `yaml:"eci"`
+	Subscribers  []*Subscriber `yaml:"subscribers"`
+	UseKernelGTP bool          `yaml:"use_kernel_gtp"`
 }
 
 // Subscriber represents a subscriber.
