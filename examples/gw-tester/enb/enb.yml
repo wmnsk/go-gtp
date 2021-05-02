@@ -7,17 +7,17 @@ local_addresses:
   s1c_ip: "127.0.1.11"
   s1u_ip: "127.0.0.11"
 mme_addr: "127.0.1.12:36412"
-use_kernel_gtp: false
+use_kernel_gtp: true
 prom_addr: "127.0.10.1:58080"
 subscribers:
   - imsi: "001010000000001"
     msisdn: "814000000001"
     imeisv: "1234500000001"
-    src_ip: "192.168.101.100"
+    src_ip: "192.168.101.201"
     i_tei: 1
-    type: "external"
+    type: "http_get"
     euu_if_name: "lo"
-    http_url: ""
+    http_url: "http://172.16.0.102/"
     reattach_on_reload: false
   - imsi: "001010000000002"
     msisdn: "814000000002"
@@ -55,12 +55,13 @@ subscribers:
     euu_if_name: "lo"
     http_url: "http://172.16.0.102/"
     reattach_on_reload: false
+  # example for external client
   #- imsi: "001010000000006"
   #  msisdn: "814000000006"
   #  imeisv: "1234500000006"
-  #  src_ip: "192.168.101.206"
-  #  i_tei: 0
+  #  src_ip: "192.168.101.101"
+  #  i_tei: 1
   #  type: "external"
-  #  euu_if_name: "lo"
+  #  euu_if_name: "eth0"
   #  http_url: ""
-  #  reattach_on_reload: false
+  #  reattach_on_reload: true

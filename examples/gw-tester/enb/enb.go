@@ -89,8 +89,8 @@ func newENB(cfg *Config) (*enb, error) {
 		e.promAddr = cfg.PromAddr
 	}
 
-	if e.useKernelGTP {
-		log.Printf("WARN: U-Plane does not work without GTP kernel module")
+	if !e.useKernelGTP {
+		log.Println("WARN: U-Plane does not work without GTP kernel module")
 	}
 
 	return e, nil
