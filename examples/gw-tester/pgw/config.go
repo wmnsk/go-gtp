@@ -18,10 +18,12 @@ type Config struct {
 		SGiIP string `yaml:"sgi_ip"`
 	} `yaml:"local_addresses"`
 
-	PromAddr string `yaml:"prom_addr"`
+	UseKernelGTP bool `yaml:"use_kernel_gtp"`
 
 	SGiIFName   string `yaml:"sgi_if_name"`
 	RouteSubnet string `yaml:"route_subnet"`
+
+	PromAddr string `yaml:"prom_addr"`
 }
 
 func loadConfig(path string) (*Config, error) {
