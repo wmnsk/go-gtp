@@ -323,10 +323,6 @@ func (e *enb) newTEID() uint32 {
 }
 
 func (e *enb) setupUPlane(ctx context.Context, sub *Subscriber) error {
-	if !e.useKernelGTP {
-		return nil
-	}
-
 	switch sub.TrafficType {
 	case "http_get":
 		if err := e.addIP(sub); err != nil {
