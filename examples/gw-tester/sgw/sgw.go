@@ -30,6 +30,8 @@ type sgw struct {
 
 	s11IP, s5cIP, s1uIP, s5uIP string
 
+	useKernelGTP bool
+
 	addedRoutes []*netlink.Route
 	addedRules  []*netlink.Rule
 
@@ -81,6 +83,11 @@ func newSGW(cfg *Config) (*sgw, error) {
 		return nil, err
 	}
 
+	s.useKernelGTP = cfg.UseKernelGTP
+	if !s.useKernelGTP {
+		log.Println("WARN: U-Plane performance would be significantly less without Kernel GTP")
+	}
+
 	if cfg.PromAddr != "" {
 		// validate if the address is valid or not.
 		if _, err = net.ResolveTCPAddr("tcp", cfg.PromAddr); err != nil {
@@ -125,8 +132,10 @@ func (s *sgw) run(ctx context.Context) error {
 	})
 
 	s.s1uConn = gtpv1.NewUPlaneConn(s.s1uAddr)
-	if err := s.s1uConn.EnableKernelGTP("gtp-sgw-s1", gtpv1.RoleGGSN); err != nil {
-		return err
+	if s.useKernelGTP {
+		if err := s.s1uConn.EnableKernelGTP("gtp-sgw-s1", gtpv1.RoleGGSN); err != nil {
+			return err
+		}
 	}
 	go func() {
 		if err := s.s1uConn.ListenAndServe(ctx); err != nil {
@@ -138,8 +147,10 @@ func (s *sgw) run(ctx context.Context) error {
 	log.Printf("Started serving S1-U on %s", s.s1uAddr)
 
 	s.s5uConn = gtpv1.NewUPlaneConn(s.s5uAddr)
-	if err := s.s5uConn.EnableKernelGTP("gtp-sgw-s5", gtpv1.RoleSGSN); err != nil {
-		return err
+	if s.useKernelGTP {
+		if err := s.s5uConn.EnableKernelGTP("gtp-sgw-s5", gtpv1.RoleSGSN); err != nil {
+			return err
+		}
 	}
 	go func() {
 		if err := s.s5uConn.ListenAndServe(ctx); err != nil {
@@ -150,8 +161,10 @@ func (s *sgw) run(ctx context.Context) error {
 	}()
 	log.Printf("Started serving S5-U on %s", s.s5uAddr)
 
-	if err := s.addRoutes(); err != nil {
-		return err
+	if s.useKernelGTP {
+		if err := s.addRoutes(); err != nil {
+			return err
+		}
 	}
 
 	// start serving Prometheus, if address is given

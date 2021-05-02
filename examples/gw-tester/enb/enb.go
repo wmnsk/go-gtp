@@ -41,6 +41,8 @@ type enb struct {
 	sessions      []*Subscriber
 	attachCh      chan *Subscriber
 
+	useKernelGTP bool
+
 	addedAddrs  map[netlink.Link]*netlink.Addr
 	addedRoutes []*netlink.Route
 	addedRules  []*netlink.Rule
@@ -62,6 +64,7 @@ func newENB(cfg *Config) (*enb, error) {
 			Eci:     cfg.ECI,
 		},
 		candidateSubs: cfg.Subscribers,
+		useKernelGTP:  cfg.UseKernelGTP,
 		addedAddrs:    make(map[netlink.Link]*netlink.Addr),
 
 		errCh: make(chan error, 1),
@@ -86,6 +89,10 @@ func newENB(cfg *Config) (*enb, error) {
 		e.promAddr = cfg.PromAddr
 	}
 
+	if !e.useKernelGTP {
+		log.Println("WARN: U-Plane does not work without GTP kernel module")
+	}
+
 	return e, nil
 }
 
@@ -99,8 +106,10 @@ func (e *enb) run(ctx context.Context) error {
 	log.Printf("Established S1-MME connection with %s", e.mmeAddr)
 
 	e.uConn = gtpv1.NewUPlaneConn(e.uAddr)
-	if err := e.uConn.EnableKernelGTP("gtp-enb", gtpv1.RoleSGSN); err != nil {
-		return err
+	if e.useKernelGTP {
+		if err := e.uConn.EnableKernelGTP("gtp-enb", gtpv1.RoleSGSN); err != nil {
+			return err
+		}
 	}
 	go func() {
 		if err := e.uConn.ListenAndServe(ctx); err != nil {
@@ -264,27 +273,31 @@ func (e *enb) attach(ctx context.Context, sub *Subscriber) error {
 			return err
 		}
 
-		if err := e.uConn.AddTunnelOverride(
-			net.ParseIP(sgwIP), net.ParseIP(req.SrcIp), rsp.OTei, req.ITei,
-		); err != nil {
-			log.Println(net.ParseIP(sgwIP), net.ParseIP(req.SrcIp), rsp.OTei, req.ITei)
-			e.errCh <- fmt.Errorf("failed to create tunnel for %s: %w", sub.IMSI, err)
-			return nil
-		}
-		if err := e.addRoute(); err != nil {
-			e.errCh <- fmt.Errorf("failed to add route for %s: %w", sub.IMSI, err)
-			return nil
+		if e.useKernelGTP {
+			if err := e.uConn.AddTunnelOverride(
+				net.ParseIP(sgwIP), net.ParseIP(req.SrcIp), rsp.OTei, req.ITei,
+			); err != nil {
+				log.Println(net.ParseIP(sgwIP), net.ParseIP(req.SrcIp), rsp.OTei, req.ITei)
+				e.errCh <- fmt.Errorf("failed to create tunnel for %s: %w", sub.IMSI, err)
+				return nil
+			}
+			if err := e.addRoute(); err != nil {
+				e.errCh <- fmt.Errorf("failed to add route for %s: %w", sub.IMSI, err)
+				return nil
+			}
 		}
 
 		sub.sgwAddr = rsp.SgwAddr
 		sub.otei = rsp.OTei
 
 		e.sessions = append(e.sessions, sub)
-		if err := e.setupUPlane(ctx, sub); err != nil {
-			e.errCh <- fmt.Errorf("failed to setup U-Plane for %s: %w", sub.IMSI, err)
-			return nil
+		if e.useKernelGTP {
+			if err := e.setupUPlane(ctx, sub); err != nil {
+				e.errCh <- fmt.Errorf("failed to setup U-Plane for %s: %w", sub.IMSI, err)
+				return nil
+			}
+			log.Printf("Successfully established tunnel for %s", sub.IMSI)
 		}
-		log.Printf("Successfully established tunnel for %s", sub.IMSI)
 	default:
 		e.errCh <- fmt.Errorf("got unexpected Cause for %s: %s", rsp.Cause, sub.IMSI)
 		return nil

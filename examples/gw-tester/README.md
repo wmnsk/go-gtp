@@ -49,7 +49,7 @@ eNB forwards incoming traffic from UE or generates traffic by itself depending o
 GTP-U feature is based on [Linux Kernel GTP-U](https://www.kernel.org/doc/Documentation/networking/gtp.txt) with netlink.
 
 | type     | behavior                                                                                                        |
-|----------|-----------------------------------------------------------------------------------------------------------------|
+| -------- | --------------------------------------------------------------------------------------------------------------- |
 | external | eNB encapsulates and forwards the incoming packets from `src_ip` toward the specified interface(`euu_if_name`). |
 | http_get | eNB starts sending HTTP GET to the specified URL.                                                               |
 | ...      | _(other types might be implemented in the future!)_                                                             |
@@ -100,22 +100,23 @@ In general, config consists of the network information of local/remote nodes and
 
 These values are used to identify eNB. Some of them are just to be set inside the packets and not validated.
 
-| config      | type of value | description                                  |
-|-------------|---------------|----------------------------------------------|
-| `mcc`       | string        | MCC of eNB                                   |
-| `mnc`       | string        | MNC of eNB                                   |
-| `rat_type`  | uint8         | RAT Type (`6` for E-UTRAN)                   |
-| `tai`       | uint16        | TAI of eNB                                   |
-| `eci`       | uint32        | ECI of eNB                                   |
-| `mme_addr`  | string        | IP/Port of MME to dial, for S1-MME interface |
-| `prom_addr` | string        | IP/Port of MME to serve Prometheus           |
+| config           | type of value | description                                                       |
+| ---------------- | ------------- | ----------------------------------------------------------------- |
+| `mcc`            | string        | MCC of eNB                                                        |
+| `mnc`            | string        | MNC of eNB                                                        |
+| `rat_type`       | uint8         | RAT Type (`6` for E-UTRAN)                                        |
+| `tai`            | uint16        | TAI of eNB                                                        |
+| `eci`            | uint32        | ECI of eNB                                                        |
+| `mme_addr`       | string        | IP/Port of MME to dial, for S1-MME interface                      |
+| `use_kernel_gtp` | bool          | Use Kernel GTP or not. U-Plane does not work when set to `false`. |
+| `prom_addr`      | string        | IP/Port of MME to serve Prometheus                                |
 
 #### Local Addresses
 
 `local_addresses` are the IP addresses/ports to be bound on the local machine.
 
 | config   | type of value | description                   |
-|----------|---------------|-------------------------------|
+| -------- | ------------- | ----------------------------- |
 | `s1c_ip` | string        | local IP for S1-MME interface |
 | `s1u_ip` | string        | local IP for S1-U interface   |
 
@@ -124,7 +125,7 @@ These values are used to identify eNB. Some of them are just to be set inside th
 `subscribers` are the list of subscribers to attach.
 
 | config               | type of value | description                                                                                                                                                                     |
-|----------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `imsi`               | string        | IMSI of the subscriber                                                                                                                                                          |
 | `msisdn`             | string        | MSISDN of the subscriber                                                                                                                                                        |
 | `imeisv`             | string        | IMEISV of the subscriber                                                                                                                                                        |
@@ -142,7 +143,7 @@ These values are used to identify eNB. Some of them are just to be set inside th
 These values are used to identify MME. Some of them are just to be set inside the packets and not validated.
 
 | config      | type of value | description                        |
-|-------------|---------------|------------------------------------|
+| ----------- | ------------- | ---------------------------------- |
 | `mcc`       | string        | MCC of MME                         |
 | `mnc`       | string        | MNC of MME                         |
 | `apn`       | string        | APN assigned to all the subscriber |
@@ -153,7 +154,7 @@ These values are used to identify MME. Some of them are just to be set inside th
 `local_addresses` are the IP addresses/ports to be bound on the local machine.
 
 | config     | type of value | description                        |
-|------------|---------------|------------------------------------|
+| ---------- | ------------- | ---------------------------------- |
 | `s1c_addr` | string        | local IP/Port for S1-MME interface |
 | `s11_ip`   | string        | local IP for S11 interface         |
 
@@ -162,7 +163,7 @@ These values are used to identify MME. Some of them are just to be set inside th
 IP addresses required to know/tell S-GW. This is typically done by DNS lookup with APN, but it's static for now.
 
 | config       | type of value | description                  |
-|--------------|---------------|------------------------------|
+| ------------ | ------------- | ---------------------------- |
 | `sgw_s11_ip` | string        | S-GW's IP for S11 interface  |
 | `pgw_s5c_ip` | string        | P-GW's IP for S5-C interface |
 
@@ -172,30 +173,32 @@ IP addresses required to know/tell S-GW. This is typically done by DNS lookup wi
 
 `local_addresses` are the IP addresses/ports to be bound on the local machine.
 
-| config      | type of value | description                        |
-|-------------|---------------|------------------------------------|
-| `s11_ip`    | string        | local IP for S11 interface         |
-| `s1u_ip`    | string        | local IP for S1-U interface        |
-| `s5c_ip`    | string        | local IP for S5-C interface        |
-| `s5u_ip`    | string        | local IP for S5-U interface        |
-| `prom_addr` | string        | IP/Port of MME to serve Prometheus |
+| config           | type of value | description                         |
+| ---------------- | ------------- | ----------------------------------- |
+| `s11_ip`         | string        | local IP for S11 interface          |
+| `s1u_ip`         | string        | local IP for S1-U interface         |
+| `s5c_ip`         | string        | local IP for S5-C interface         |
+| `s5u_ip`         | string        | local IP for S5-U interface         |
+| `use_kernel_gtp` | bool          | Use Kernel GTP or not.              |
+| `prom_addr`      | string        | IP/Port of S-GW to serve Prometheus |
 
 ### P-GW
 
 #### Global
 
-| config         | type of value | description                                                                |
-|----------------|---------------|----------------------------------------------------------------------------|
-| `sgi_if_name`  | string        | name of the network interface on SGi side. Used to downlink route traffic. |
-| `route_subnet` | string        | IP subnet of UEs that should be routed properly.                           |
-| `prom_addr`    | string        | IP/Port of MME to serve Prometheus                                         |
+| config           | type of value | description                                                                |
+| ---------------- | ------------- | -------------------------------------------------------------------------- |
+| `sgi_if_name`    | string        | name of the network interface on SGi side. Used to downlink route traffic. |
+| `route_subnet`   | string        | IP subnet of UEs that should be routed properly.                           |
+| `use_kernel_gtp` | bool          | Use Kernel GTP or not. U-Plane does not work when set to `false`.          |
+| `prom_addr`      | string        | IP/Port of P-GW to serve Prometheus                                        |
 
 #### Local Addresses
 
 `local_addresses` are the IP addresses/ports to be bound on the local machine.
 
 | config   | type of value | description                 |
-|----------|---------------|-----------------------------|
+| -------- | ------------- | --------------------------- |
 | `s5c_ip` | string        | local IP for S5-C interface |
 | `s5u_ip` | string        | local IP for S5-U interface |
 | `sgi_ip` | string        | local IP for SGi interface  |
@@ -212,7 +215,7 @@ GW Tester nodes expose some metrics for Prometheus if `prom_addr` is given in ea
 I'm planning to add some more metrics like "success rate of HTTP probe", etc.
 
 | Metrics           | Name                                  | Description                                   |
-|-------------------|---------------------------------------|-----------------------------------------------|
+| ----------------- | ------------------------------------- | --------------------------------------------- |
 | Active sessions   | `<node-name>_active_sessions`         | number of session established currently       |
 | Active bearers    | `<node-name>_active_bearers`          | number of GTP-U tunnels established currently |
 | Messages sent     | `<node-name>_messages_sent_total`     | number of messages sent by messagge type      |
