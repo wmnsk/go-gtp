@@ -30,6 +30,12 @@ _This project follows [the Release Policy of Go](https://golang.org/doc/devel/re
 
 ### Running examples
 
+#### End-to-end
+
+We have a set of tools called GW Tester at [`examples/gw-tester`](./examples/gw-tester). See the [document](./examples/gw-tester/README.md) for how it works and how to run it. It is also used for the integration test of this project. [Workflow setting](./.github/workflows/go.yml) may help as well.
+
+#### Individual node
+
 Examples work as it is by `go build` and executing commands in the following way.
 
 *Note for MacOs users*: before running any go service, make sure to execute `./mac_local_host_enabler.sh` you will find at [examples/utils](examples/utils)
