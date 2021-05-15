@@ -5,6 +5,7 @@
 package ie_test
 
 import (
+	"net"
 	"testing"
 	"time"
 
@@ -13,7 +14,13 @@ import (
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
+var (
+	mac1, _ = net.ParseMAC("12:34:56:78:90:01")
+	mac2, _ = net.ParseMAC("12:34:56:78:90:02")
+)
+
 func TestIEs(t *testing.T) {
+
 	cases := []struct {
 		description string
 		structured  *ie.IE
@@ -157,18 +164,222 @@ func TestIEs(t *testing.T) {
 			"ServingNetwork/3-digit",
 			ie.NewServingNetwork("123", "456"),
 			[]byte{0x53, 0x00, 0x03, 0x00, 0x21, 0x63, 0x54},
-		},
-		/* { XXX - implement!
-			"EPSBearerLevelTrafficFlowTemplate",
-			ie.NewEPSBearerLevelTrafficFlowTemplate(),
-			[]byte{},
-		},*/
-		/* { XXX - implement! (same as Bearer TFT)
-			"TrafficAggregateDescription",
-			ie.NewTrafficAggregateDescription(),
-			[]byte{},
-		},*/
-		{
+		}, {
+			"BearerTFT/TFTOpCreateNewTFT/NoParams",
+			ie.NewBearerTFTCreateNewTFT(
+				[]*ie.TFTPacketFilter{
+					ie.NewTFTPacketFilter(
+						ie.TFTPFPreRel7TFTFilter, 1, 0,
+						ie.NewTFTPFComponentIPv4RemoteAddress(
+							net.ParseIP("127.0.0.1"), net.IPv4Mask(255, 255, 255, 0),
+						),
+						ie.NewTFTPFComponentIPv4LocalAddress(
+							net.ParseIP("127.0.0.1"), net.IPv4Mask(255, 255, 255, 0),
+						),
+						ie.NewTFTPFComponentIPv6RemoteAddress(
+							net.ParseIP("2001::1"), net.CIDRMask(64, 128),
+						),
+						ie.NewTFTPFComponentIPv6RemoteAddressPrefixLength(
+							net.ParseIP("2001::1"), 64,
+						),
+						ie.NewTFTPFComponentIPv6LocalAddressPrefixLength(
+							net.ParseIP("2001::1"), 64,
+						),
+					),
+					ie.NewTFTPacketFilter(
+						ie.TFTPFDownlinkOnly, 2, 0,
+						ie.NewTFTPFComponentProtocolIdentifierNextHeader(1),
+						ie.NewTFTPFComponentSingleLocalPort(2152),
+						ie.NewTFTPFComponentSingleRemotePort(2123),
+						ie.NewTFTPFComponentLocalPortRange(2123, 2152),
+						ie.NewTFTPFComponentRemotePortRange(2152, 2123),
+					),
+					ie.NewTFTPacketFilter(
+						ie.TFTPFUplinkOnly, 3, 0,
+						ie.NewTFTPFComponentSecurityParameterIndex(0xdeadbeef),
+						ie.NewTFTPFComponentTypeOfServiceTrafficClass(1, 2),
+						ie.NewTFTPFComponentFlowLabel(0x00011111),
+						ie.NewTFTPFComponentDestinationMACAddress(mac1),
+						ie.NewTFTPFComponentSourceMACAddress(mac2),
+					),
+					ie.NewTFTPacketFilter(
+						ie.TFTPFBidirectional, 4, 0,
+						ie.NewTFTPFComponentDot1QCTAGVID(0x0111),
+						ie.NewTFTPFComponentDot1QSTAGVID(0x0222),
+						ie.NewTFTPFComponentDot1QCTAGPCPDEI(3),
+						ie.NewTFTPFComponentDot1QSTAGPCPDEI(5),
+						ie.NewTFTPFComponentEthertype(0x0800),
+					),
+				},
+				nil,
+			),
+			[]byte{
+				0x54, 0x00, 0x9d, 0x00, 0x24, 0x01, 0x00, 0x57, 0x10, 0x7f, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff,
+				0x00, 0x11, 0x7f, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 0x00, 0x20, 0x20, 0x01, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff,
+				0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0x20, 0x01, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x40, 0x23, 0x20, 0x01,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x40, 0x12,
+				0x00, 0x12, 0x30, 0x01, 0x40, 0x08, 0x68, 0x50, 0x08, 0x4b, 0x41, 0x08, 0x4b, 0x08, 0x68, 0x51,
+				0x08, 0x68, 0x08, 0x4b, 0x23, 0x00, 0x1a, 0x60, 0xde, 0xad, 0xbe, 0xef, 0x70, 0x01, 0x02, 0x80,
+				0x01, 0x11, 0x11, 0x81, 0x12, 0x34, 0x56, 0x78, 0x90, 0x01, 0x82, 0x12, 0x34, 0x56, 0x78, 0x90,
+				0x02, 0x34, 0x00, 0x0d, 0x83, 0x01, 0x11, 0x84, 0x02, 0x22, 0x85, 0x03, 0x86, 0x05, 0x87, 0x08,
+				0x00,
+			},
+		}, {
+			"BearerTFT/TFTOpCreateNewTFT/NoParams",
+			ie.NewBearerTFTCreateNewTFT(
+				[]*ie.TFTPacketFilter{
+					ie.NewTFTPacketFilter(
+						ie.TFTPFPreRel7TFTFilter, 1, 0,
+						ie.NewTFTPFComponentIPv4RemoteAddress(
+							net.ParseIP("127.0.0.1"), net.IPv4Mask(255, 255, 255, 0),
+						),
+						ie.NewTFTPFComponentIPv4LocalAddress(
+							net.ParseIP("127.0.0.1"), net.IPv4Mask(255, 255, 255, 0),
+						),
+						ie.NewTFTPFComponentIPv6RemoteAddress(
+							net.ParseIP("2001::1"), net.CIDRMask(64, 128),
+						),
+						ie.NewTFTPFComponentIPv6RemoteAddressPrefixLength(
+							net.ParseIP("2001::1"), 64,
+						),
+						ie.NewTFTPFComponentIPv6LocalAddressPrefixLength(
+							net.ParseIP("2001::1"), 64,
+						),
+					),
+					ie.NewTFTPacketFilter(
+						ie.TFTPFDownlinkOnly, 2, 0,
+						ie.NewTFTPFComponentProtocolIdentifierNextHeader(1),
+						ie.NewTFTPFComponentSingleLocalPort(2152),
+						ie.NewTFTPFComponentSingleRemotePort(2123),
+						ie.NewTFTPFComponentLocalPortRange(2123, 2152),
+						ie.NewTFTPFComponentRemotePortRange(2152, 2123),
+					),
+					ie.NewTFTPacketFilter(
+						ie.TFTPFUplinkOnly, 3, 0,
+						ie.NewTFTPFComponentSecurityParameterIndex(0xdeadbeef),
+						ie.NewTFTPFComponentTypeOfServiceTrafficClass(1, 2),
+						ie.NewTFTPFComponentFlowLabel(0x00011111),
+						ie.NewTFTPFComponentDestinationMACAddress(mac1),
+						ie.NewTFTPFComponentSourceMACAddress(mac2),
+					),
+					ie.NewTFTPacketFilter(
+						ie.TFTPFBidirectional, 4, 0,
+						ie.NewTFTPFComponentDot1QCTAGVID(0x0111),
+						ie.NewTFTPFComponentDot1QSTAGVID(0x0222),
+						ie.NewTFTPFComponentDot1QCTAGPCPDEI(3),
+						ie.NewTFTPFComponentDot1QSTAGPCPDEI(5),
+						ie.NewTFTPFComponentEthertype(0x0800),
+					),
+				},
+				[]*ie.TFTParameter{
+					ie.NewTFTParameter(ie.TFTParamIDAuthorizationToken, []byte{0xde, 0xad, 0xbe, 0xef}),
+					ie.NewTFTParameter(ie.TFTParamIDFlowIdentifier, []byte{0x11, 0x11, 0x22, 0x22}),
+					ie.NewTFTParameter(ie.TFTParamIDPacketFileterIdentifier, []byte{0x01, 0x02, 0x03, 0x04}),
+				},
+			),
+			[]byte{
+				0x54, 0x00, 0xaf, 0x00, 0x34, 0x01, 0x00, 0x57, 0x10, 0x7f, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff,
+				0x00, 0x11, 0x7f, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 0x00, 0x20, 0x20, 0x01, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff,
+				0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0x20, 0x01, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x40, 0x23, 0x20, 0x01,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x40, 0x12,
+				0x00, 0x12, 0x30, 0x01, 0x40, 0x08, 0x68, 0x50, 0x08, 0x4b, 0x41, 0x08, 0x4b, 0x08, 0x68, 0x51,
+				0x08, 0x68, 0x08, 0x4b, 0x23, 0x00, 0x1a, 0x60, 0xde, 0xad, 0xbe, 0xef, 0x70, 0x01, 0x02, 0x80,
+				0x01, 0x11, 0x11, 0x81, 0x12, 0x34, 0x56, 0x78, 0x90, 0x01, 0x82, 0x12, 0x34, 0x56, 0x78, 0x90,
+				0x02, 0x34, 0x00, 0x0d, 0x83, 0x01, 0x11, 0x84, 0x02, 0x22, 0x85, 0x03, 0x86, 0x05, 0x87, 0x08,
+				0x00, 0x01, 0x04, 0xde, 0xad, 0xbe, 0xef, 0x02, 0x04, 0x11, 0x11, 0x22, 0x22, 0x03, 0x04, 0x01,
+				0x02, 0x03, 0x04,
+			},
+		}, {
+			"BearerTFT/TFTOpDeleteExistingTFT/NoParams",
+			ie.NewBearerTFTDeleteExistingTFT(),
+			[]byte{0x54, 0x00, 0x01, 0x00, 0x40},
+		}, {
+			"BearerTFT/TFTOpDeleteExistingTFT/NoParams",
+			ie.NewBearerTFTDeleteExistingTFT(),
+			[]byte{0x54, 0x00, 0x01, 0x00, 0x40},
+		}, {
+			"BearerTFT/TFTOpDeleteExistingTFT/NoParams",
+			ie.NewBearerTFTDeleteExistingTFT(),
+			[]byte{0x54, 0x00, 0x01, 0x00, 0x40},
+		}, {
+			"BearerTFT/TFTOpDeleteExistingTFT/NoParams",
+			ie.NewBearerTFTDeleteExistingTFT(),
+			[]byte{0x54, 0x00, 0x01, 0x00, 0x40},
+		}, {
+			"BearerTFT/TFTOpDeleteExistingTFT/WithParams",
+			ie.NewBearerTFTDeleteExistingTFT(
+				ie.NewTFTParameter(ie.TFTParamIDAuthorizationToken, []byte{0xde, 0xad, 0xbe, 0xef}),
+				ie.NewTFTParameter(ie.TFTParamIDFlowIdentifier, []byte{0x11, 0x11, 0x22, 0x22}),
+				ie.NewTFTParameter(ie.TFTParamIDPacketFileterIdentifier, []byte{0x01, 0x02, 0x03, 0x04}),
+			),
+			[]byte{
+				0x54, 0x00, 0x13, 0x00, 0x50,
+				0x01, 0x04, 0xde, 0xad, 0xbe, 0xef,
+				0x02, 0x04, 0x11, 0x11, 0x22, 0x22,
+				0x03, 0x04, 0x01, 0x02, 0x03, 0x04,
+			},
+		}, {
+			"BearerTFT/TFTOpAddPacketFilters/NoParams",
+			ie.NewBearerTFTAddPacketFilters(
+				[]*ie.TFTPacketFilter{
+					ie.NewTFTPacketFilter(
+						ie.TFTPFPreRel7TFTFilter, 1, 0,
+						ie.NewTFTPFComponentIPv4RemoteAddress(
+							net.ParseIP("127.0.0.1"), net.IPv4Mask(255, 255, 255, 0),
+						),
+					),
+				},
+				nil,
+			),
+			[]byte{
+				0x54, 0x00, 0x0d, 0x00, 0x61,
+				0x01, 0x00, 0x09, 0x10, 0x7f, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 0x00,
+			},
+		}, {
+			"BearerTFT/TFTOpReplacePacketFilters/NoParams",
+			ie.NewBearerTFTReplacePacketFilters(
+				[]*ie.TFTPacketFilter{
+					ie.NewTFTPacketFilter(
+						ie.TFTPFPreRel7TFTFilter, 1, 0,
+						ie.NewTFTPFComponentIPv4RemoteAddress(
+							net.ParseIP("127.0.0.1"), net.IPv4Mask(255, 255, 255, 0),
+						),
+					),
+				},
+				nil,
+			),
+			[]byte{
+				0x54, 0x00, 0x0d, 0x00, 0x81,
+				0x01, 0x00, 0x09, 0x10, 0x7f, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 0x00,
+			},
+		}, {
+			"BearerTFT/TFTOpDeletePacketFilters/NoParams",
+			ie.NewBearerTFTDeletePacketFilters([]uint8{1, 2, 3, 4}, nil),
+			[]byte{0x54, 0x00, 0x05, 0x00, 0xa4, 0x01, 0x02, 0x03, 0x04},
+		}, {
+			"BearerTFT/TFTOpDeletePacketFilters/WithParams",
+			ie.NewBearerTFTDeletePacketFilters(
+				[]uint8{1, 2, 3, 4},
+				ie.NewTFTParameter(ie.TFTParamIDAuthorizationToken, []byte{0xde, 0xad, 0xbe, 0xef}),
+				ie.NewTFTParameter(ie.TFTParamIDFlowIdentifier, []byte{0x11, 0x11, 0x22, 0x22}),
+				ie.NewTFTParameter(ie.TFTParamIDPacketFileterIdentifier, []byte{0x01, 0x02, 0x03, 0x04}),
+			),
+			[]byte{
+				0x54, 0x00, 0x17, 0x00, 0xb4,
+				0x01, 0x02, 0x03, 0x04,
+				0x01, 0x04, 0xde, 0xad, 0xbe, 0xef,
+				0x02, 0x04, 0x11, 0x11, 0x22, 0x22,
+				0x03, 0x04, 0x01, 0x02, 0x03, 0x04,
+			},
+		}, {
+			"BearerTFT/TFTOpNoTFTOperation/NoParams",
+			ie.NewBearerTFTNoTFTOperation(),
+			[]byte{0x54, 0x00, 0x01, 0x00, 0xc0},
+		}, {
 			"UserLocationInformation/Lazy-1",
 			ie.NewUserLocationInformationLazy(
 				"123", "45",
@@ -486,7 +697,7 @@ func TestIEs(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		t.Run("serialize/"+c.description, func(t *testing.T) {
+		t.Run("marshal/"+c.description, func(t *testing.T) {
 			got, err := c.structured.Marshal()
 			if err != nil {
 				t.Fatal(err)
@@ -497,7 +708,7 @@ func TestIEs(t *testing.T) {
 			}
 		})
 
-		t.Run("decode/"+c.description, func(t *testing.T) {
+		t.Run("unmarshal/"+c.description, func(t *testing.T) {
 			got, err := ie.Parse(c.serialized)
 			if err != nil {
 				t.Fatal(err)
