@@ -238,7 +238,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ie.Ne
 | 81      | Flow Quality of Service (Flow QoS)                             | Yes       |
 | 82      | RAT Type                                                       | Yes       |
 | 83      | Serving Network                                                | Yes       |
-| 84      | EPS Bearer Level Traffic Flow Template (Bearer TFT)            |           |
+| 84      | EPS Bearer Level Traffic Flow Template (Bearer TFT)            | Yes       |
 | 85      | Traffic Aggregation Description (TAD)                          |           |
 | 86      | User Location Information (ULI)                                | Yes       |
 | 87      | Fully Qualified Tunnel Endpoint Identifier (F-TEID)            | Yes       |

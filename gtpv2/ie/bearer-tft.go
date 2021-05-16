@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"log"
 	"net"
 
 	"github.com/wmnsk/go-gtp/utils"
@@ -223,7 +222,6 @@ func (f *BearerTFTFields) UnmarshalBinary(b []byte) error {
 	}
 
 	if hasParams {
-		log.Println(b)
 		params, err := ParseMultiTFTParameters(b[offset:])
 		if err != nil {
 			return fmt.Errorf("failed to parse Parameters: %w", err)
@@ -257,6 +255,7 @@ func (f *BearerTFTFields) MarshalLen() int {
 	return l
 }
 
+// TFT Packet Filter Identifier definitions.
 const (
 	TFTPFPreRel7TFTFilter uint8 = 0
 	TFTPFDownlinkOnly     uint8 = 1
