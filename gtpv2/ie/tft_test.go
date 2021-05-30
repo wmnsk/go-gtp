@@ -8,7 +8,7 @@ import (
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
-func TestBearerTFT(t *testing.T) {
+func TestTrafficFlowTemplate(t *testing.T) {
 	cases := []struct {
 		description string
 		serialized  []byte
@@ -196,7 +196,7 @@ func TestBearerTFT(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			f, err := i.BearerTFT()
+			f, err := i.TrafficFlowTemplate()
 			if err != nil {
 				t.Fatal(err)
 			}
