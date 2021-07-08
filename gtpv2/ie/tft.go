@@ -592,7 +592,7 @@ func (c *TFTPFComponent) LocalPortRange() (uint16, uint16, error) {
 
 // SingleRemotePort returns SingleRemotePort in uint16 if the type of component matches.
 func (c *TFTPFComponent) SingleRemotePort() (uint16, error) {
-	if c.Type != PFCompSingleLocalPort {
+	if c.Type != PFCompSingleRemotePort {
 		return 0, ErrInvalidType
 	}
 	if len(c.Contents) < 2 {
