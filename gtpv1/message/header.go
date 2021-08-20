@@ -47,7 +47,7 @@ func NewHeaderWithNPDUNumber(flags, mtype uint8, teid uint32, seqnum uint16, npd
 // NewHeaderWithExtensionHeaders creates a new Header with ExtensionHeaders.
 func NewHeaderWithExtensionHeaders(flags, mtype uint8, teid uint32, seqnum uint16, payload []byte, extHdrs ...*ExtensionHeader) *Header {
 	h := NewHeader(flags, mtype, teid, seqnum, payload)
-	h.AddExtensionHeaders(extHdrs...)
+	_ = h.AddExtensionHeaders(extHdrs...)
 	return h
 }
 
@@ -230,7 +230,7 @@ func (h *Header) SetNextExtensionHeaderType(exhType uint8) {
 
 // WithExtensionHeaders returns the Header with ExtensionHeaders added.
 func (h *Header) WithExtensionHeaders(extHdrs ...*ExtensionHeader) *Header {
-	h.AddExtensionHeaders(extHdrs...)
+	_ = h.AddExtensionHeaders(extHdrs...)
 	return h
 }
 
