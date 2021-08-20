@@ -1,6 +1,8 @@
 package message
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // ExtensionHeaderType definitions.
 const (
@@ -31,7 +33,6 @@ type ExtensionHeader struct {
 // NewExtensionHeader creates a new ExtensionHeader.
 //
 // ExtensionHeader struct has its own type while it does not actually exist in the packet.
-// When you are not sure about the type, set the first parameter to 0(ExtHeaderTypeNoMoreExtensionHeaders).
 func NewExtensionHeader(typ uint8, content []byte, nextType uint8) *ExtensionHeader {
 	eh := &ExtensionHeader{
 		Type:     typ,
@@ -60,7 +61,7 @@ func (e *ExtensionHeader) MarshalTo(b []byte) error {
 	}
 
 	b[0] = e.Length
-	offset := int(e.Length) - 1
+	offset := int(e.Length)*4 - 1
 	if l < offset+1 {
 		return ErrTooShortToMarshal
 	}
@@ -70,7 +71,7 @@ func (e *ExtensionHeader) MarshalTo(b []byte) error {
 	return nil
 }
 
-// ParseExtensionHeader decodes given byte sequence as a GTPv1 header.
+// ParseExtensionHeader decodes given byte sequence as a ExtensionHeader.
 func ParseExtensionHeader(b []byte) (*ExtensionHeader, error) {
 	e := &ExtensionHeader{}
 	if err := e.UnmarshalBinary(b); err != nil {
@@ -79,7 +80,7 @@ func ParseExtensionHeader(b []byte) (*ExtensionHeader, error) {
 	return e, nil
 }
 
-// UnmarshalBinary sets the values retrieved from byte sequence in GTPv1 header.
+// UnmarshalBinary sets the values retrieved from byte sequence in ExtensionHeader.
 func (e *ExtensionHeader) UnmarshalBinary(b []byte) error {
 	l := len(b)
 	if l < 2 {
@@ -96,6 +97,32 @@ func (e *ExtensionHeader) UnmarshalBinary(b []byte) error {
 	e.NextType = b[offset]
 
 	return nil
+}
+
+// ParseMultiExtensionHeaders parses given bytes sequence as multiple ExtensionHeaders.
+func ParseMultiExtensionHeaders(b []byte) ([]*ExtensionHeader, error) {
+	var ehs []*ExtensionHeader
+	next := ExtHeaderTypeNoMoreExtensionHeaders
+	for {
+		if len(b) == 0 {
+			break
+		}
+
+		eh, err := ParseExtensionHeader(b)
+		if err != nil {
+			return nil, err
+		}
+		eh.Type = next
+
+		ehs = append(ehs, eh)
+		b = b[eh.MarshalLen():]
+		next = eh.NextType
+		if next == ExtHeaderTypeNoMoreExtensionHeaders {
+			break
+		}
+		continue
+	}
+	return ehs, nil
 }
 
 // MarshalLen returns the serial length of ExtensionHeader.
