@@ -48,7 +48,7 @@ func NewHeaderFlags(v, p, e, s, n int) uint8 {
 	)
 }
 
-// Marshal returns the byte sequence generated from an IE instance.
+// Marshal returns the byte sequence generated from a Header.
 func (h *Header) Marshal() ([]byte, error) {
 	b := make([]byte, h.MarshalLen())
 	if err := h.MarshalTo(b); err != nil {
@@ -71,8 +71,11 @@ func (h *Header) MarshalTo(b []byte) error {
 	if h.HasSequence() {
 		binary.BigEndian.PutUint16(b[offset:offset+2], h.SequenceNumber)
 		// two bytes of padding before payload.
-		offset += 4
+		offset += 2
 	}
+
+	binary.BigEndian.PutUint16(b[offset:offset+2], h.Reserved)
+	offset += 2
 
 	// two bytes of padding before payload.
 	copy(b[offset:], h.Payload)
