@@ -22,13 +22,16 @@ const (
 
 // ExtensionHeader represents an GTP Extension Header defined in §5.2, TS 29.281 and §6.1 TS 29.060.
 type ExtensionHeader struct {
-	Type     uint8 // this doesn't exist in the spec - but surely helpful to have
+	Type     uint8 // this doesn't exist in the spec, but it's apparently helpful to have
 	Length   uint8
 	Content  []byte
 	NextType uint8
 }
 
 // NewExtensionHeader creates a new ExtensionHeader.
+//
+// ExtensionHeader struct has its own type while it does not actually exist in the packet.
+// When you are not sure about the type, set the first parameter to 0(ExtHeaderTypeNoMoreExtensionHeaders).
 func NewExtensionHeader(typ uint8, content []byte, nextType uint8) *ExtensionHeader {
 	eh := &ExtensionHeader{
 		Type:     typ,
@@ -51,13 +54,18 @@ func (e *ExtensionHeader) Marshal() ([]byte, error) {
 
 // MarshalTo puts the byte sequence in the byte array given as b.
 func (e *ExtensionHeader) MarshalTo(b []byte) error {
-	if len(b) < e.MarshalLen() {
+	l := len(b)
+	if l < e.MarshalLen() {
 		return ErrTooShortToMarshal
 	}
 
 	b[0] = e.Length
-	copy(b[1:], e.Content)
-	b[len(e.Content)+1] = e.NextType
+	offset := int(e.Length) - 1
+	if l < offset+1 {
+		return ErrTooShortToMarshal
+	}
+	copy(b[1:offset], e.Content)
+	b[offset] = e.NextType
 
 	return nil
 }
@@ -79,30 +87,31 @@ func (e *ExtensionHeader) UnmarshalBinary(b []byte) error {
 	}
 
 	e.Length = b[0]
-	n := int(e.Length) * 4
-	if n < l {
+	offset := int(e.Length)*4 - 1
+	if l < offset+1 {
 		return ErrTooShortToParse
 	}
 
-	e.Content = b[1 : n-1]
-	e.NextType = b[n]
+	e.Content = b[1:offset]
+	e.NextType = b[offset]
 
 	return nil
 }
 
 // MarshalLen returns the serial length of ExtensionHeader.
 func (e *ExtensionHeader) MarshalLen() int {
-	return len(e.Content) + 2
+	return pad4Len(len(e.Content) + 2)
 }
 
 // SetLength sets the length calculated from the length of contents to Length field.
 func (e *ExtensionHeader) SetLength() {
-	e.Length = uint8((len(e.Content) + 1) / 4)
+	e.Length = uint8(pad4Len(len(e.Content)+2) / 4)
 }
 
 // String returns an ExtensionHeader fields in human readable format.
 func (e *ExtensionHeader) String() string {
-	return fmt.Sprintf("{Length: %d, Contents: %#x, NextType: %x}",
+	return fmt.Sprintf("{Type: %d, Length: %d, Contents: %#x, NextType: %x}",
+		e.Type,
 		e.Length,
 		e.Content,
 		e.NextType,
@@ -113,4 +122,8 @@ func (e *ExtensionHeader) String() string {
 // ExtensionHeader is required or not.
 func (e *ExtensionHeader) IsComprehensionRequired() bool {
 	return e.Type>>7 == 1
+}
+
+func pad4Len(n int) int {
+	return n + ((4 - n) & 0b11)
 }
