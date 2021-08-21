@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/wmnsk/go-gtp/gtpv1"
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
+	"github.com/wmnsk/go-gtp/gtpv1/message"
 )
 
 func TestIEs(t *testing.T) {
@@ -136,6 +137,13 @@ func TestIEs(t *testing.T) {
 				0x10,
 				0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
 			},
+		}, {
+			"ExtensionHeaderTypeList",
+			ie.NewExtensionHeaderTypeList(
+				message.ExtHeaderTypePDUSessionContainer,
+				message.ExtHeaderTypeUDPPort,
+			),
+			[]byte{0x8d, 0x00, 0x02, 0x85, 0x40},
 		}, {
 			"CommonFlags",
 			ie.NewCommonFlags(0, 1, 0, 0, 0, 0, 0, 0),
