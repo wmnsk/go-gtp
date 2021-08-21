@@ -22,7 +22,7 @@ func TestHeader(t *testing.T) {
 					0, // Next Extension Header?
 					0, // Sequence Number?
 					0, // N-PDU Number?
-				), //Flags
+				), // Flags
 				message.MsgTypeTPDU, // Message type
 				0xdeadbeef,          // TEID
 				0x00,                // Sequence Number
@@ -43,7 +43,7 @@ func TestHeader(t *testing.T) {
 					0, // Next Extension Header?
 					1, // Sequence Number?
 					0, // N-PDU Number?
-				), //Flags
+				), // Flags
 				message.MsgTypeEchoRequest, // Message type
 				0xdeadbeef,                 // TEID
 				0xcafe,                     // Sequence Number
@@ -64,7 +64,7 @@ func TestHeader(t *testing.T) {
 					0, // Next Extension Header?
 					0, // Sequence Number?
 					0, // N-PDU Number?: set to zero at first, set by With... method
-				), //Flags
+				), // Flags
 				message.MsgTypeEchoRequest, // Message type
 				0xdeadbeef,                 // TEID
 				0x00,                       // Sequence Number
@@ -85,7 +85,7 @@ func TestHeader(t *testing.T) {
 					0, // Next Extension Header?: set to zero at first, set by With... method
 					0, // Sequence Number?
 					0, // N-PDU Number?
-				), //Flags
+				), // Flags
 				message.MsgTypeEchoRequest, // Message type
 				0xdeadbeef,                 // TEID
 				0x00,                       // Sequence Number
@@ -118,7 +118,7 @@ func TestHeader(t *testing.T) {
 					0, // Next Extension Header?
 					0, // Sequence Number?
 					0, // N-PDU Number?: set to zero at first, set by With... method
-				), //Flags
+				), // Flags
 				message.MsgTypeEchoRequest, // Message type
 				0xdeadbeef,                 // TEID
 				0x00,                       // Sequence Number
@@ -139,7 +139,7 @@ func TestHeader(t *testing.T) {
 					0, // Next Extension Header?: set to zero at first, set by With... method
 					0, // Sequence Number?: set to zero at first, set by With... method
 					0, // N-PDU Number?
-				), //Flags
+				), // Flags
 				message.MsgTypeEchoRequest, // Message type
 				0xdeadbeef,                 // TEID
 				0x00,                       // Sequence Number
@@ -172,7 +172,7 @@ func TestHeader(t *testing.T) {
 					0, // Next Extension Header?: set to zero at first, set by With... method
 					0, // Sequence Number?: set to zero at first, set by With... method
 					0, // N-PDU Number?: set to zero at first, set by With... method
-				), //Flags
+				), // Flags
 				message.MsgTypeEchoRequest, // Message type
 				0xdeadbeef,                 // TEID
 				0x00,                       // Sequence Number

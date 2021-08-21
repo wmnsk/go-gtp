@@ -1,8 +1,10 @@
+// Copyright 2019-2021 go-gtp authors. All rights reserved.
+// Use of this source code is governed by a MIT-style license that can be
+// found in the LICENSE file.
+
 package message
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // ExtensionHeaderType definitions.
 const (
@@ -22,7 +24,7 @@ const (
 	ExtHeaderTypeSuspendResponse                        uint8 = 0b11000010
 )
 
-// ExtensionHeader represents an GTP Extension Header defined in §5.2, TS 29.281 and §6.1 TS 29.060.
+// ExtensionHeader represents an Extension Header defined in §5.2, TS 29.281 and §6.1 TS 29.060.
 type ExtensionHeader struct {
 	Type     uint8 // this doesn't exist in the spec, but it's apparently helpful to have
 	Length   uint8
@@ -33,6 +35,8 @@ type ExtensionHeader struct {
 // NewExtensionHeader creates a new ExtensionHeader.
 //
 // ExtensionHeader struct has its own type while it does not actually exist in the packet.
+// Be sure to set an appropriate one - putting a wrong type may cause unexpected errors while
+// using method depends on ExtensionHeader struct.
 func NewExtensionHeader(typ uint8, content []byte, nextType uint8) *ExtensionHeader {
 	eh := &ExtensionHeader{
 		Type:     typ,
@@ -137,7 +141,7 @@ func (e *ExtensionHeader) SetLength() {
 
 // String returns an ExtensionHeader fields in human readable format.
 func (e *ExtensionHeader) String() string {
-	return fmt.Sprintf("{Type: %d, Length: %d, Contents: %#x, NextType: %x}",
+	return fmt.Sprintf("{Type: %#x, Length: %d, Content: %#x, NextType: %x}",
 		e.Type,
 		e.Length,
 		e.Content,
@@ -145,8 +149,8 @@ func (e *ExtensionHeader) String() string {
 	)
 }
 
-// IsComprehensionRequired reports whether the comprehension of the
-// ExtensionHeader is required or not.
+// IsComprehensionRequired reports whether the comprehension of the ExtensionHeader is
+// required or not.
 func (e *ExtensionHeader) IsComprehensionRequired() bool {
 	return e.Type>>7 == 1
 }
