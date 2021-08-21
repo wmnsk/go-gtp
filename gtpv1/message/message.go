@@ -48,7 +48,7 @@ const (
 	MsgTypePDUNotificationResponse
 	MsgTypePDUNotificationRejectRequest
 	MsgTypePDUNotificationRejectResponse
-	_
+	MsgTypeSupportedExtensionHeaderNotification
 	MsgTypeSendRoutingInfoRequest
 	MsgTypeSendRoutingInfoResponse
 	MsgTypeFailureReportRequest
@@ -135,7 +135,7 @@ func Parse(b []byte) (Message, error) {
 		m = &VersionNotSupported{}
 	case MsgTypeDeletePDPContextResponse:
 		m = &DeletePDPContextResponse{}
-	/* XXX - Implement!
+	/* TODO: Implement!
 	case MsgTypeNodeAliveRequest:
 		m = &NodeAliveReq{}
 	case MsgTypeNodeAliveResponse:
@@ -155,7 +155,7 @@ func Parse(b []byte) (Message, error) {
 	*/
 	case MsgTypeErrorIndication:
 		m = &ErrorIndication{}
-	/* XXX - Implement!
+	/* TODO: Implement!
 	case MsgTypePduNotificationRequest:
 		m = &PduNotificationReq{}
 	case MsgTypePduNotificationResponse:
@@ -164,6 +164,10 @@ func Parse(b []byte) (Message, error) {
 		m = &PduNotificationRejectReq{}
 	case MsgTypePduNotificationRejectResponse:
 		m = &PduNotificationRejectRes{}
+	*/
+	case MsgTypeSupportedExtensionHeaderNotification:
+		m = &SupportedExtensionHeaderNotification{}
+	/* TODO: Implement!
 	case MsgTypeSendRoutingInfoRequest:
 		m = &SendRoutingInfoReq{}
 	case MsgTypeSendRoutingInfoResponse:

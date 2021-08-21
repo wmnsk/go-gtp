@@ -4,21 +4,21 @@
 
 package message
 
-import "github.com/wmnsk/go-gtp/gtpv1/ie"
+import (
+	"github.com/wmnsk/go-gtp/gtpv1/ie"
+)
 
-// ErrorIndication is a ErrorIndication Header and its IEs above.
-type ErrorIndication struct {
+// SupportedExtensionHeaderNotification is a SupportedExtensionHeaderNotification Header and its IEs above.
+type SupportedExtensionHeaderNotification struct {
 	*Header
-	TEIDDataI        *ie.IE
-	GTPUPeerAddress  *ie.IE
-	PrivateExtension *ie.IE
-	AdditionalIEs    []*ie.IE
+	ExtensionHeaderTypeList *ie.IE
+	AdditionalIEs           []*ie.IE
 }
 
-// NewErrorIndication creates a new GTPv1 ErrorIndication.
-func NewErrorIndication(teid uint32, seq uint16, ies ...*ie.IE) *ErrorIndication {
-	e := &ErrorIndication{
-		Header: NewHeader(0x32, MsgTypeErrorIndication, teid, seq, nil),
+// NewSupportedExtensionHeaderNotification creates a new GTPv1 SupportedExtensionHeaderNotification.
+func NewSupportedExtensionHeaderNotification(teid uint32, seq uint16, ies ...*ie.IE) *SupportedExtensionHeaderNotification {
+	e := &SupportedExtensionHeaderNotification{
+		Header: NewHeader(0x30, MsgTypeSupportedExtensionHeaderNotification, teid, seq, nil),
 	}
 
 	for _, i := range ies {
@@ -26,12 +26,8 @@ func NewErrorIndication(teid uint32, seq uint16, ies ...*ie.IE) *ErrorIndication
 			continue
 		}
 		switch i.Type {
-		case ie.TEIDDataI:
-			e.TEIDDataI = i
-		case ie.GSNAddress:
-			e.GTPUPeerAddress = i
-		case ie.PrivateExtension:
-			e.PrivateExtension = i
+		case ie.ExtensionHeaderTypeList:
+			e.ExtensionHeaderTypeList = i
 		default:
 			e.AdditionalIEs = append(e.AdditionalIEs, i)
 		}
@@ -41,8 +37,8 @@ func NewErrorIndication(teid uint32, seq uint16, ies ...*ie.IE) *ErrorIndication
 	return e
 }
 
-// Marshal returns the byte sequence generated from a ErrorIndication.
-func (e *ErrorIndication) Marshal() ([]byte, error) {
+// Marshal returns the byte sequence generated from a SupportedExtensionHeaderNotification.
+func (e *SupportedExtensionHeaderNotification) Marshal() ([]byte, error) {
 	b := make([]byte, e.MarshalLen())
 	if err := e.MarshalTo(b); err != nil {
 		return nil, err
@@ -52,26 +48,14 @@ func (e *ErrorIndication) Marshal() ([]byte, error) {
 }
 
 // MarshalTo puts the byte sequence in the byte array given as b.
-func (e *ErrorIndication) MarshalTo(b []byte) error {
+func (e *SupportedExtensionHeaderNotification) MarshalTo(b []byte) error {
 	if len(b) < e.MarshalLen() {
 		return ErrTooShortToMarshal
 	}
 	e.Header.Payload = make([]byte, e.MarshalLen()-e.Header.MarshalLen())
 
 	offset := 0
-	if ie := e.TEIDDataI; ie != nil {
-		if err := ie.MarshalTo(e.Payload[offset:]); err != nil {
-			return err
-		}
-		offset += ie.MarshalLen()
-	}
-	if ie := e.GTPUPeerAddress; ie != nil {
-		if err := ie.MarshalTo(e.Payload[offset:]); err != nil {
-			return err
-		}
-		offset += ie.MarshalLen()
-	}
-	if ie := e.PrivateExtension; ie != nil {
+	if ie := e.ExtensionHeaderTypeList; ie != nil {
 		if err := ie.MarshalTo(e.Payload[offset:]); err != nil {
 			return err
 		}
@@ -92,17 +76,17 @@ func (e *ErrorIndication) MarshalTo(b []byte) error {
 	return e.Header.MarshalTo(b)
 }
 
-// ParseErrorIndication decodes a given byte sequence as a ErrorIndication.
-func ParseErrorIndication(b []byte) (*ErrorIndication, error) {
-	e := &ErrorIndication{}
+// ParseSupportedExtensionHeaderNotification decodes a given byte sequence as a SupportedExtensionHeaderNotification.
+func ParseSupportedExtensionHeaderNotification(b []byte) (*SupportedExtensionHeaderNotification, error) {
+	e := &SupportedExtensionHeaderNotification{}
 	if err := e.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}
 	return e, nil
 }
 
-// UnmarshalBinary decodes a given byte sequence as a ErrorIndication.
-func (e *ErrorIndication) UnmarshalBinary(b []byte) error {
+// UnmarshalBinary decodes a given byte sequence as a SupportedExtensionHeaderNotification.
+func (e *SupportedExtensionHeaderNotification) UnmarshalBinary(b []byte) error {
 	var err error
 	e.Header, err = ParseHeader(b)
 	if err != nil {
@@ -122,12 +106,8 @@ func (e *ErrorIndication) UnmarshalBinary(b []byte) error {
 			continue
 		}
 		switch i.Type {
-		case ie.TEIDDataI:
-			e.TEIDDataI = i
-		case ie.GSNAddress:
-			e.GTPUPeerAddress = i
-		case ie.PrivateExtension:
-			e.PrivateExtension = i
+		case ie.ExtensionHeaderTypeList:
+			e.ExtensionHeaderTypeList = i
 		default:
 			e.AdditionalIEs = append(e.AdditionalIEs, i)
 		}
@@ -136,16 +116,10 @@ func (e *ErrorIndication) UnmarshalBinary(b []byte) error {
 }
 
 // MarshalLen returns the serial length of Data.
-func (e *ErrorIndication) MarshalLen() int {
+func (e *SupportedExtensionHeaderNotification) MarshalLen() int {
 	l := e.Header.MarshalLen() - len(e.Header.Payload)
 
-	if ie := e.TEIDDataI; ie != nil {
-		l += ie.MarshalLen()
-	}
-	if ie := e.GTPUPeerAddress; ie != nil {
-		l += ie.MarshalLen()
-	}
-	if ie := e.PrivateExtension; ie != nil {
+	if ie := e.ExtensionHeaderTypeList; ie != nil {
 		l += ie.MarshalLen()
 	}
 
@@ -159,16 +133,16 @@ func (e *ErrorIndication) MarshalLen() int {
 }
 
 // SetLength sets the length in Length field.
-func (e *ErrorIndication) SetLength() {
+func (e *SupportedExtensionHeaderNotification) SetLength() {
 	e.Length = uint16(e.MarshalLen() - 8)
 }
 
 // MessageTypeName returns the name of protocol.
-func (e *ErrorIndication) MessageTypeName() string {
-	return "Errror Indication"
+func (e *SupportedExtensionHeaderNotification) MessageTypeName() string {
+	return "Supported Extension Header Notification"
 }
 
 // TEID returns the TEID in human-readable string.
-func (e *ErrorIndication) TEID() uint32 {
+func (e *SupportedExtensionHeaderNotification) TEID() uint32 {
 	return e.Header.TEID
 }

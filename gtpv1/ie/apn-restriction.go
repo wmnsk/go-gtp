@@ -13,7 +13,7 @@ func NewAPNRestriction(restriction uint8) *IE {
 
 // APNRestriction returns APNRestriction in uint8 if type matches.
 func (i *IE) APNRestriction() (uint8, error) {
-	if i.Type != AuthenticationTriplet {
+	if i.Type != APNRestriction {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
 	if len(i.Payload) == 0 {
