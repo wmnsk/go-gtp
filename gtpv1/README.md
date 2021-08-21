@@ -164,12 +164,13 @@ s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID, s1uBearer.RemoteAdd
 
 ### Handling Extension Headers
 
-`AddExtensionHeaders` is provided to add ExtensionHeaders to a Message.
-It adds ExtensionHeader(s) to the Header of a Message, set the E flag, and checks if the types given are consistent (error will be returned if not).
+`AddExtensionHeaders` adds ExtensionHeader(s) to the Header of a Message, set the E flag, and checks if the types given are consistent (error will be returned if not).
 
 ```go
 msg := message.NewTPDU(0x11223344, []byte{0xde, 0xad, 0xbe, 0xef})
 if err := msg.AddExtensionHeaders(
+	// We don't support construction of the specific type of an ExtensionHeader.
+	// The second parameter should be the serialized bytes of contents.
 	message.NewExtensionHeader(
 		message.ExtHeaderTypeUDPPort,
 		[]byte{0x22, 0xb8},
@@ -185,8 +186,7 @@ if err := msg.AddExtensionHeaders(
 }
 ```
 
-ExtensionHeaders are stored in `ExtensionHeaders` field in Header, which can be accessed like this.
-Note that `Payload` field does not contain data of ExtensionHeaders.
+ExtensionHeaders decoded or added are stored in `ExtensionHeaders` field in the Header, which can be accessed like this.
 
 ```go
 // no need to write msg.Header.ExtensionHeaders, as the Header is embedded in messages.
@@ -197,8 +197,8 @@ for _, eh := range msg.ExtensionHeaders {
 }
 ```
 
-When you are manipulating Header, `WithExtensionHeaders` would help you simplify your operation.
-Be sure not to call it on a Message, as it returns `*Header`.
+When you are directly manipulating a Header for some reason, `WithExtensionHeaders` would help you simplify your operation.
+Be sure not to call it on a Message, as it returns `*Header`, not a `Message` interface.
 
 ```go
 header := message.NewHeader(
@@ -220,7 +220,6 @@ header := message.NewHeader(
 	),
 )
 ```
-
 
 ## Supported Features
 
