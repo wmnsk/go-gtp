@@ -16,8 +16,8 @@ type ModifyBearerResponse struct {
 	LinkedEBI                      *ie.IE
 	APNRestriction                 *ie.IE
 	PCO                            *ie.IE
-	BearerContextsModified         *ie.IE
-	BearerContextsMarkedForRemoval *ie.IE
+	BearerContextsModified         []*ie.IE
+	BearerContextsMarkedForRemoval []*ie.IE
 	ChangeReportingAction          *ie.IE
 	CSGInformationReportingAction  *ie.IE
 	HeNBInformationReporting       *ie.IE
@@ -29,7 +29,7 @@ type ModifyBearerResponse struct {
 	SGWLDN                         *ie.IE
 	PGWLDN                         *ie.IE
 	IndicationFlags                *ie.IE
-	PresenceReportingAreaAction    *ie.IE
+	PresenceReportingAreaAction    []*ie.IE
 	PGWNodeLoadControlInformation  *ie.IE
 	PGWAPNLoadControlInformation   *ie.IE
 	SGWNodeLoadControlInformation  *ie.IE
@@ -67,9 +67,9 @@ func NewModifyBearerResponse(teid, seq uint32, ies ...*ie.IE) *ModifyBearerRespo
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				m.BearerContextsModified = i
+				m.BearerContextsModified = append(m.BearerContextsModified, i)
 			case 1:
-				m.BearerContextsMarkedForRemoval = i
+				m.BearerContextsMarkedForRemoval = append(m.BearerContextsMarkedForRemoval, i)
 			default:
 				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
@@ -106,7 +106,7 @@ func NewModifyBearerResponse(teid, seq uint32, ies ...*ie.IE) *ModifyBearerRespo
 		case ie.Indication:
 			m.IndicationFlags = i
 		case ie.PresenceReportingAreaAction:
-			m.PresenceReportingAreaAction = i
+			m.PresenceReportingAreaAction = append(m.PresenceReportingAreaAction, i)
 		case ie.LoadControlInformation:
 			switch i.Instance() {
 			case 0:
@@ -187,13 +187,13 @@ func (m *ModifyBearerResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsModified; ie != nil {
+	for _, ie := range m.BearerContextsModified {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsMarkedForRemoval; ie != nil {
+	for _, ie := range m.BearerContextsMarkedForRemoval {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -265,7 +265,7 @@ func (m *ModifyBearerResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.PresenceReportingAreaAction; ie != nil {
+	for _, ie := range m.PresenceReportingAreaAction {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -371,9 +371,9 @@ func (m *ModifyBearerResponse) UnmarshalBinary(b []byte) error {
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				m.BearerContextsModified = i
+				m.BearerContextsModified = append(m.BearerContextsModified, i)
 			case 1:
-				m.BearerContextsMarkedForRemoval = i
+				m.BearerContextsMarkedForRemoval = append(m.BearerContextsMarkedForRemoval, i)
 			default:
 				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
@@ -410,7 +410,7 @@ func (m *ModifyBearerResponse) UnmarshalBinary(b []byte) error {
 		case ie.Indication:
 			m.IndicationFlags = i
 		case ie.PresenceReportingAreaAction:
-			m.PresenceReportingAreaAction = i
+			m.PresenceReportingAreaAction = append(m.PresenceReportingAreaAction, i)
 		case ie.LoadControlInformation:
 			switch i.Instance() {
 			case 0:
@@ -462,10 +462,10 @@ func (m *ModifyBearerResponse) MarshalLen() int {
 	if ie := m.PCO; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsModified; ie != nil {
+	for _, ie := range m.BearerContextsModified {
 		l += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsMarkedForRemoval; ie != nil {
+	for _, ie := range m.BearerContextsMarkedForRemoval {
 		l += ie.MarshalLen()
 	}
 	if ie := m.ChangeReportingAction; ie != nil {
@@ -501,7 +501,7 @@ func (m *ModifyBearerResponse) MarshalLen() int {
 	if ie := m.IndicationFlags; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := m.PresenceReportingAreaAction; ie != nil {
+	for _, ie := range m.PresenceReportingAreaAction {
 		l += ie.MarshalLen()
 	}
 	if ie := m.PGWNodeLoadControlInformation; ie != nil {

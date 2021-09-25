@@ -12,7 +12,7 @@ import (
 type CreateBearerResponse struct {
 	*Header
 	Cause                              *ie.IE
-	BearerContexts                     *ie.IE
+	BearerContexts                     []*ie.IE
 	Recovery                           *ie.IE
 	MMEFQCSID                          *ie.IE
 	SGWFQCSID                          *ie.IE
@@ -24,7 +24,7 @@ type CreateBearerResponse struct {
 	TWANIdentifier                     *ie.IE
 	MMEOverloadControlInformation      *ie.IE
 	SGWOverloadControlInformation      *ie.IE
-	PresenceReportingAction            *ie.IE
+	PresenceReportingAction            []*ie.IE
 	MMESGSNIdentifier                  *ie.IE
 	TWANePDGOverloadControlInformation *ie.IE
 	WLANLocationInformation            *ie.IE
@@ -54,7 +54,7 @@ func NewCreateBearerResponse(teid, seq uint32, ies ...*ie.IE) *CreateBearerRespo
 		case ie.Cause:
 			c.Cause = i
 		case ie.BearerContext:
-			c.BearerContexts = i
+			c.BearerContexts = append(c.BearerContexts, i)
 		case ie.Recovery:
 			c.Recovery = i
 		case ie.FullyQualifiedCSID:
@@ -104,7 +104,7 @@ func NewCreateBearerResponse(teid, seq uint32, ies ...*ie.IE) *CreateBearerRespo
 				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ie.PresenceReportingAreaAction:
-			c.PresenceReportingAction = i
+			c.PresenceReportingAction = append(c.PresenceReportingAction, i)
 		case ie.IPAddress:
 			switch i.Instance() {
 			case 0:
@@ -157,7 +157,7 @@ func (c *CreateBearerResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.BearerContexts; ie != nil {
+	for _, ie := range c.BearerContexts {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -229,7 +229,7 @@ func (c *CreateBearerResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.PresenceReportingAction; ie != nil {
+	for _, ie := range c.PresenceReportingAction {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -337,7 +337,7 @@ func (c *CreateBearerResponse) UnmarshalBinary(b []byte) error {
 		case ie.Cause:
 			c.Cause = i
 		case ie.BearerContext:
-			c.BearerContexts = i
+			c.BearerContexts = append(c.BearerContexts, i)
 		case ie.Recovery:
 			c.Recovery = i
 		case ie.FullyQualifiedCSID:
@@ -379,7 +379,7 @@ func (c *CreateBearerResponse) UnmarshalBinary(b []byte) error {
 				c.TWANePDGOverloadControlInformation = i
 			}
 		case ie.PresenceReportingAreaAction:
-			c.PresenceReportingAction = i
+			c.PresenceReportingAction = append(c.PresenceReportingAction, i)
 		case ie.IPAddress:
 			switch i.Instance() {
 			case 0:
@@ -413,7 +413,7 @@ func (c *CreateBearerResponse) MarshalLen() int {
 	if ie := c.Cause; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.BearerContexts; ie != nil {
+	for _, ie := range c.BearerContexts {
 		l += ie.MarshalLen()
 	}
 	if ie := c.Recovery; ie != nil {
@@ -449,7 +449,7 @@ func (c *CreateBearerResponse) MarshalLen() int {
 	if ie := c.SGWOverloadControlInformation; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.PresenceReportingAction; ie != nil {
+	for _, ie := range c.PresenceReportingAction {
 		l += ie.MarshalLen()
 	}
 	if ie := c.MMESGSNIdentifier; ie != nil {
