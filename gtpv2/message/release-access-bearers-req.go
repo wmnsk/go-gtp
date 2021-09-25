@@ -9,10 +9,10 @@ import "github.com/wmnsk/go-gtp/gtpv2/ie"
 // ReleaseAccessBearersRequest is a ReleaseAccessBearersRequest Header and its IEs above.
 type ReleaseAccessBearersRequest struct {
 	*Header
-	ListOfRABs                  *ie.IE
+	ListOfRABs                  []*ie.IE
 	OriginatingNode             *ie.IE
 	IndicationFlags             *ie.IE
-	SecondaryRATUsageDataReport *ie.IE
+	SecondaryRATUsageDataReport []*ie.IE
 	PrivateExtension            *ie.IE
 	AdditionalIEs               []*ie.IE
 }
@@ -32,13 +32,13 @@ func NewReleaseAccessBearersRequest(teid, seq uint32, ies ...*ie.IE) *ReleaseAcc
 		}
 		switch i.Type {
 		case ie.EPSBearerID:
-			r.ListOfRABs = i
+			r.ListOfRABs = append(r.ListOfRABs, i)
 		case ie.NodeType:
 			r.OriginatingNode = i
 		case ie.Indication:
 			r.IndicationFlags = i
 		case ie.SecondaryRATUsageDataReport:
-			r.SecondaryRATUsageDataReport = i
+			r.SecondaryRATUsageDataReport = append(r.SecondaryRATUsageDataReport, i)
 		case ie.PrivateExtension:
 			r.PrivateExtension = i
 		default:
@@ -67,7 +67,7 @@ func (r *ReleaseAccessBearersRequest) MarshalTo(b []byte) error {
 	r.Header.Payload = make([]byte, r.MarshalLen()-r.Header.MarshalLen())
 
 	offset := 0
-	if ie := r.ListOfRABs; ie != nil {
+	for _, ie := range r.ListOfRABs {
 		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
@@ -85,7 +85,7 @@ func (r *ReleaseAccessBearersRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := r.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range r.SecondaryRATUsageDataReport {
 		if err := ie.MarshalTo(r.Payload[offset:]); err != nil {
 			return err
 		}
@@ -142,13 +142,13 @@ func (r *ReleaseAccessBearersRequest) UnmarshalBinary(b []byte) error {
 		}
 		switch i.Type {
 		case ie.EPSBearerID:
-			r.ListOfRABs = i
+			r.ListOfRABs = append(r.ListOfRABs, i)
 		case ie.NodeType:
 			r.OriginatingNode = i
 		case ie.Indication:
 			r.IndicationFlags = i
 		case ie.SecondaryRATUsageDataReport:
-			r.SecondaryRATUsageDataReport = i
+			r.SecondaryRATUsageDataReport = append(r.SecondaryRATUsageDataReport, i)
 		case ie.PrivateExtension:
 			r.PrivateExtension = i
 		default:
@@ -162,7 +162,7 @@ func (r *ReleaseAccessBearersRequest) UnmarshalBinary(b []byte) error {
 // MarshalLen returns the serial length in int.
 func (r *ReleaseAccessBearersRequest) MarshalLen() int {
 	l := r.Header.MarshalLen() - len(r.Header.Payload)
-	if ie := r.ListOfRABs; ie != nil {
+	for _, ie := range r.ListOfRABs {
 		l += ie.MarshalLen()
 	}
 	if ie := r.OriginatingNode; ie != nil {
@@ -171,7 +171,7 @@ func (r *ReleaseAccessBearersRequest) MarshalLen() int {
 	if ie := r.IndicationFlags; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := r.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range r.SecondaryRATUsageDataReport {
 		l += ie.MarshalLen()
 	}
 	if ie := r.PrivateExtension; ie != nil {

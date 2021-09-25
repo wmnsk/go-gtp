@@ -21,7 +21,7 @@ func TestContextResponse(t *testing.T) {
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ie.NewCause(gtpv2.CauseRequestAccepted, 0, 0, 0, nil),
 				ie.NewIMSI("123451234567890"),
-				// ie.NewMMContext(),  XXX- implement!
+				// ie.NewMMContext(), TODO: implement!
 				ie.NewFullyQualifiedTEID(gtpv2.IFTypeS10MMEGTPC, 0xffffffff, "1.1.1.1", ""),
 			),
 			Serialized: []byte{

@@ -14,7 +14,7 @@ type ContextResponse struct {
 	Cause                               *ie.IE
 	IMSI                                *ie.IE
 	UEMMContext                         *ie.IE
-	UEPDNConnections                    *ie.IE
+	UEPDNConnections                    []*ie.IE
 	SenderFTEID                         *ie.IE
 	SGWS11S4FTEID                       *ie.IE
 	SGWNodeName                         *ie.IE
@@ -33,7 +33,7 @@ type ContextResponse struct {
 	MonitoringEventInformation          *ie.IE
 	MonitoringEventExtensionInformation *ie.IE
 	UEUsageType                         *ie.IE
-	SCEFPDNConnection                   *ie.IE
+	SCEFPDNConnection                   []*ie.IE
 	RATType                             *ie.IE
 	ServingPLMNRateControl              *ie.IE
 	MOExceptionDataCounter              *ie.IE
@@ -73,7 +73,7 @@ func NewContextResponse(teid, seq uint32, ies ...*ie.IE) *ContextResponse {
 				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ie.PDNConnection:
-			c.UEPDNConnections = i
+			c.UEPDNConnections = append(c.UEPDNConnections, i)
 		case ie.FullyQualifiedTEID:
 			switch i.Instance() {
 			case 0:
@@ -138,7 +138,7 @@ func NewContextResponse(teid, seq uint32, ies ...*ie.IE) *ContextResponse {
 				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ie.SCEFPDNConnection:
-			c.SCEFPDNConnection = i
+			c.SCEFPDNConnection = append(c.SCEFPDNConnection, i)
 		case ie.RATType:
 			c.RATType = i
 		case ie.ServingPLMNRateControl:
@@ -202,7 +202,7 @@ func (c *ContextResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.UEPDNConnections; ie != nil {
+	for _, ie := range c.UEPDNConnections {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -310,7 +310,7 @@ func (c *ContextResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.SCEFPDNConnection; ie != nil {
+	for _, ie := range c.SCEFPDNConnection {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -410,7 +410,7 @@ func (c *ContextResponse) UnmarshalBinary(b []byte) error {
 				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ie.PDNConnection:
-			c.UEPDNConnections = i
+			c.UEPDNConnections = append(c.UEPDNConnections, i)
 		case ie.FullyQualifiedTEID:
 			switch i.Instance() {
 			case 0:
@@ -473,7 +473,7 @@ func (c *ContextResponse) UnmarshalBinary(b []byte) error {
 				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
 		case ie.SCEFPDNConnection:
-			c.SCEFPDNConnection = i
+			c.SCEFPDNConnection = append(c.SCEFPDNConnection, i)
 		case ie.RATType:
 			c.RATType = i
 		case ie.ServingPLMNRateControl:
@@ -505,7 +505,7 @@ func (c *ContextResponse) MarshalLen() int {
 	if ie := c.UEMMContext; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.UEPDNConnections; ie != nil {
+	for _, ie := range c.UEPDNConnections {
 		l += ie.MarshalLen()
 	}
 	if ie := c.SenderFTEID; ie != nil {
@@ -559,7 +559,7 @@ func (c *ContextResponse) MarshalLen() int {
 	if ie := c.UEUsageType; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.SCEFPDNConnection; ie != nil {
+	for _, ie := range c.SCEFPDNConnection {
 		l += ie.MarshalLen()
 	}
 	if ie := c.RATType; ie != nil {

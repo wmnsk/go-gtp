@@ -22,7 +22,7 @@ type CreateSessionResponse struct {
 	AMBR                          *ie.IE
 	EBI                           *ie.IE
 	PCO                           *ie.IE
-	BearerContextsCreated         *ie.IE
+	BearerContextsCreated         []*ie.IE
 	BearerContextMarkedForRemoval *ie.IE
 	Recovery                      *ie.IE
 	ChargingGatewayName           *ie.IE // = PGWNodeName
@@ -35,7 +35,7 @@ type CreateSessionResponse struct {
 	APCO                          *ie.IE
 	TrustedTWANIPv4Parameters     *ie.IE
 	IndicationFlags               *ie.IE
-	PresenceReportingAreaAction   *ie.IE
+	PresenceReportingAreaAction   []*ie.IE
 	PGWNodeLoadControlInformation *ie.IE
 	PGWAPNLoadControlInformation  *ie.IE
 	SGWNodeLoadControlInformation *ie.IE
@@ -91,7 +91,7 @@ func NewCreateSessionResponse(teid, seq uint32, ies ...*ie.IE) *CreateSessionRes
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				c.BearerContextsCreated = i
+				c.BearerContextsCreated = append(c.BearerContextsCreated, i)
 			case 1:
 				c.BearerContextMarkedForRemoval = i
 			default:
@@ -130,7 +130,7 @@ func NewCreateSessionResponse(teid, seq uint32, ies ...*ie.IE) *CreateSessionRes
 		case ie.Indication:
 			c.IndicationFlags = i
 		case ie.PresenceReportingAreaAction:
-			c.PresenceReportingAreaAction = i
+			c.PresenceReportingAreaAction = append(c.PresenceReportingAreaAction, i)
 		case ie.LoadControlInformation:
 			switch i.Instance() {
 			case 0:
@@ -251,7 +251,7 @@ func (c *CreateSessionResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.BearerContextsCreated; ie != nil {
+	for _, ie := range c.BearerContextsCreated {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -329,7 +329,7 @@ func (c *CreateSessionResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.PresenceReportingAreaAction; ie != nil {
+	for _, ie := range c.PresenceReportingAreaAction {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -464,7 +464,7 @@ func (c *CreateSessionResponse) UnmarshalBinary(b []byte) error {
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				c.BearerContextsCreated = i
+				c.BearerContextsCreated = append(c.BearerContextsCreated, i)
 			case 1:
 				c.BearerContextMarkedForRemoval = i
 			default:
@@ -503,7 +503,7 @@ func (c *CreateSessionResponse) UnmarshalBinary(b []byte) error {
 		case ie.Indication:
 			c.IndicationFlags = i
 		case ie.PresenceReportingAreaAction:
-			c.PresenceReportingAreaAction = i
+			c.PresenceReportingAreaAction = append(c.PresenceReportingAreaAction, i)
 		case ie.LoadControlInformation:
 			switch i.Instance() {
 			case 0:
@@ -577,7 +577,7 @@ func (c *CreateSessionResponse) MarshalLen() int {
 	if ie := c.PCO; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.BearerContextsCreated; ie != nil {
+	for _, ie := range c.BearerContextsCreated {
 		l += ie.MarshalLen()
 	}
 	if ie := c.BearerContextMarkedForRemoval; ie != nil {
@@ -616,7 +616,7 @@ func (c *CreateSessionResponse) MarshalLen() int {
 	if ie := c.IndicationFlags; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.PresenceReportingAreaAction; ie != nil {
+	for _, ie := range c.PresenceReportingAreaAction {
 		l += ie.MarshalLen()
 	}
 	if ie := c.PGWNodeLoadControlInformation; ie != nil {

@@ -19,8 +19,8 @@ type ModifyBearerRequest struct {
 	SenderFTEIDC                           *ie.IE
 	AMBR                                   *ie.IE
 	DelayDownlinkPacketNotificationRequest *ie.IE
-	BearerContextsToBeModified             *ie.IE
-	BearerContextsToBeRemoved              *ie.IE
+	BearerContextsToBeModified             []*ie.IE
+	BearerContextsToBeRemoved              []*ie.IE
 	Recovery                               *ie.IE
 	UETimeZone                             *ie.IE
 	MMEFQCSID                              *ie.IE
@@ -34,7 +34,7 @@ type ModifyBearerRequest struct {
 	HeNBUDPPort                            *ie.IE
 	MMESGSNIdentifier                      *ie.IE
 	CNOperatorSelectionEntity              *ie.IE
-	PresenceReportingAreaInformation       *ie.IE
+	PresenceReportingAreaInformation       []*ie.IE
 	MMESGSNOverloadControlInformation      *ie.IE
 	SGWOverloadControlInformation          *ie.IE
 	EPDGOverloadControlInformation         *ie.IE
@@ -44,7 +44,7 @@ type ModifyBearerRequest struct {
 	ULIForSGW                              *ie.IE
 	WLANLocationInformation                *ie.IE
 	WLANLocationTimeStamp                  *ie.IE
-	SecondaryRATUsageDataReport            *ie.IE
+	SecondaryRATUsageDataReport            []*ie.IE
 	PrivateExtension                       *ie.IE
 	AdditionalIEs                          []*ie.IE
 }
@@ -89,9 +89,9 @@ func NewModifyBearerRequest(teid, seq uint32, ies ...*ie.IE) *ModifyBearerReques
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				m.BearerContextsToBeModified = i
+				m.BearerContextsToBeModified = append(m.BearerContextsToBeModified, i)
 			case 1:
-				m.BearerContextsToBeRemoved = i
+				m.BearerContextsToBeRemoved = append(m.BearerContextsToBeRemoved, i)
 			default:
 				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
@@ -142,7 +142,7 @@ func NewModifyBearerRequest(teid, seq uint32, ies ...*ie.IE) *ModifyBearerReques
 		case ie.CNOperatorSelectionEntity:
 			m.CNOperatorSelectionEntity = i
 		case ie.PresenceReportingAreaInformation:
-			m.PresenceReportingAreaInformation = i
+			m.PresenceReportingAreaInformation = append(m.PresenceReportingAreaInformation, i)
 		case ie.OverloadControlInformation:
 			switch i.Instance() {
 			case 0:
@@ -165,7 +165,7 @@ func NewModifyBearerRequest(teid, seq uint32, ies ...*ie.IE) *ModifyBearerReques
 		case ie.TWANIdentifierTimestamp:
 			m.WLANLocationTimeStamp = i
 		case ie.SecondaryRATUsageDataReport:
-			m.SecondaryRATUsageDataReport = i
+			m.SecondaryRATUsageDataReport = append(m.SecondaryRATUsageDataReport, i)
 		case ie.PrivateExtension:
 			m.PrivateExtension = i
 		default:
@@ -242,13 +242,13 @@ func (m *ModifyBearerRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsToBeModified; ie != nil {
+	for _, ie := range m.BearerContextsToBeModified {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsToBeRemoved; ie != nil {
+	for _, ie := range m.BearerContextsToBeRemoved {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -332,7 +332,7 @@ func (m *ModifyBearerRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.PresenceReportingAreaInformation; ie != nil {
+	for _, ie := range m.PresenceReportingAreaInformation {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -392,7 +392,7 @@ func (m *ModifyBearerRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range m.SecondaryRATUsageDataReport {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -475,9 +475,9 @@ func (m *ModifyBearerRequest) UnmarshalBinary(b []byte) error {
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				m.BearerContextsToBeModified = i
+				m.BearerContextsToBeModified = append(m.BearerContextsToBeModified, i)
 			case 1:
-				m.BearerContextsToBeRemoved = i
+				m.BearerContextsToBeRemoved = append(m.BearerContextsToBeRemoved, i)
 			default:
 				m.AdditionalIEs = append(m.AdditionalIEs, i)
 			}
@@ -528,7 +528,7 @@ func (m *ModifyBearerRequest) UnmarshalBinary(b []byte) error {
 		case ie.CNOperatorSelectionEntity:
 			m.CNOperatorSelectionEntity = i
 		case ie.PresenceReportingAreaInformation:
-			m.PresenceReportingAreaInformation = i
+			m.PresenceReportingAreaInformation = append(m.PresenceReportingAreaInformation, i)
 		case ie.OverloadControlInformation:
 			switch i.Instance() {
 			case 0:
@@ -551,7 +551,7 @@ func (m *ModifyBearerRequest) UnmarshalBinary(b []byte) error {
 		case ie.TWANIdentifierTimestamp:
 			m.WLANLocationTimeStamp = i
 		case ie.SecondaryRATUsageDataReport:
-			m.SecondaryRATUsageDataReport = i
+			m.SecondaryRATUsageDataReport = append(m.SecondaryRATUsageDataReport, i)
 		case ie.PrivateExtension:
 			m.PrivateExtension = i
 		default:
@@ -590,10 +590,10 @@ func (m *ModifyBearerRequest) MarshalLen() int {
 	if ie := m.DelayDownlinkPacketNotificationRequest; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsToBeModified; ie != nil {
+	for _, ie := range m.BearerContextsToBeModified {
 		l += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsToBeRemoved; ie != nil {
+	for _, ie := range m.BearerContextsToBeRemoved {
 		l += ie.MarshalLen()
 	}
 	if ie := m.Recovery; ie != nil {
@@ -635,7 +635,7 @@ func (m *ModifyBearerRequest) MarshalLen() int {
 	if ie := m.CNOperatorSelectionEntity; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := m.PresenceReportingAreaInformation; ie != nil {
+	for _, ie := range m.PresenceReportingAreaInformation {
 		l += ie.MarshalLen()
 	}
 	if ie := m.MMESGSNOverloadControlInformation; ie != nil {
@@ -665,7 +665,7 @@ func (m *ModifyBearerRequest) MarshalLen() int {
 	if ie := m.WLANLocationTimeStamp; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := m.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range m.SecondaryRATUsageDataReport {
 		l += ie.MarshalLen()
 	}
 	if ie := m.PrivateExtension; ie != nil {

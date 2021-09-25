@@ -12,10 +12,10 @@ type ModifyAccessBearersRequest struct {
 	IndicationFlags                        *ie.IE
 	SenderFTEIDC                           *ie.IE
 	DelayDownlinkPacketNotificationRequest *ie.IE
-	BearerContextsToBeModified             *ie.IE
-	BearerContextsToBeRemoved              *ie.IE
+	BearerContextsToBeModified             []*ie.IE
+	BearerContextsToBeRemoved              []*ie.IE
 	Recovery                               *ie.IE
-	SecondaryRATUsageDataReport            *ie.IE
+	SecondaryRATUsageDataReport            []*ie.IE
 	PrivateExtension                       *ie.IE
 	AdditionalIEs                          []*ie.IE
 }
@@ -43,14 +43,14 @@ func NewModifyAccessBearersRequest(teid, seq uint32, ies ...*ie.IE) *ModifyAcces
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				m.BearerContextsToBeModified = i
+				m.BearerContextsToBeModified = append(m.BearerContextsToBeModified, i)
 			case 1:
-				m.BearerContextsToBeRemoved = i
+				m.BearerContextsToBeRemoved = append(m.BearerContextsToBeRemoved, i)
 			}
 		case ie.Recovery:
 			m.Recovery = i
 		case ie.SecondaryRATUsageDataReport:
-			m.SecondaryRATUsageDataReport = i
+			m.SecondaryRATUsageDataReport = append(m.SecondaryRATUsageDataReport, i)
 		case ie.PrivateExtension:
 			m.PrivateExtension = i
 		default:
@@ -97,13 +97,13 @@ func (m *ModifyAccessBearersRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsToBeModified; ie != nil {
+	for _, ie := range m.BearerContextsToBeModified {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsToBeRemoved; ie != nil {
+	for _, ie := range m.BearerContextsToBeRemoved {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -115,7 +115,7 @@ func (m *ModifyAccessBearersRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range m.SecondaryRATUsageDataReport {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -180,14 +180,14 @@ func (m *ModifyAccessBearersRequest) UnmarshalBinary(b []byte) error {
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				m.BearerContextsToBeModified = i
+				m.BearerContextsToBeModified = append(m.BearerContextsToBeModified, i)
 			case 1:
-				m.BearerContextsToBeRemoved = i
+				m.BearerContextsToBeRemoved = append(m.BearerContextsToBeRemoved, i)
 			}
 		case ie.Recovery:
 			m.Recovery = i
 		case ie.SecondaryRATUsageDataReport:
-			m.SecondaryRATUsageDataReport = i
+			m.SecondaryRATUsageDataReport = append(m.SecondaryRATUsageDataReport, i)
 		case ie.PrivateExtension:
 			m.PrivateExtension = i
 		default:
@@ -210,16 +210,16 @@ func (m *ModifyAccessBearersRequest) MarshalLen() int {
 	if ie := m.DelayDownlinkPacketNotificationRequest; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsToBeModified; ie != nil {
+	for _, ie := range m.BearerContextsToBeModified {
 		l += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsToBeRemoved; ie != nil {
+	for _, ie := range m.BearerContextsToBeRemoved {
 		l += ie.MarshalLen()
 	}
 	if ie := m.Recovery; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := m.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range m.SecondaryRATUsageDataReport {
 		l += ie.MarshalLen()
 	}
 	if ie := m.PrivateExtension; ie != nil {

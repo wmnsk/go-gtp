@@ -10,8 +10,8 @@ import "github.com/wmnsk/go-gtp/gtpv2/ie"
 type ModifyAccessBearersResponse struct {
 	*Header
 	Cause                          *ie.IE
-	BearerContextsModified         *ie.IE
-	BearerContextsMarkedForRemoval *ie.IE
+	BearerContextsModified         []*ie.IE
+	BearerContextsMarkedForRemoval []*ie.IE
 	Recovery                       *ie.IE
 	IndicationFlags                *ie.IE
 	SGWNodeLoadControlInformation  *ie.IE
@@ -39,9 +39,9 @@ func NewModifyAccessBearersResponse(teid, seq uint32, ies ...*ie.IE) *ModifyAcce
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				m.BearerContextsModified = i
+				m.BearerContextsModified = append(m.BearerContextsModified, i)
 			case 1:
-				m.BearerContextsMarkedForRemoval = i
+				m.BearerContextsMarkedForRemoval = append(m.BearerContextsMarkedForRemoval, i)
 			}
 		case ie.Recovery:
 			m.Recovery = i
@@ -85,13 +85,13 @@ func (m *ModifyAccessBearersResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsModified; ie != nil {
+	for _, ie := range m.BearerContextsModified {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsMarkedForRemoval; ie != nil {
+	for _, ie := range m.BearerContextsMarkedForRemoval {
 		if err := ie.MarshalTo(m.Payload[offset:]); err != nil {
 			return err
 		}
@@ -176,9 +176,9 @@ func (m *ModifyAccessBearersResponse) UnmarshalBinary(b []byte) error {
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				m.BearerContextsModified = i
+				m.BearerContextsModified = append(m.BearerContextsModified, i)
 			case 1:
-				m.BearerContextsMarkedForRemoval = i
+				m.BearerContextsMarkedForRemoval = append(m.BearerContextsMarkedForRemoval, i)
 			}
 		case ie.Recovery:
 			m.Recovery = i
@@ -204,10 +204,10 @@ func (m *ModifyAccessBearersResponse) MarshalLen() int {
 	if ie := m.Cause; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsModified; ie != nil {
+	for _, ie := range m.BearerContextsModified {
 		l += ie.MarshalLen()
 	}
-	if ie := m.BearerContextsMarkedForRemoval; ie != nil {
+	for _, ie := range m.BearerContextsMarkedForRemoval {
 		l += ie.MarshalLen()
 	}
 	if ie := m.Recovery; ie != nil {
