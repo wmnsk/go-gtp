@@ -215,8 +215,8 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, 
 	csRspFromSGW = csRspFromPGW
 	csRspFromSGW.SenderFTEIDC = s11sgwFTEID
 	csRspFromSGW.SGWFQCSID = ie.NewFullyQualifiedCSID(s.s1uIP, 1).WithInstance(1)
-	csRspFromSGW.BearerContextsCreated.Add(s1usgwFTEID)
-	csRspFromSGW.BearerContextsCreated.Remove(ie.ChargingID, 0)
+	csRspFromSGW.BearerContextsCreated[0].Add(s1usgwFTEID)
+	csRspFromSGW.BearerContextsCreated[0].Remove(ie.ChargingID, 0)
 	csRspFromSGW.SetTEID(s11mmeTEID)
 	csRspFromSGW.SetLength()
 
@@ -274,7 +274,7 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, m
 	var enbIP string
 	mbReqFromMME := msg.(*message.ModifyBearerRequest)
 	if brCtxIE := mbReqFromMME.BearerContextsToBeModified; brCtxIE != nil {
-		for _, childIE := range brCtxIE.ChildIEs {
+		for _, childIE := range brCtxIE[0].ChildIEs {
 			switch childIE.Type {
 			case ie.Indication:
 				// do nothing in this implementation.
