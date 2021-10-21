@@ -22,10 +22,34 @@ const (
 	emenbilen int = 6
 )
 
+const (
+	flagcgi    uint8 = 0x01
+	flagsai    uint8 = 0x02
+	flagrai    uint8 = 0x04
+	flagtai    uint8 = 0x08
+	flagecgi   uint8 = 0x10
+	flaglai    uint8 = 0x20
+	flagmenbi  uint8 = 0x40
+	flagemenbi uint8 = 0x80
+)
+
 // PLMN represents a PLMN-ID(MCC and MNC).
+// PLMN: Public Land Mobile Network    https://en.wikipedia.org/wiki/Public_land_mobile_network
+// MCC: Mobile Country Code            https://en.wikipedia.org/wiki/Mobile_country_code
+// MNC: Mobile Network Code
 type PLMN struct {
 	MCC string
 	MNC string
+}
+
+// Get MCC from PLMN.
+func (plmn *PLMN) MCCFromPLMN() string {
+	return plmn.MCC
+}
+
+// Get MNC from PLMN.
+func (plmn *PLMN) MNCFromPLMN() string {
+	return plmn.MNC
 }
 
 // CGI represents a CGI, which is defined to be used as a field of UserLocationInformation IE.
@@ -44,6 +68,11 @@ func NewCGI(mcc, mnc string, lac, ci uint16) *CGI {
 	}
 }
 
+// HasCGI checks if UserLocationInformationFields has CGI.
+func (uli *UserLocationInformationFields) HasCGI() bool {
+	return uli.Flags&flagcgi != 0
+}
+
 // SAI represents a SAI, which is defined to be used as a field of UserLocationInformation IE.
 type SAI struct {
 	*PLMN
@@ -58,6 +87,11 @@ func NewSAI(mcc, mnc string, lac, sac uint16) *SAI {
 		LAC:  lac,
 		SAC:  sac,
 	}
+}
+
+// HasSAI checks if UserLocationInformationFields has SAI.
+func (uli *UserLocationInformationFields) HasSAI() bool {
+	return uli.Flags&flagsai != 0
 }
 
 // RAI represents a RAI, which is defined to be used as a field of UserLocationInformation IE.
@@ -76,6 +110,11 @@ func NewRAI(mcc, mnc string, lac, rac uint16) *RAI {
 	}
 }
 
+// HasRAI checks if UserLocationInformationFields has RAI.
+func (uli *UserLocationInformationFields) HasRAI() bool {
+	return uli.Flags&flagrai != 0
+}
+
 // TAI represents a TAI, which is defined to be used as a field of UserLocationInformation IE.
 type TAI struct {
 	*PLMN
@@ -88,6 +127,11 @@ func NewTAI(mcc, mnc string, tac uint16) *TAI {
 		PLMN: &PLMN{MCC: mcc, MNC: mnc},
 		TAC:  tac,
 	}
+}
+
+// HasTAI checks if UserLocationInformationFields has TAI.
+func (uli *UserLocationInformationFields) HasTAI() bool {
+	return uli.Flags&flagtai != 0
 }
 
 // ECGI represents a ECGI, which is defined to be used as a field of UserLocationInformation IE.
@@ -104,6 +148,11 @@ func NewECGI(mcc, mnc string, eci uint32) *ECGI {
 	}
 }
 
+// HasECGI checks if UserLocationInformationFields has ECGI.
+func (uli *UserLocationInformationFields) HasECGI() bool {
+	return uli.Flags&flagecgi != 0
+}
+
 // LAI represents a LAI, which is defined to be used as a field of UserLocationInformation IE.
 type LAI struct {
 	*PLMN
@@ -116,6 +165,11 @@ func NewLAI(mcc, mnc string, lac uint16) *LAI {
 		PLMN: &PLMN{MCC: mcc, MNC: mnc},
 		LAC:  lac,
 	}
+}
+
+// HasLAI checks if UserLocationInformationFields has LAI.
+func (uli *UserLocationInformationFields) HasLAI() bool {
+	return uli.Flags&flaglai != 0
 }
 
 // MENBI represents a MENBI, which is defined to be used as a field of UserLocationInformation IE.
@@ -132,6 +186,11 @@ func NewMENBI(mcc, mnc string, menbi uint32) *MENBI {
 	}
 }
 
+// HasMENBI checks if UserLocationInformationFields has MENBI.
+func (uli *UserLocationInformationFields) HasMENBI() bool {
+	return uli.Flags&flagmenbi != 0
+}
+
 // EMENBI represents a EMENBI, which is defined to be used as a field of UserLocationInformation IE.
 type EMENBI struct {
 	*PLMN
@@ -144,6 +203,11 @@ func NewEMENBI(mcc, mnc string, menbi uint32) *EMENBI {
 		PLMN:   &PLMN{MCC: mcc, MNC: mnc},
 		EMENBI: menbi,
 	}
+}
+
+// HasEMENBI checks if UserLocationInformationFields has EMENBI.
+func (uli *UserLocationInformationFields) HasEMENBI() bool {
+	return uli.Flags&flagemenbi != 0
 }
 
 // NewUserLocationInformationStruct creates a new UserLocationInformation IE from
@@ -190,35 +254,35 @@ func NewUserLocationInformationFields(cgi *CGI, sai *SAI, rai *RAI, tai *TAI, ec
 	f := &UserLocationInformationFields{}
 
 	if cgi != nil {
-		f.Flags |= 0x01
+		f.Flags |= flagcgi
 		f.CGI = cgi
 	}
 	if sai != nil {
-		f.Flags |= 0x02
+		f.Flags |= flagsai
 		f.SAI = sai
 	}
 	if rai != nil {
-		f.Flags |= 0x04
+		f.Flags |= flagrai
 		f.RAI = rai
 	}
 	if tai != nil {
-		f.Flags |= 0x08
+		f.Flags |= flagtai
 		f.TAI = tai
 	}
 	if ecgi != nil {
-		f.Flags |= 0x10
+		f.Flags |= flagecgi
 		f.ECGI = ecgi
 	}
 	if lai != nil {
-		f.Flags |= 0x20
+		f.Flags |= flaglai
 		f.LAI = lai
 	}
 	if menbi != nil {
-		f.Flags |= 0x40
+		f.Flags |= flagmenbi
 		f.MENBI = menbi
 	}
 	if emenbi != nil {
-		f.Flags |= 0x80
+		f.Flags |= flagemenbi
 		f.EMENBI = emenbi
 	}
 
@@ -246,7 +310,7 @@ func (f *UserLocationInformationFields) MarshalTo(b []byte) error {
 	offset := 1
 
 	if has1stBit(f.Flags) { // CGI
-		if l < offset+7 {
+		if l < offset+cgilen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -257,10 +321,10 @@ func (f *UserLocationInformationFields) MarshalTo(b []byte) error {
 		copy(b[offset:offset+3], plmn)
 		binary.BigEndian.PutUint16(b[offset+3:offset+5], f.CGI.LAC)
 		binary.BigEndian.PutUint16(b[offset+5:offset+7], f.CGI.CI)
-		offset += 7
+		offset += cgilen
 	}
 	if has2ndBit(f.Flags) { // SAI
-		if l < offset+7 {
+		if l < offset+sailen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -271,10 +335,10 @@ func (f *UserLocationInformationFields) MarshalTo(b []byte) error {
 		copy(b[offset:offset+3], plmn)
 		binary.BigEndian.PutUint16(b[offset+3:offset+5], f.SAI.LAC)
 		binary.BigEndian.PutUint16(b[offset+5:offset+7], f.SAI.SAC)
-		offset += 7
+		offset += sailen
 	}
 	if has3rdBit(f.Flags) { // RAI
-		if l < offset+7 {
+		if l < offset+railen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -285,10 +349,10 @@ func (f *UserLocationInformationFields) MarshalTo(b []byte) error {
 		copy(b[offset:offset+3], plmn)
 		binary.BigEndian.PutUint16(b[offset+3:offset+5], f.RAI.LAC)
 		binary.BigEndian.PutUint16(b[offset+5:offset+7], f.RAI.RAC)
-		offset += 7
+		offset += railen
 	}
 	if has4thBit(f.Flags) { // TAI
-		if l < offset+5 {
+		if l < offset+tailen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -298,10 +362,10 @@ func (f *UserLocationInformationFields) MarshalTo(b []byte) error {
 		}
 		copy(b[offset:offset+3], plmn)
 		binary.BigEndian.PutUint16(b[offset+3:offset+5], f.TAI.TAC)
-		offset += 5
+		offset += tailen
 	}
 	if has5thBit(f.Flags) { // ECGI
-		if l < offset+7 {
+		if l < offset+ecgilen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -311,10 +375,10 @@ func (f *UserLocationInformationFields) MarshalTo(b []byte) error {
 		}
 		copy(b[offset:offset+3], plmn)
 		binary.BigEndian.PutUint32(b[offset+3:offset+7], f.ECGI.ECI)
-		offset += 7
+		offset += ecgilen
 	}
 	if has6thBit(f.Flags) { // LAI
-		if l < offset+5 {
+		if l < offset+lailen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -324,10 +388,10 @@ func (f *UserLocationInformationFields) MarshalTo(b []byte) error {
 		}
 		copy(b[offset:offset+3], plmn)
 		binary.BigEndian.PutUint16(b[offset+3:offset+5], f.LAI.LAC)
-		offset += 5
+		offset += lailen
 	}
 	if has7thBit(f.Flags) { // MENBI
-		if l < offset+6 {
+		if l < offset+menbilen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -337,10 +401,10 @@ func (f *UserLocationInformationFields) MarshalTo(b []byte) error {
 		}
 		copy(b[offset:offset+3], plmn)
 		copy(b[offset+3:offset+6], utils.Uint32To24(f.MENBI.MENBI))
-		offset += 6
+		offset += menbilen
 	}
 	if has8thBit(f.Flags) { // EMENBI
-		if l < offset+6 {
+		if l < offset+emenbilen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -375,8 +439,8 @@ func (f *UserLocationInformationFields) UnmarshalBinary(b []byte) error {
 	offset := 1
 
 	var err error
-	if has1stBit(f.Flags) {
-		if l < offset+7 {
+	if has1stBit(f.Flags) { // CGI
+		if l < offset+cgilen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -387,10 +451,10 @@ func (f *UserLocationInformationFields) UnmarshalBinary(b []byte) error {
 		}
 		f.CGI.LAC = binary.BigEndian.Uint16(b[offset+3 : offset+5])
 		f.CGI.CI = binary.BigEndian.Uint16(b[offset+5 : offset+7])
-		offset += 7
+		offset += cgilen
 	}
-	if has2ndBit(f.Flags) {
-		if l < offset+7 {
+	if has2ndBit(f.Flags) { // SAI
+		if l < offset+sailen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -401,10 +465,10 @@ func (f *UserLocationInformationFields) UnmarshalBinary(b []byte) error {
 		}
 		f.SAI.LAC = binary.BigEndian.Uint16(b[offset+3 : offset+5])
 		f.SAI.SAC = binary.BigEndian.Uint16(b[offset+5 : offset+7])
-		offset += 7
+		offset += sailen
 	}
-	if has3rdBit(f.Flags) {
-		if l < offset+7 {
+	if has3rdBit(f.Flags) { // RAI
+		if l < offset+railen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -415,10 +479,10 @@ func (f *UserLocationInformationFields) UnmarshalBinary(b []byte) error {
 		}
 		f.RAI.LAC = binary.BigEndian.Uint16(b[offset+3 : offset+5])
 		f.RAI.RAC = binary.BigEndian.Uint16(b[offset+5 : offset+7])
-		offset += 7
+		offset += railen
 	}
-	if has4thBit(f.Flags) {
-		if l < offset+5 {
+	if has4thBit(f.Flags) { // TAI
+		if l < offset+tailen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -428,10 +492,10 @@ func (f *UserLocationInformationFields) UnmarshalBinary(b []byte) error {
 			return err
 		}
 		f.TAI.TAC = binary.BigEndian.Uint16(b[offset+3 : offset+5])
-		offset += 5
+		offset += tailen
 	}
-	if has5thBit(f.Flags) {
-		if l < offset+7 {
+	if has5thBit(f.Flags) { // ECGI
+		if l < offset+ecgilen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -441,10 +505,10 @@ func (f *UserLocationInformationFields) UnmarshalBinary(b []byte) error {
 			return err
 		}
 		f.ECGI.ECI = binary.BigEndian.Uint32(b[offset+3 : offset+7])
-		offset += 7
+		offset += ecgilen
 	}
-	if has6thBit(f.Flags) {
-		if l < offset+5 {
+	if has6thBit(f.Flags) { // LAI
+		if l < offset+lailen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -454,10 +518,10 @@ func (f *UserLocationInformationFields) UnmarshalBinary(b []byte) error {
 			return err
 		}
 		f.LAI.LAC = binary.BigEndian.Uint16(b[offset+3 : offset+5])
-		offset += 5
+		offset += lailen
 	}
-	if has7thBit(f.Flags) {
-		if l < offset+6 {
+	if has7thBit(f.Flags) { // MENBI
+		if l < offset+menbilen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -467,10 +531,10 @@ func (f *UserLocationInformationFields) UnmarshalBinary(b []byte) error {
 			return err
 		}
 		f.MENBI.MENBI = utils.Uint24To32(b[offset+3 : offset+6])
-		offset += 6
+		offset += menbilen
 	}
-	if has8thBit(f.Flags) {
-		if l < offset+6 {
+	if has8thBit(f.Flags) { // EMENBI
+		if l < offset+emenbilen {
 			return io.ErrUnexpectedEOF
 		}
 
@@ -630,28 +694,28 @@ func NewUserLocationInformation(
 
 func uliPayloadLen(flags uint8) int {
 	l := 1
-	if flags&0x01 == 1 {
+	if flags&flagcgi != 0 {
 		l += cgilen
 	}
-	if flags>>1&0x01 == 1 {
+	if flags&flagsai != 0 {
 		l += sailen
 	}
-	if flags>>2&0x01 == 1 {
+	if flags&flagrai != 0 {
 		l += railen
 	}
-	if flags>>3&0x01 == 1 {
+	if flags&flagtai != 0 {
 		l += tailen
 	}
-	if flags>>4&0x01 == 1 {
+	if flags&flagecgi != 0 {
 		l += ecgilen
 	}
-	if flags>>5&0x01 == 1 {
+	if flags&flaglai != 0 {
 		l += lailen
 	}
-	if flags>>6&0x01 == 1 {
+	if flags&flagmenbi != 0 {
 		l += menbilen
 	}
-	if flags>>7&0x01 == 1 {
+	if flags&flagemenbi != 0 {
 		l += emenbilen
 	}
 	return l
