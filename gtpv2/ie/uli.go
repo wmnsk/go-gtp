@@ -69,8 +69,8 @@ func NewCGI(mcc, mnc string, lac, ci uint16) *CGI {
 }
 
 // HasCGI checks if UserLocationInformationFields has CGI.
-func (uli *UserLocationInformationFields) HasCGI() bool {
-	return uli.Flags&flagcgi != 0
+func (f *UserLocationInformationFields) HasCGI() bool {
+	return f.Flags&flagcgi != 0
 }
 
 // SAI represents a SAI, which is defined to be used as a field of UserLocationInformation IE.
@@ -90,8 +90,8 @@ func NewSAI(mcc, mnc string, lac, sac uint16) *SAI {
 }
 
 // HasSAI checks if UserLocationInformationFields has SAI.
-func (uli *UserLocationInformationFields) HasSAI() bool {
-	return uli.Flags&flagsai != 0
+func (f *UserLocationInformationFields) HasSAI() bool {
+	return f.Flags&flagsai != 0
 }
 
 // RAI represents a RAI, which is defined to be used as a field of UserLocationInformation IE.
@@ -111,8 +111,8 @@ func NewRAI(mcc, mnc string, lac, rac uint16) *RAI {
 }
 
 // HasRAI checks if UserLocationInformationFields has RAI.
-func (uli *UserLocationInformationFields) HasRAI() bool {
-	return uli.Flags&flagrai != 0
+func (f *UserLocationInformationFields) HasRAI() bool {
+	return f.Flags&flagrai != 0
 }
 
 // TAI represents a TAI, which is defined to be used as a field of UserLocationInformation IE.
@@ -130,8 +130,8 @@ func NewTAI(mcc, mnc string, tac uint16) *TAI {
 }
 
 // HasTAI checks if UserLocationInformationFields has TAI.
-func (uli *UserLocationInformationFields) HasTAI() bool {
-	return uli.Flags&flagtai != 0
+func (f *UserLocationInformationFields) HasTAI() bool {
+	return f.Flags&flagtai != 0
 }
 
 // ECGI represents a ECGI, which is defined to be used as a field of UserLocationInformation IE.
@@ -149,8 +149,8 @@ func NewECGI(mcc, mnc string, eci uint32) *ECGI {
 }
 
 // HasECGI checks if UserLocationInformationFields has ECGI.
-func (uli *UserLocationInformationFields) HasECGI() bool {
-	return uli.Flags&flagecgi != 0
+func (f *UserLocationInformationFields) HasECGI() bool {
+	return f.Flags&flagecgi != 0
 }
 
 // LAI represents a LAI, which is defined to be used as a field of UserLocationInformation IE.
@@ -168,8 +168,8 @@ func NewLAI(mcc, mnc string, lac uint16) *LAI {
 }
 
 // HasLAI checks if UserLocationInformationFields has LAI.
-func (uli *UserLocationInformationFields) HasLAI() bool {
-	return uli.Flags&flaglai != 0
+func (f *UserLocationInformationFields) HasLAI() bool {
+	return f.Flags&flaglai != 0
 }
 
 // MENBI represents a MENBI, which is defined to be used as a field of UserLocationInformation IE.
@@ -187,8 +187,8 @@ func NewMENBI(mcc, mnc string, menbi uint32) *MENBI {
 }
 
 // HasMENBI checks if UserLocationInformationFields has MENBI.
-func (uli *UserLocationInformationFields) HasMENBI() bool {
-	return uli.Flags&flagmenbi != 0
+func (f *UserLocationInformationFields) HasMENBI() bool {
+	return f.Flags&flagmenbi != 0
 }
 
 // EMENBI represents a EMENBI, which is defined to be used as a field of UserLocationInformation IE.
@@ -206,8 +206,8 @@ func NewEMENBI(mcc, mnc string, menbi uint32) *EMENBI {
 }
 
 // HasEMENBI checks if UserLocationInformationFields has EMENBI.
-func (uli *UserLocationInformationFields) HasEMENBI() bool {
-	return uli.Flags&flagemenbi != 0
+func (f *UserLocationInformationFields) HasEMENBI() bool {
+	return f.Flags&flagemenbi != 0
 }
 
 // NewUserLocationInformationStruct creates a new UserLocationInformation IE from
