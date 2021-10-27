@@ -23,31 +23,27 @@ const (
 )
 
 const (
-	flagcgi    uint8 = 0x01
-	flagsai    uint8 = 0x02
-	flagrai    uint8 = 0x04
-	flagtai    uint8 = 0x08
-	flagecgi   uint8 = 0x10
-	flaglai    uint8 = 0x20
-	flagmenbi  uint8 = 0x40
-	flagemenbi uint8 = 0x80
+	uliFlagCGI    uint8 = 0x01
+	uliFlagSAI    uint8 = 0x02
+	uliFlagRAI    uint8 = 0x04
+	uliFlagTAI    uint8 = 0x08
+	uliFlagECGI   uint8 = 0x10
+	uliFlagLAI    uint8 = 0x20
+	uliFlagMENBI  uint8 = 0x40
+	uliFlagEMENBI uint8 = 0x80
 )
 
-// PLMN represents a PLMN-ID(MCC and MNC).
-// PLMN: Public Land Mobile Network    https://en.wikipedia.org/wiki/Public_land_mobile_network
-// MCC: Mobile Country Code            https://en.wikipedia.org/wiki/Mobile_country_code
-// MNC: Mobile Network Code
 type PLMN struct {
 	MCC string
 	MNC string
 }
 
-// Get MCC from PLMN.
+// MCCFromPLMN gets MCC from PLMN.
 func (plmn *PLMN) MCCFromPLMN() string {
 	return plmn.MCC
 }
 
-// Get MNC from PLMN.
+// MNCFromPLMN gets MNC from PLMN.
 func (plmn *PLMN) MNCFromPLMN() string {
 	return plmn.MNC
 }
@@ -70,7 +66,7 @@ func NewCGI(mcc, mnc string, lac, ci uint16) *CGI {
 
 // HasCGI checks if UserLocationInformationFields has CGI.
 func (f *UserLocationInformationFields) HasCGI() bool {
-	return f.Flags&flagcgi != 0
+	return f.Flags&uliFlagCGI != 0
 }
 
 // SAI represents a SAI, which is defined to be used as a field of UserLocationInformation IE.
@@ -91,7 +87,7 @@ func NewSAI(mcc, mnc string, lac, sac uint16) *SAI {
 
 // HasSAI checks if UserLocationInformationFields has SAI.
 func (f *UserLocationInformationFields) HasSAI() bool {
-	return f.Flags&flagsai != 0
+	return f.Flags&uliFlagSAI != 0
 }
 
 // RAI represents a RAI, which is defined to be used as a field of UserLocationInformation IE.
@@ -112,7 +108,7 @@ func NewRAI(mcc, mnc string, lac, rac uint16) *RAI {
 
 // HasRAI checks if UserLocationInformationFields has RAI.
 func (f *UserLocationInformationFields) HasRAI() bool {
-	return f.Flags&flagrai != 0
+	return f.Flags&uliFlagRAI != 0
 }
 
 // TAI represents a TAI, which is defined to be used as a field of UserLocationInformation IE.
@@ -131,7 +127,7 @@ func NewTAI(mcc, mnc string, tac uint16) *TAI {
 
 // HasTAI checks if UserLocationInformationFields has TAI.
 func (f *UserLocationInformationFields) HasTAI() bool {
-	return f.Flags&flagtai != 0
+	return f.Flags&uliFlagTAI != 0
 }
 
 // ECGI represents a ECGI, which is defined to be used as a field of UserLocationInformation IE.
@@ -150,7 +146,7 @@ func NewECGI(mcc, mnc string, eci uint32) *ECGI {
 
 // HasECGI checks if UserLocationInformationFields has ECGI.
 func (f *UserLocationInformationFields) HasECGI() bool {
-	return f.Flags&flagecgi != 0
+	return f.Flags&uliFlagECGI != 0
 }
 
 // LAI represents a LAI, which is defined to be used as a field of UserLocationInformation IE.
@@ -169,7 +165,7 @@ func NewLAI(mcc, mnc string, lac uint16) *LAI {
 
 // HasLAI checks if UserLocationInformationFields has LAI.
 func (f *UserLocationInformationFields) HasLAI() bool {
-	return f.Flags&flaglai != 0
+	return f.Flags&uliFlagLAI != 0
 }
 
 // MENBI represents a MENBI, which is defined to be used as a field of UserLocationInformation IE.
@@ -188,7 +184,7 @@ func NewMENBI(mcc, mnc string, menbi uint32) *MENBI {
 
 // HasMENBI checks if UserLocationInformationFields has MENBI.
 func (f *UserLocationInformationFields) HasMENBI() bool {
-	return f.Flags&flagmenbi != 0
+	return f.Flags&uliFlagMENBI != 0
 }
 
 // EMENBI represents a EMENBI, which is defined to be used as a field of UserLocationInformation IE.
@@ -207,7 +203,7 @@ func NewEMENBI(mcc, mnc string, menbi uint32) *EMENBI {
 
 // HasEMENBI checks if UserLocationInformationFields has EMENBI.
 func (f *UserLocationInformationFields) HasEMENBI() bool {
-	return f.Flags&flagemenbi != 0
+	return f.Flags&uliFlagEMENBI != 0
 }
 
 // NewUserLocationInformationStruct creates a new UserLocationInformation IE from
@@ -254,35 +250,35 @@ func NewUserLocationInformationFields(cgi *CGI, sai *SAI, rai *RAI, tai *TAI, ec
 	f := &UserLocationInformationFields{}
 
 	if cgi != nil {
-		f.Flags |= flagcgi
+		f.Flags |= uliFlagCGI
 		f.CGI = cgi
 	}
 	if sai != nil {
-		f.Flags |= flagsai
+		f.Flags |= uliFlagSAI
 		f.SAI = sai
 	}
 	if rai != nil {
-		f.Flags |= flagrai
+		f.Flags |= uliFlagRAI
 		f.RAI = rai
 	}
 	if tai != nil {
-		f.Flags |= flagtai
+		f.Flags |= uliFlagTAI
 		f.TAI = tai
 	}
 	if ecgi != nil {
-		f.Flags |= flagecgi
+		f.Flags |= uliFlagECGI
 		f.ECGI = ecgi
 	}
 	if lai != nil {
-		f.Flags |= flaglai
+		f.Flags |= uliFlagLAI
 		f.LAI = lai
 	}
 	if menbi != nil {
-		f.Flags |= flagmenbi
+		f.Flags |= uliFlagMENBI
 		f.MENBI = menbi
 	}
 	if emenbi != nil {
-		f.Flags |= flagemenbi
+		f.Flags |= uliFlagEMENBI
 		f.EMENBI = emenbi
 	}
 
@@ -694,28 +690,28 @@ func NewUserLocationInformation(
 
 func uliPayloadLen(flags uint8) int {
 	l := 1
-	if flags&flagcgi != 0 {
+	if flags&uliFlagCGI != 0 {
 		l += cgilen
 	}
-	if flags&flagsai != 0 {
+	if flags&uliFlagSAI != 0 {
 		l += sailen
 	}
-	if flags&flagrai != 0 {
+	if flags&uliFlagRAI != 0 {
 		l += railen
 	}
-	if flags&flagtai != 0 {
+	if flags&uliFlagTAI != 0 {
 		l += tailen
 	}
-	if flags&flagecgi != 0 {
+	if flags&uliFlagECGI != 0 {
 		l += ecgilen
 	}
-	if flags&flaglai != 0 {
+	if flags&uliFlagLAI != 0 {
 		l += lailen
 	}
-	if flags&flagmenbi != 0 {
+	if flags&uliFlagMENBI != 0 {
 		l += menbilen
 	}
-	if flags&flagemenbi != 0 {
+	if flags&uliFlagEMENBI != 0 {
 		l += emenbilen
 	}
 	return l
