@@ -5,6 +5,9 @@
 package message
 
 import (
+	"encoding/hex"
+	"fmt"
+	"reflect"
 	"github.com/wmnsk/go-gtp/gtpv2/ie"
 )
 
@@ -173,3 +176,78 @@ func (e *EchoRequest) MessageTypeName() string {
 func (e *EchoRequest) TEID() uint32 {
 	return e.Header.teid()
 }
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+func (msg *EchoRequest) MarshalTo1(Payload []byte, marshalLen int) error {
+
+	msg.Header.Payload = make([]byte, marshalLen-msg.Header.MarshalLen())
+
+	itemVal := reflect.ValueOf(*msg)
+	var IElen, offset int64
+	for i := 1; i < itemVal.NumField(); i++ { //loop over fields in msg
+		fieldVal := itemVal.Field(i)        //get a field
+		if fieldVal.Kind() == reflect.Ptr { //check that it's a pointer
+			fieldVal1 := fieldVal.Elem() // This is only helpful if the field is not nil
+			fmt.Println(i, " ==> fieldVal ", fieldVal.Kind(), "   ", fieldVal1.Kind())
+			if fieldVal1.Kind() != reflect.Invalid { //check that Kind is valid
+				//fmt.Println(i, " ==> fieldVal1.Type().Name() ;", fieldVal1.Type().Name(), ";")
+
+				MarshalLenMethod := fieldVal.MethodByName("MarshalLen")      //get method (i *IE) MarshalLen()
+				MarshalLenResult := MarshalLenMethod.Call([]reflect.Value{}) //call method (i *IE) MarshalLen()
+				IElen = MarshalLenResult[0].Int()
+
+				MarshalToMethod := fieldVal.MethodByName("MarshalTo")                                                  //get method (i *IE) MarshalTo()
+				MarshalToResult := MarshalToMethod.Call([]reflect.Value{reflect.ValueOf(msg.Header.Payload[offset:])}) //call method (i *IE) MarshalTo()
+				fmt.Println(i, " MarshalToResult[0] ==> ", MarshalToResult[0], "IElen = ", IElen)
+				fmt.Println(i, " ==> fieldVal1 ", fieldVal1.Kind(),
+					"  reflect.TypeOf(fieldVal1) =  ", fieldVal1.Type().Name())
+				offset += IElen //update offset
+
+			}
+			//fmt.Println(i, " ==> fieldVal ", fieldVal.Kind(), "   ", fieldVal1.Kind())
+		} else {
+			fmt.Println(i, " ==> fieldVal ", fieldVal.Kind())
+		}
+	}
+	fmt.Println("MarshalTo(msg *EchoRequest) ==> msg.Header.Payload =  ", hex.Dump(msg.Header.Payload))
+	msg.Header.SetLength()
+	return msg.Header.MarshalTo(Payload)
+
+}
+
+func (msg *EchoRequest) MarshalLen1() int64 {
+
+	fmt.Printf(" EchoRequest ==> len(msg.Header.Payload) =  %d \n", len(msg.Header.Payload))
+
+	itemVal := reflect.ValueOf(*msg)
+	var Totlen, IElen int64
+	for i := 0; i < itemVal.NumField(); i++ { //loop over fields in msg
+		fieldVal := itemVal.Field(i)        //get a field
+		if fieldVal.Kind() == reflect.Ptr { //check that it's a pointer
+			fieldVal1 := fieldVal.Elem() // This is only helpful if the field is not nil
+			fmt.Println(i, " ==> fieldVal ", fieldVal.Kind(), "   ", fieldVal1.Kind())
+			if fieldVal1.Kind() != reflect.Invalid { //check that Kind is valid
+				//fmt.Println(i, " ==> fieldVal1.Type().Name() ;", fieldVal1.Type().Name(), ";")
+
+				MarshalLenMethod := fieldVal.MethodByName("MarshalLen")      //get method (i *IE) MarshalLen()
+				MarshalLenResult := MarshalLenMethod.Call([]reflect.Value{}) //call method (i *IE) MarshalLen()
+				IElen = MarshalLenResult[0].Int()                            // get result from (i *IE) MarshalLen()
+				Totlen += IElen                                              //add MarshalLen to total length
+
+				fmt.Println(i, "IElen = ", IElen)
+
+			}
+			//fmt.Println(i, " ==> fieldVal ", fieldVal.Kind(), "   ", fieldVal1.Kind())
+		} else {
+			fmt.Println(i, " ==> fieldVal ", fieldVal.Kind())
+		}
+	}
+	return Totlen
+}
+
+
+
+
+
