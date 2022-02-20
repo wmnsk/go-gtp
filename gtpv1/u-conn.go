@@ -21,6 +21,8 @@ import (
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
 	"github.com/wmnsk/go-gtp/gtpv1/message"
 	v2ie "github.com/wmnsk/go-gtp/gtpv2/ie"
+	"golang.org/x/net/ipv4"
+	"golang.org/x/net/ipv6"
 )
 
 type tpduSet struct {
@@ -30,11 +32,228 @@ type tpduSet struct {
 	payload []byte
 }
 
+// pktConnAbstraction is an abstraction allowing to store
+// a PacketConn and to set socket level options for IPv4 / IPv6
+type pktConnAbstraction struct {
+	ipVersion uint
+	pktConn4  *ipv4.PacketConn
+	pktConn6  *ipv6.PacketConn
+	pktConn   net.PacketConn
+	// this mutex is used before Writing to the PacketConn,
+	// to be sure the right DSCP/ECN value
+	// is applied before performing the Write.
+	mu sync.Mutex
+}
+
+// newPktConnAbstraction creates a new pktConnAbstraction initialized with a given local UDP address
+func newPktConnAbstraction(laddr net.Addr) (*pktConnAbstraction, error) {
+	pkt := &pktConnAbstraction{mu: sync.Mutex{}}
+	if pkt.pktConn4 == nil && pkt.pktConn6 == nil {
+		var err error
+		pkt.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
+		if err != nil {
+			return nil, err
+		}
+		// check if UDPConn is over IPv4 or IPv6
+		addr, err := net.ResolveUDPAddr(laddr.Network(), laddr.String())
+		if err != nil {
+			return nil, err
+		}
+		if addr.IP.To4() != nil {
+			pkt.ipVersion = 4
+			pkt.pktConn4 = ipv4.NewPacketConn(pkt.pktConn)
+		} else if addr.IP.To16() != nil {
+			pkt.ipVersion = 6
+			pkt.pktConn6 = ipv6.NewPacketConn(pkt.pktConn)
+		} else {
+			return nil, fmt.Errorf("laddr must refer to an IP address")
+		}
+	}
+	return pkt, nil
+}
+
+// IPVersion return the IP version used for this pktConnAbstraction
+func (pkt pktConnAbstraction) IPVersion() uint {
+	return pkt.ipVersion
+}
+
+// setDSCPECN sets the DSCP/ECN value used for next writes.
+func (pkt pktConnAbstraction) setDSCPECN(dscpecs int) error {
+	switch pkt.IPVersion() {
+	case 4:
+		return pkt.pktConn4.SetTOS(dscpecs)
+	case 6:
+		return pkt.pktConn6.SetTrafficClass(dscpecs)
+	default:
+		return fmt.Errorf("IP version not set for this pktConnAbstraction")
+	}
+}
+
+// DSCPECN returns the DSCP/ECN value.
+func (pkt pktConnAbstraction) DSCPECN() (int, error) {
+	switch pkt.IPVersion() {
+	case 4:
+		return pkt.pktConn4.TOS()
+	case 6:
+		return pkt.pktConn6.TrafficClass()
+	default:
+		return 0, fmt.Errorf("IP version not set for this pktConnAbstraction")
+	}
+}
+
+// WriteTo writes a packet with payload p to addr.
+// WriteTo can be made to time out and return
+// an Error with Timeout() == true after a fixed time limit;
+// see SetDeadline and SetWriteDeadline.
+// On packet-oriented connections, write timeouts are rare.
+func (pkt pktConnAbstraction) WriteTo(p []byte, addr net.Addr) (n int, err error) {
+	return pkt.WriteToWithDSCPECN(p, addr, 0)
+}
+
+// WriteToWithDSCPECN writes a packet with payload p to addr using the given DSCP/ECN value.
+// WriteToWithDSCPECN can be made to time out and return
+// an Error with Timeout() == true after a fixed time limit;
+// see SetDeadline and SetWriteDeadline.
+// On packet-oriented connections, write timeouts are rare.
+func (pkt pktConnAbstraction) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error) {
+	// Since we use UDP, writing will never block, so there is no need for timeout
+	pkt.mu.Lock()
+	defer pkt.mu.Unlock()
+	oldDSCPECN, err := pkt.DSCPECN()
+	if err != nil {
+		return 0, err
+	}
+	err = pkt.setDSCPECN(dscpecn)
+	if err != nil {
+		return 0, err
+	}
+	defer pkt.setDSCPECN(oldDSCPECN) // set back DSCP/ECN for next write calls
+	switch pkt.IPVersion() {
+	case 4:
+		return pkt.pktConn4.WriteTo(p, nil, addr)
+	case 6:
+		return pkt.pktConn6.WriteTo(p, nil, addr)
+	default:
+		return 0, fmt.Errorf("IP version not set for this pktConnAbstraction")
+	}
+}
+
+// File returns the File associated with the internal UDPConn
+func (pkt pktConnAbstraction) File() (f *os.File, err error) {
+	return pkt.pktConn.(*net.UDPConn).File()
+}
+
+// Close closes the connection.
+// Any blocked Read or Write operations will be unblocked and return errors.
+func (pkt pktConnAbstraction) Close() error {
+	switch pkt.IPVersion() {
+	case 4:
+		return pkt.pktConn4.Close()
+	case 6:
+		return pkt.pktConn6.Close()
+	default:
+		return fmt.Errorf("IP version not set for this pktConnAbstraction")
+	}
+}
+
+// ReadFrom reads a packet from the connection,
+// copying the payload into p. It returns the number of
+// bytes copied into p and the return address that
+// was on the packet.
+// It returns the number of bytes read (0 <= n <= len(p))
+// and any error encountered. Callers should always process
+// the n > 0 bytes returned before considering the error err.
+// ReadFrom can be made to time out and return
+// an Error with Timeout() == true after a fixed time limit;
+// see SetDeadline and SetReadDeadline.
+//
+// Note that valid GTP-U packets handled by Kernel can NOT be retrieved by this.
+func (pkt pktConnAbstraction) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+	switch pkt.IPVersion() {
+	case 4:
+		n, _, addr, err := pkt.pktConn4.ReadFrom(p)
+		return n, addr, err
+	case 6:
+		n, _, addr, err := pkt.pktConn6.ReadFrom(p)
+		return n, addr, err
+	default:
+		return 0, nil, fmt.Errorf("IP version not set for this pktConnAbstraction")
+	}
+}
+
+// SetDeadline sets the read and write deadlines associated
+// with the connection. It is equivalent to calling both
+// SetReadDeadline and SetWriteDeadline.
+//
+// A deadline is an absolute time after which I/O operations
+// fail with a timeout (see type Error) instead of
+// blocking. The deadline applies to all future and pending
+// I/O, not just the immediately following call to Read or
+// Write. After a deadline has been exceeded, the connection
+// can be refreshed by setting a deadline in the future.
+//
+// An idle timeout can be implemented by repeatedly extending
+// the deadline after successful Read or Write calls.
+//
+// A zero value for t means I/O operations will not time out.
+func (pkt pktConnAbstraction) SetDeadline(t time.Time) error {
+	switch pkt.IPVersion() {
+	case 4:
+		return pkt.pktConn4.SetDeadline(t)
+	case 6:
+		return pkt.pktConn6.SetDeadline(t)
+	default:
+		return fmt.Errorf("IP version not set for this pktConnAbstraction")
+	}
+}
+
+// SetReadDeadline sets the deadline for future Read calls
+// and any currently-blocked Read call.
+// A zero value for t means Read will not time out.
+func (pkt pktConnAbstraction) SetReadDeadline(t time.Time) error {
+	switch pkt.IPVersion() {
+	case 4:
+		return pkt.pktConn4.SetReadDeadline(t)
+	case 6:
+		return pkt.pktConn6.SetReadDeadline(t)
+	default:
+		return fmt.Errorf("IP version not set for this pktConnAbstraction")
+	}
+}
+
+// SetWriteDeadline sets the deadline for future Write calls
+// and any currently-blocked Write call.
+// Even if write times out, it may return n > 0, indicating that
+// some of the data was successfully written.
+// A zero value for t means Write will not time out.
+func (pkt pktConnAbstraction) SetWriteDeadline(t time.Time) error {
+	switch pkt.IPVersion() {
+	case 4:
+		return pkt.pktConn4.SetWriteDeadline(t)
+	case 6:
+		return pkt.pktConn6.SetWriteDeadline(t)
+	default:
+		return fmt.Errorf("IP version not set for this pktConnAbstraction")
+	}
+}
+
+// LocalAddr returns the local network address.
+func (pkt pktConnAbstraction) LocalAddr() net.Addr {
+	switch pkt.IPVersion() {
+	case 4:
+		return pkt.pktConn4.LocalAddr()
+	case 6:
+		return pkt.pktConn6.LocalAddr()
+	default:
+		return nil
+	}
+}
+
 // UPlaneConn represents a U-Plane Connection of GTPv1.
 type UPlaneConn struct {
 	mu      sync.Mutex
 	laddr   net.Addr
-	pktConn net.PacketConn
+	pktConn *pktConnAbstraction
 	*msgHandlerMap
 	*iteiMap
 
@@ -86,16 +305,16 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 	}
 
 	// setup UDPConn first.
+	var err error
 	if u.pktConn == nil {
-		var err error
-		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+		u.pktConn, err = newPktConnAbstraction(u.laddr)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// if no response coming within 5 seconds, returns error.
-	if err := u.pktConn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+	if err := u.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
 		return nil, err
 	}
 
@@ -113,11 +332,11 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 			return nil, err
 		}
 
-		n, _, err := u.pktConn.ReadFrom(buf)
+		n, _, err := u.ReadFrom(buf)
 		if err != nil {
 			return nil, err
 		}
-		if err := u.pktConn.SetReadDeadline(time.Time{}); err != nil {
+		if err := u.SetReadDeadline(time.Time{}); err != nil {
 			return nil, err
 		}
 
@@ -149,13 +368,12 @@ func (u *UPlaneConn) ListenAndServe(ctx context.Context) error {
 	if u.pktConn == nil {
 		var err error
 		u.mu.Lock()
-		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+		u.pktConn, err = newPktConnAbstraction(u.laddr)
 		u.mu.Unlock()
 		if err != nil {
 			return err
 		}
 	}
-
 	return u.listenAndServe(ctx)
 }
 
@@ -181,8 +399,10 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 		}
 
 		// This doesn't finish for some reason when Kernel GTP is enabled.
-		if err := u.pktConn.Close(); err != nil {
-			logf("error closing the underlying conn: %s", err)
+		if u.pktConn != nil {
+			if err := u.pktConn.Close(); err != nil {
+				logf("error closing the underlying conn: %s", err)
+			}
 		}
 	}()
 
@@ -197,7 +417,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 			// do nothing and go forward.
 		}
 
-		n, raddr, err := u.pktConn.ReadFrom(buf)
+		n, raddr, err := u.ReadFrom(buf)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
@@ -307,6 +527,15 @@ func (u *UPlaneConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 	return u.pktConn.WriteTo(p, addr)
 }
 
+// WriteToWithDSCPECN writes a packet with payload p to addr using the given DSCP/ECN value.
+// WriteToWithDSCPECN can be made to time out and return
+// an Error with Timeout() == true after a fixed time limit;
+// see SetDeadline and SetWriteDeadline.
+// On packet-oriented connections, write timeouts are rare.
+func (u *UPlaneConn) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error) {
+	return u.pktConn.WriteToWithDSCPECN(p, addr, dscpecn)
+}
+
 // WriteToGTP writes a packet with TEID and payload to addr.
 func (u *UPlaneConn) WriteToGTP(teid uint32, p []byte, addr net.Addr) (n int, err error) {
 	b, err := Encapsulate(teid, p).Marshal()
@@ -314,7 +543,7 @@ func (u *UPlaneConn) WriteToGTP(teid uint32, p []byte, addr net.Addr) (n int, er
 		return
 	}
 
-	if _, err = u.pktConn.WriteTo(b, addr); err != nil {
+	if _, err = u.WriteTo(b, addr); err != nil {
 		return
 	}
 	return len(b), nil
@@ -424,7 +653,7 @@ func (u *UPlaneConn) EchoRequest(raddr net.Addr) error {
 		return err
 	}
 
-	if _, err := u.pktConn.WriteTo(b, raddr); err != nil {
+	if _, err := u.WriteTo(b, raddr); err != nil {
 		return err
 	}
 	return nil
@@ -437,7 +666,7 @@ func (u *UPlaneConn) EchoResponse(raddr net.Addr) error {
 		return err
 	}
 
-	if _, err := u.pktConn.WriteTo(b, raddr); err != nil {
+	if _, err := u.WriteTo(b, raddr); err != nil {
 		return err
 	}
 	return nil
