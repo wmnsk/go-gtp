@@ -40,7 +40,7 @@ const (
 func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
 	if u.pktConn == nil {
 		var err error
-		u.pktConn, err = newPktConnAbstraction(u.laddr)
+		u.pktConn, err = newPktConn(u.laddr)
 		if err != nil {
 			return err
 		}

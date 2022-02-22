@@ -32,91 +32,60 @@ type tpduSet struct {
 	payload []byte
 }
 
-// pktConnAbstraction is an abstraction allowing to store
-// a PacketConn and to set socket level options for IPv4 / IPv6
-type pktConnAbstraction struct {
-	ipVersion uint
-	pktConn4  *ipv4.PacketConn
-	pktConn6  *ipv6.PacketConn
-	pktConn   net.PacketConn
-	// this mutex is used before Writing to the PacketConn,
+type pktConn interface {
+	// WriteToWithDSCPECN writes a packet with payload p to addr using the given DSCP/ECN value.
+	// WriteToWithDSCPECN can be made to time out and return
+	// an Error with Timeout() == true after a fixed time limit;
+	// see SetDeadline and SetWriteDeadline.
+	// On packet-oriented connections, write timeouts are rare.
+	WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error)
+
+	// File returns a copy of the underlying os.File. It is the caller's responsibility to close f when finished.
+	// Closing c does not affect f, and closing f does not affect c.
+	// The returned os.File's file descriptor is different from the connection's.
+	// Attempting to change properties of the original using this duplicate may or may not have the desired effect.
+	File() (f *os.File, err error)
+
+	net.PacketConn
+}
+
+type pktConn4 struct {
+	// mu is the mutex used before Writing to the PacketConn,
 	// to be sure the right DSCP/ECN value
 	// is applied before performing the Write.
 	mu *sync.Mutex
+
+	// udpConn is the UDPConn used as underlying transport
+	udpConn *net.UDPConn
+
+	*ipv4.PacketConn
 }
 
-// newPktConnAbstraction creates a new pktConnAbstraction initialized with a given local UDP address
-func newPktConnAbstraction(laddr net.Addr) (*pktConnAbstraction, error) {
-	pkt := &pktConnAbstraction{mu: &sync.Mutex{}}
-	if pkt.pktConn4 == nil && pkt.pktConn6 == nil {
-		var err error
-		pkt.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
-		if err != nil {
-			return nil, err
-		}
-		// check if UDPConn is over IPv4 or IPv6
-		addr, err := net.ResolveUDPAddr(laddr.Network(), laddr.String())
-		if err != nil {
-			return nil, err
-		}
-		if addr.IP.To4() != nil {
-			pkt.ipVersion = 4
-			pkt.pktConn4 = ipv4.NewPacketConn(pkt.pktConn)
-		} else if addr.IP.To16() != nil {
-			pkt.ipVersion = 6
-			pkt.pktConn6 = ipv6.NewPacketConn(pkt.pktConn)
-		} else {
-			return nil, fmt.Errorf("laddr must refer to an IP address")
-		}
-	}
-	return pkt, nil
+// ReadFrom implements the io.ReaderFrom ReadFrom method.
+func (p pktConn4) ReadFrom(b []byte) (n int, src net.Addr, err error) {
+	n, _, src, err = p.PacketConn.ReadFrom(b)
+	return n, src, err
 }
 
-// IPVersion return the IP version used for this pktConnAbstraction
-func (pkt pktConnAbstraction) IPVersion() uint {
-	return pkt.ipVersion
+// WriteTo implements the PacketConn WriteTo method.
+func (p pktConn4) WriteTo(b []byte, dst net.Addr) (n int, err error) {
+	return p.PacketConn.WriteTo(b, nil, dst)
 }
 
 // setDSCPECN sets the DSCP/ECN value used for next writes.
-func (pkt pktConnAbstraction) setDSCPECN(dscpecs int) error {
-	switch pkt.IPVersion() {
-	case 4:
-		return pkt.pktConn4.SetTOS(dscpecs)
-	case 6:
-		return pkt.pktConn6.SetTrafficClass(dscpecs)
-	default:
-		return fmt.Errorf("IP version not set for this pktConnAbstraction")
-	}
+func (pkt pktConn4) setDSCPECN(dscpecs int) error {
+	// With IPv4, DSCP/ECN is using the TOS field
+	return pkt.SetTOS(dscpecs)
 }
 
 // DSCPECN returns the DSCP/ECN value.
-func (pkt pktConnAbstraction) DSCPECN() (int, error) {
-	switch pkt.IPVersion() {
-	case 4:
-		return pkt.pktConn4.TOS()
-	case 6:
-		return pkt.pktConn6.TrafficClass()
-	default:
-		return 0, fmt.Errorf("IP version not set for this pktConnAbstraction")
-	}
+func (pkt pktConn4) DSCPECN() (int, error) {
+	// With IPv4, DSCP/ECN is using the TOS field
+	return pkt.TOS()
 }
 
-// WriteTo writes a packet with payload p to addr.
-// WriteTo can be made to time out and return
-// an Error with Timeout() == true after a fixed time limit;
-// see SetDeadline and SetWriteDeadline.
-// On packet-oriented connections, write timeouts are rare.
-func (pkt pktConnAbstraction) WriteTo(p []byte, addr net.Addr) (n int, err error) {
-	return pkt.WriteToWithDSCPECN(p, addr, 0)
-}
-
-// WriteToWithDSCPECN writes a packet with payload p to addr using the given DSCP/ECN value.
-// WriteToWithDSCPECN can be made to time out and return
-// an Error with Timeout() == true after a fixed time limit;
-// see SetDeadline and SetWriteDeadline.
-// On packet-oriented connections, write timeouts are rare.
-func (pkt pktConnAbstraction) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error) {
-	// Since we use UDP, writing will never block, so there is no need for timeout
+// WriteToWithDSCPECN implements the pktConn WriteToWithDSCPECN method.
+func (pkt pktConn4) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error) {
 	pkt.mu.Lock()
 	defer pkt.mu.Unlock()
 	oldDSCPECN, err := pkt.DSCPECN()
@@ -129,126 +98,107 @@ func (pkt pktConnAbstraction) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpec
 	}
 	defer func() {
 		// set back DSCP/ECN for next write calls
-		err = pkt.setDSCPECN(oldDSCPECN)
+		_ = pkt.setDSCPECN(oldDSCPECN)
 	}()
-	switch pkt.IPVersion() {
-	case 4:
-		return pkt.pktConn4.WriteTo(p, nil, addr)
-	case 6:
-		return pkt.pktConn6.WriteTo(p, nil, addr)
-	default:
-		return 0, fmt.Errorf("IP version not set for this pktConnAbstraction")
+	return pkt.WriteTo(p, addr)
+}
+
+// File returns a copy of the underlying os.File. It is the caller's responsibility to close f when finished.
+// Closing c does not affect f, and closing f does not affect c.
+// The returned os.File's file descriptor is different from the connection's.
+// Attempting to change properties of the original using this duplicate may or may not have the desired effect.
+func (pkt pktConn4) File() (f *os.File, err error) {
+	return pkt.udpConn.File()
+}
+
+type pktConn6 struct {
+	// mu is the mutex used before Writing to the PacketConn,
+	// to be sure the right DSCP/ECN value
+	// is applied before performing the Write.
+	mu *sync.Mutex
+
+	// udpConn is the UDPConn used as underlying transport.
+	udpConn *net.UDPConn
+
+	*ipv6.PacketConn
+}
+
+// ReadFrom implements the io.ReaderFrom ReadFrom method.
+func (p pktConn6) ReadFrom(b []byte) (n int, src net.Addr, err error) {
+	n, _, src, err = p.PacketConn.ReadFrom(b)
+	return n, src, err
+}
+
+// WriteTo implements the PacketConn WriteTo method.
+func (p pktConn6) WriteTo(b []byte, dst net.Addr) (n int, err error) {
+	return p.PacketConn.WriteTo(b, nil, dst)
+}
+
+// setDSCPECN sets the DSCP/ECN value used for next writes.
+func (pkt pktConn6) setDSCPECN(dscpecs int) error {
+	// With IPv6, DSCP/ECN is using the Traffic Class field
+	return pkt.SetTrafficClass(dscpecs)
+}
+
+// DSCPECN returns the DSCP/ECN value.
+func (pkt pktConn6) DSCPECN() (int, error) {
+	// With IPv6, DSCP/ECN is using the Traffic Class field
+	return pkt.TrafficClass()
+}
+
+// WriteToWithDSCPECN implements the pktConn WriteToWithDSCPECN method.
+func (pkt pktConn6) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error) {
+	pkt.mu.Lock()
+	defer pkt.mu.Unlock()
+	oldDSCPECN, err := pkt.DSCPECN()
+	if err != nil {
+		return 0, err
 	}
-}
-
-// File returns the File associated with the internal UDPConn
-func (pkt pktConnAbstraction) File() (f *os.File, err error) {
-	return pkt.pktConn.(*net.UDPConn).File()
-}
-
-// Close closes the connection.
-// Any blocked Read or Write operations will be unblocked and return errors.
-func (pkt pktConnAbstraction) Close() error {
-	switch pkt.IPVersion() {
-	case 4:
-		return pkt.pktConn4.Close()
-	case 6:
-		return pkt.pktConn6.Close()
-	default:
-		return fmt.Errorf("IP version not set for this pktConnAbstraction")
+	err = pkt.setDSCPECN(dscpecn)
+	if err != nil {
+		return 0, err
 	}
+	defer func() {
+		// set back DSCP/ECN for next write calls
+		_ = pkt.setDSCPECN(oldDSCPECN)
+	}()
+	return pkt.WriteTo(p, addr)
 }
 
-// ReadFrom reads a packet from the connection,
-// copying the payload into p. It returns the number of
-// bytes copied into p and the return address that
-// was on the packet.
-// It returns the number of bytes read (0 <= n <= len(p))
-// and any error encountered. Callers should always process
-// the n > 0 bytes returned before considering the error err.
-// ReadFrom can be made to time out and return
-// an Error with Timeout() == true after a fixed time limit;
-// see SetDeadline and SetReadDeadline.
-//
-// Note that valid GTP-U packets handled by Kernel can NOT be retrieved by this.
-func (pkt pktConnAbstraction) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
-	switch pkt.IPVersion() {
-	case 4:
-		n, _, addr, err := pkt.pktConn4.ReadFrom(p)
-		return n, addr, err
-	case 6:
-		n, _, addr, err := pkt.pktConn6.ReadFrom(p)
-		return n, addr, err
-	default:
-		return 0, nil, fmt.Errorf("IP version not set for this pktConnAbstraction")
+// File returns a copy of the underlying os.File. It is the caller's responsibility to close f when finished.
+// Closing c does not affect f, and closing f does not affect c.
+// The returned os.File's file descriptor is different from the connection's.
+// Attempting to change properties of the original using this duplicate may or may not have the desired effect.
+func (pkt pktConn6) File() (f *os.File, err error) {
+	return pkt.udpConn.File()
+}
+
+// newPktConn creates a new pktConn initialized with a given local UDP address
+func newPktConn(laddr net.Addr) (pktConn, error) {
+	var err error
+	pktC, err := net.ListenPacket(laddr.Network(), laddr.String())
+	if err != nil {
+		return nil, err
 	}
-}
-
-// SetDeadline sets the read and write deadlines associated
-// with the connection. It is equivalent to calling both
-// SetReadDeadline and SetWriteDeadline.
-//
-// A deadline is an absolute time after which I/O operations
-// fail with a timeout (see type Error) instead of
-// blocking. The deadline applies to all future and pending
-// I/O, not just the immediately following call to Read or
-// Write. After a deadline has been exceeded, the connection
-// can be refreshed by setting a deadline in the future.
-//
-// An idle timeout can be implemented by repeatedly extending
-// the deadline after successful Read or Write calls.
-//
-// A zero value for t means I/O operations will not time out.
-func (pkt pktConnAbstraction) SetDeadline(t time.Time) error {
-	switch pkt.IPVersion() {
-	case 4:
-		return pkt.pktConn4.SetDeadline(t)
-	case 6:
-		return pkt.pktConn6.SetDeadline(t)
-	default:
-		return fmt.Errorf("IP version not set for this pktConnAbstraction")
+	// check if UDPConn is over IPv4 or IPv6
+	addr, err := net.ResolveUDPAddr(laddr.Network(), laddr.String())
+	if err != nil {
+		return nil, err
 	}
-}
-
-// SetReadDeadline sets the deadline for future Read calls
-// and any currently-blocked Read call.
-// A zero value for t means Read will not time out.
-func (pkt pktConnAbstraction) SetReadDeadline(t time.Time) error {
-	switch pkt.IPVersion() {
-	case 4:
-		return pkt.pktConn4.SetReadDeadline(t)
-	case 6:
-		return pkt.pktConn6.SetReadDeadline(t)
-	default:
-		return fmt.Errorf("IP version not set for this pktConnAbstraction")
-	}
-}
-
-// SetWriteDeadline sets the deadline for future Write calls
-// and any currently-blocked Write call.
-// Even if write times out, it may return n > 0, indicating that
-// some of the data was successfully written.
-// A zero value for t means Write will not time out.
-func (pkt pktConnAbstraction) SetWriteDeadline(t time.Time) error {
-	switch pkt.IPVersion() {
-	case 4:
-		return pkt.pktConn4.SetWriteDeadline(t)
-	case 6:
-		return pkt.pktConn6.SetWriteDeadline(t)
-	default:
-		return fmt.Errorf("IP version not set for this pktConnAbstraction")
-	}
-}
-
-// LocalAddr returns the local network address.
-func (pkt pktConnAbstraction) LocalAddr() net.Addr {
-	switch pkt.IPVersion() {
-	case 4:
-		return pkt.pktConn4.LocalAddr()
-	case 6:
-		return pkt.pktConn6.LocalAddr()
-	default:
-		return nil
+	if addr.IP.To4() != nil {
+		return pktConn4{
+			mu:         &sync.Mutex{},
+			udpConn:    pktC.(*net.UDPConn),
+			PacketConn: ipv4.NewPacketConn(pktC),
+		}, nil
+	} else if addr.IP.To16() != nil {
+		return pktConn6{
+			mu:         &sync.Mutex{},
+			udpConn:    pktC.(*net.UDPConn),
+			PacketConn: ipv6.NewPacketConn(pktC),
+		}, nil
+	} else {
+		return nil, fmt.Errorf("laddr must refer to an IP address")
 	}
 }
 
@@ -256,7 +206,7 @@ func (pkt pktConnAbstraction) LocalAddr() net.Addr {
 type UPlaneConn struct {
 	mu      sync.Mutex
 	laddr   net.Addr
-	pktConn *pktConnAbstraction
+	pktConn pktConn
 	*msgHandlerMap
 	*iteiMap
 
@@ -310,7 +260,7 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 	// setup UDPConn first.
 	var err error
 	if u.pktConn == nil {
-		u.pktConn, err = newPktConnAbstraction(u.laddr)
+		u.pktConn, err = newPktConn(u.laddr)
 		if err != nil {
 			return nil, err
 		}
@@ -371,7 +321,7 @@ func (u *UPlaneConn) ListenAndServe(ctx context.Context) error {
 	if u.pktConn == nil {
 		var err error
 		u.mu.Lock()
-		u.pktConn, err = newPktConnAbstraction(u.laddr)
+		u.pktConn, err = newPktConn(u.laddr)
 		u.mu.Unlock()
 		if err != nil {
 			return err
@@ -462,7 +412,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 
 				// just use original packet not to get it slow.
 				binary.BigEndian.PutUint32(raw[4:8], peer.teid)
-				if _, err := peer.srcConn.WriteTo(raw[:n], peer.addr); err != nil {
+				if _, err := peer.srcConn.WriteToWithDSCPECN(raw[:n], peer.addr, 0); err != nil {
 					// should not stop serving with this error
 					logf("error sending on UPlaneConn %s: %v", u.LocalAddr(), err)
 				}
@@ -527,7 +477,7 @@ func (u *UPlaneConn) ReadFromGTP(p []byte) (n int, addr net.Addr, teid uint32, e
 // see SetDeadline and SetWriteDeadline.
 // On packet-oriented connections, write timeouts are rare.
 func (u *UPlaneConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
-	return u.pktConn.WriteTo(p, addr)
+	return u.pktConn.WriteToWithDSCPECN(p, addr, 0)
 }
 
 // WriteToWithDSCPECN writes a packet with payload p to addr using the given DSCP/ECN value.
