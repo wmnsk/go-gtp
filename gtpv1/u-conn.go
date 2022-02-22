@@ -42,12 +42,12 @@ type pktConnAbstraction struct {
 	// this mutex is used before Writing to the PacketConn,
 	// to be sure the right DSCP/ECN value
 	// is applied before performing the Write.
-	mu sync.Mutex
+	mu *sync.Mutex
 }
 
 // newPktConnAbstraction creates a new pktConnAbstraction initialized with a given local UDP address
 func newPktConnAbstraction(laddr net.Addr) (*pktConnAbstraction, error) {
-	pkt := &pktConnAbstraction{mu: sync.Mutex{}}
+	pkt := &pktConnAbstraction{mu: &sync.Mutex{}}
 	if pkt.pktConn4 == nil && pkt.pktConn6 == nil {
 		var err error
 		pkt.pktConn, err = net.ListenPacket(laddr.Network(), laddr.String())
@@ -127,7 +127,10 @@ func (pkt pktConnAbstraction) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpec
 	if err != nil {
 		return 0, err
 	}
-	defer pkt.setDSCPECN(oldDSCPECN) // set back DSCP/ECN for next write calls
+	defer func() {
+		// set back DSCP/ECN for next write calls
+		err = pkt.setDSCPECN(oldDSCPECN)
+	}()
 	switch pkt.IPVersion() {
 	case 4:
 		return pkt.pktConn4.WriteTo(p, nil, addr)
