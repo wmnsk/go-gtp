@@ -62,14 +62,14 @@ type pktConn4 struct {
 }
 
 // ReadFrom implements the io.ReaderFrom ReadFrom method.
-func (p pktConn4) ReadFrom(b []byte) (n int, src net.Addr, err error) {
-	n, _, src, err = p.PacketConn.ReadFrom(b)
+func (pkt pktConn4) ReadFrom(b []byte) (n int, src net.Addr, err error) {
+	n, _, src, err = pkt.PacketConn.ReadFrom(b)
 	return n, src, err
 }
 
 // WriteTo implements the PacketConn WriteTo method.
-func (p pktConn4) WriteTo(b []byte, dst net.Addr) (n int, err error) {
-	return p.PacketConn.WriteTo(b, nil, dst)
+func (pkt pktConn4) WriteTo(b []byte, dst net.Addr) (n int, err error) {
+	return pkt.PacketConn.WriteTo(b, nil, dst)
 }
 
 // setDSCPECN sets the DSCP/ECN value used for next writes.
@@ -124,14 +124,14 @@ type pktConn6 struct {
 }
 
 // ReadFrom implements the io.ReaderFrom ReadFrom method.
-func (p pktConn6) ReadFrom(b []byte) (n int, src net.Addr, err error) {
-	n, _, src, err = p.PacketConn.ReadFrom(b)
+func (pkt pktConn6) ReadFrom(b []byte) (n int, src net.Addr, err error) {
+	n, _, src, err = pkt.PacketConn.ReadFrom(b)
 	return n, src, err
 }
 
 // WriteTo implements the PacketConn WriteTo method.
-func (p pktConn6) WriteTo(b []byte, dst net.Addr) (n int, err error) {
-	return p.PacketConn.WriteTo(b, nil, dst)
+func (pkt pktConn6) WriteTo(b []byte, dst net.Addr) (n int, err error) {
+	return pkt.PacketConn.WriteTo(b, nil, dst)
 }
 
 // setDSCPECN sets the DSCP/ECN value used for next writes.
