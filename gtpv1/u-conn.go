@@ -21,6 +21,8 @@ import (
 	"github.com/wmnsk/go-gtp/gtpv1/ie"
 	"github.com/wmnsk/go-gtp/gtpv1/message"
 	v2ie "github.com/wmnsk/go-gtp/gtpv2/ie"
+	"golang.org/x/net/ipv4"
+	"golang.org/x/net/ipv6"
 )
 
 type tpduSet struct {
@@ -30,11 +32,181 @@ type tpduSet struct {
 	payload []byte
 }
 
+type pktConn interface {
+	// WriteToWithDSCPECN writes a packet with payload p to addr using the given DSCP/ECN value.
+	// WriteToWithDSCPECN can be made to time out and return
+	// an Error with Timeout() == true after a fixed time limit;
+	// see SetDeadline and SetWriteDeadline.
+	// On packet-oriented connections, write timeouts are rare.
+	WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error)
+
+	// File returns a copy of the underlying os.File. It is the caller's responsibility to close f when finished.
+	// Closing c does not affect f, and closing f does not affect c.
+	// The returned os.File's file descriptor is different from the connection's.
+	// Attempting to change properties of the original using this duplicate may or may not have the desired effect.
+	File() (f *os.File, err error)
+
+	net.PacketConn
+}
+
+type pktConn4 struct {
+	// mu is the mutex used before Writing to the PacketConn,
+	// to be sure the right DSCP/ECN value
+	// is applied before performing the Write.
+	mu *sync.Mutex
+
+	// udpConn is the UDPConn used as underlying transport
+	udpConn *net.UDPConn
+
+	*ipv4.PacketConn
+}
+
+// ReadFrom implements the io.ReaderFrom ReadFrom method.
+func (pkt pktConn4) ReadFrom(b []byte) (n int, src net.Addr, err error) {
+	n, _, src, err = pkt.PacketConn.ReadFrom(b)
+	return n, src, err
+}
+
+// WriteTo implements the PacketConn WriteTo method.
+func (pkt pktConn4) WriteTo(b []byte, dst net.Addr) (n int, err error) {
+	return pkt.PacketConn.WriteTo(b, nil, dst)
+}
+
+// setDSCPECN sets the DSCP/ECN value used for next writes.
+func (pkt pktConn4) setDSCPECN(dscpecs int) error {
+	// With IPv4, DSCP/ECN is using the TOS field
+	return pkt.SetTOS(dscpecs)
+}
+
+// DSCPECN returns the DSCP/ECN value.
+func (pkt pktConn4) DSCPECN() (int, error) {
+	// With IPv4, DSCP/ECN is using the TOS field
+	return pkt.TOS()
+}
+
+// WriteToWithDSCPECN implements the pktConn WriteToWithDSCPECN method.
+func (pkt pktConn4) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error) {
+	pkt.mu.Lock()
+	defer pkt.mu.Unlock()
+	oldDSCPECN, err := pkt.DSCPECN()
+	if err != nil {
+		return 0, err
+	}
+	err = pkt.setDSCPECN(dscpecn)
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		// set back DSCP/ECN for next write calls
+		_ = pkt.setDSCPECN(oldDSCPECN)
+	}()
+	return pkt.WriteTo(p, addr)
+}
+
+// File returns a copy of the underlying os.File. It is the caller's responsibility to close f when finished.
+// Closing c does not affect f, and closing f does not affect c.
+// The returned os.File's file descriptor is different from the connection's.
+// Attempting to change properties of the original using this duplicate may or may not have the desired effect.
+func (pkt pktConn4) File() (f *os.File, err error) {
+	return pkt.udpConn.File()
+}
+
+type pktConn6 struct {
+	// mu is the mutex used before Writing to the PacketConn,
+	// to be sure the right DSCP/ECN value
+	// is applied before performing the Write.
+	mu *sync.Mutex
+
+	// udpConn is the UDPConn used as underlying transport.
+	udpConn *net.UDPConn
+
+	*ipv6.PacketConn
+}
+
+// ReadFrom implements the io.ReaderFrom ReadFrom method.
+func (pkt pktConn6) ReadFrom(b []byte) (n int, src net.Addr, err error) {
+	n, _, src, err = pkt.PacketConn.ReadFrom(b)
+	return n, src, err
+}
+
+// WriteTo implements the PacketConn WriteTo method.
+func (pkt pktConn6) WriteTo(b []byte, dst net.Addr) (n int, err error) {
+	return pkt.PacketConn.WriteTo(b, nil, dst)
+}
+
+// setDSCPECN sets the DSCP/ECN value used for next writes.
+func (pkt pktConn6) setDSCPECN(dscpecs int) error {
+	// With IPv6, DSCP/ECN is using the Traffic Class field
+	return pkt.SetTrafficClass(dscpecs)
+}
+
+// DSCPECN returns the DSCP/ECN value.
+func (pkt pktConn6) DSCPECN() (int, error) {
+	// With IPv6, DSCP/ECN is using the Traffic Class field
+	return pkt.TrafficClass()
+}
+
+// WriteToWithDSCPECN implements the pktConn WriteToWithDSCPECN method.
+func (pkt pktConn6) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error) {
+	pkt.mu.Lock()
+	defer pkt.mu.Unlock()
+	oldDSCPECN, err := pkt.DSCPECN()
+	if err != nil {
+		return 0, err
+	}
+	err = pkt.setDSCPECN(dscpecn)
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		// set back DSCP/ECN for next write calls
+		_ = pkt.setDSCPECN(oldDSCPECN)
+	}()
+	return pkt.WriteTo(p, addr)
+}
+
+// File returns a copy of the underlying os.File. It is the caller's responsibility to close f when finished.
+// Closing c does not affect f, and closing f does not affect c.
+// The returned os.File's file descriptor is different from the connection's.
+// Attempting to change properties of the original using this duplicate may or may not have the desired effect.
+func (pkt pktConn6) File() (f *os.File, err error) {
+	return pkt.udpConn.File()
+}
+
+// newPktConn creates a new pktConn initialized with a given local UDP address
+func newPktConn(laddr net.Addr) (pktConn, error) {
+	var err error
+	pktC, err := net.ListenPacket(laddr.Network(), laddr.String())
+	if err != nil {
+		return nil, err
+	}
+	// check if UDPConn is over IPv4 or IPv6
+	addr, err := net.ResolveUDPAddr(laddr.Network(), laddr.String())
+	if err != nil {
+		return nil, err
+	}
+	if addr.IP.To4() != nil {
+		return pktConn4{
+			mu:         &sync.Mutex{},
+			udpConn:    pktC.(*net.UDPConn),
+			PacketConn: ipv4.NewPacketConn(pktC),
+		}, nil
+	} else if addr.IP.To16() != nil {
+		return pktConn6{
+			mu:         &sync.Mutex{},
+			udpConn:    pktC.(*net.UDPConn),
+			PacketConn: ipv6.NewPacketConn(pktC),
+		}, nil
+	} else {
+		return nil, fmt.Errorf("laddr must refer to an IP address")
+	}
+}
+
 // UPlaneConn represents a U-Plane Connection of GTPv1.
 type UPlaneConn struct {
 	mu      sync.Mutex
 	laddr   net.Addr
-	pktConn net.PacketConn
+	pktConn pktConn
 	*msgHandlerMap
 	*iteiMap
 
@@ -86,16 +258,16 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 	}
 
 	// setup UDPConn first.
+	var err error
 	if u.pktConn == nil {
-		var err error
-		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+		u.pktConn, err = newPktConn(u.laddr)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// if no response coming within 5 seconds, returns error.
-	if err := u.pktConn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+	if err := u.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
 		return nil, err
 	}
 
@@ -113,11 +285,11 @@ func DialUPlane(ctx context.Context, laddr, raddr net.Addr) (*UPlaneConn, error)
 			return nil, err
 		}
 
-		n, _, err := u.pktConn.ReadFrom(buf)
+		n, _, err := u.ReadFrom(buf)
 		if err != nil {
 			return nil, err
 		}
-		if err := u.pktConn.SetReadDeadline(time.Time{}); err != nil {
+		if err := u.SetReadDeadline(time.Time{}); err != nil {
 			return nil, err
 		}
 
@@ -149,13 +321,12 @@ func (u *UPlaneConn) ListenAndServe(ctx context.Context) error {
 	if u.pktConn == nil {
 		var err error
 		u.mu.Lock()
-		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+		u.pktConn, err = newPktConn(u.laddr)
 		u.mu.Unlock()
 		if err != nil {
 			return err
 		}
 	}
-
 	return u.listenAndServe(ctx)
 }
 
@@ -181,8 +352,10 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 		}
 
 		// This doesn't finish for some reason when Kernel GTP is enabled.
-		if err := u.pktConn.Close(); err != nil {
-			logf("error closing the underlying conn: %s", err)
+		if u.pktConn != nil {
+			if err := u.pktConn.Close(); err != nil {
+				logf("error closing the underlying conn: %s", err)
+			}
 		}
 	}()
 
@@ -197,7 +370,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 			// do nothing and go forward.
 		}
 
-		n, raddr, err := u.pktConn.ReadFrom(buf)
+		n, raddr, err := u.ReadFrom(buf)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
@@ -239,7 +412,7 @@ func (u *UPlaneConn) serve(ctx context.Context) error {
 
 				// just use original packet not to get it slow.
 				binary.BigEndian.PutUint32(raw[4:8], peer.teid)
-				if _, err := peer.srcConn.WriteTo(raw[:n], peer.addr); err != nil {
+				if _, err := peer.srcConn.WriteToWithDSCPECN(raw[:n], peer.addr, 0); err != nil {
 					// should not stop serving with this error
 					logf("error sending on UPlaneConn %s: %v", u.LocalAddr(), err)
 				}
@@ -304,7 +477,16 @@ func (u *UPlaneConn) ReadFromGTP(p []byte) (n int, addr net.Addr, teid uint32, e
 // see SetDeadline and SetWriteDeadline.
 // On packet-oriented connections, write timeouts are rare.
 func (u *UPlaneConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
-	return u.pktConn.WriteTo(p, addr)
+	return u.pktConn.WriteToWithDSCPECN(p, addr, 0)
+}
+
+// WriteToWithDSCPECN writes a packet with payload p to addr using the given DSCP/ECN value.
+// WriteToWithDSCPECN can be made to time out and return
+// an Error with Timeout() == true after a fixed time limit;
+// see SetDeadline and SetWriteDeadline.
+// On packet-oriented connections, write timeouts are rare.
+func (u *UPlaneConn) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n int, err error) {
+	return u.pktConn.WriteToWithDSCPECN(p, addr, dscpecn)
 }
 
 // WriteToGTP writes a packet with TEID and payload to addr.
@@ -314,7 +496,7 @@ func (u *UPlaneConn) WriteToGTP(teid uint32, p []byte, addr net.Addr) (n int, er
 		return
 	}
 
-	if _, err = u.pktConn.WriteTo(b, addr); err != nil {
+	if _, err = u.WriteTo(b, addr); err != nil {
 		return
 	}
 	return len(b), nil
@@ -424,7 +606,7 @@ func (u *UPlaneConn) EchoRequest(raddr net.Addr) error {
 		return err
 	}
 
-	if _, err := u.pktConn.WriteTo(b, raddr); err != nil {
+	if _, err := u.WriteTo(b, raddr); err != nil {
 		return err
 	}
 	return nil
@@ -437,7 +619,7 @@ func (u *UPlaneConn) EchoResponse(raddr net.Addr) error {
 		return err
 	}
 
-	if _, err := u.pktConn.WriteTo(b, raddr); err != nil {
+	if _, err := u.WriteTo(b, raddr); err != nil {
 		return err
 	}
 	return nil
