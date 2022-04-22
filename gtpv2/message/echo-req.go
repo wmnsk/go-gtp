@@ -180,11 +180,11 @@ func (e *EchoRequest) TEID() uint32 {
 
 //////////////////////////////////////////////////////////////////////////////
 
-func (msg *EchoRequest) MarshalTo1(Payload []byte, marshalLen int, debug bool) error {
+func (e *EchoRequest) MarshalTo1(Payload []byte, marshalLen int, debug bool) error {
 
-	msg.Header.Payload = make([]byte, marshalLen-msg.Header.MarshalLen())
+	e.Header.Payload = make([]byte, marshalLen-e.Header.MarshalLen())
 
-	itemVal := reflect.ValueOf(*msg)
+	itemVal := reflect.ValueOf(*e)
 	var IElen, offset int64
 	for i := 1; i < itemVal.NumField(); i++ { //loop over fields in msg
 		fieldVal := itemVal.Field(i)        //get a field
@@ -200,8 +200,8 @@ func (msg *EchoRequest) MarshalTo1(Payload []byte, marshalLen int, debug bool) e
 				MarshalLenResult := MarshalLenMethod.Call([]reflect.Value{}) //call method (i *IE) MarshalLen()
 				IElen = MarshalLenResult[0].Int()
 
-				MarshalToMethod := fieldVal.MethodByName("MarshalTo")                                                  //get method (i *IE) MarshalTo()
-				MarshalToResult := MarshalToMethod.Call([]reflect.Value{reflect.ValueOf(msg.Header.Payload[offset:])}) //call method (i *IE) MarshalTo()
+				MarshalToMethod := fieldVal.MethodByName("MarshalTo")                                                //get method (i *IE) MarshalTo()
+				MarshalToResult := MarshalToMethod.Call([]reflect.Value{reflect.ValueOf(e.Header.Payload[offset:])}) //call method (i *IE) MarshalTo()
 				if debug {
 					fmt.Println(i, " MarshalToResult[0] ==> ", MarshalToResult[0], "IElen = ", IElen)
 					fmt.Println(i, " ==> fieldVal1 ", fieldVal1.Kind(),
@@ -218,10 +218,10 @@ func (msg *EchoRequest) MarshalTo1(Payload []byte, marshalLen int, debug bool) e
 		}
 	}
 	if debug {
-		fmt.Println("MarshalTo(msg *EchoRequest) ==> msg.Header.Payload =  ", hex.Dump(msg.Header.Payload))
+		fmt.Println("MarshalTo(msg *EchoRequest) ==> msg.Header.Payload =  ", hex.Dump(e.Header.Payload))
 	}
-	msg.Header.SetLength()
-	return msg.Header.MarshalTo(Payload)
+	e.Header.SetLength()
+	return e.Header.MarshalTo(Payload)
 
 }
 

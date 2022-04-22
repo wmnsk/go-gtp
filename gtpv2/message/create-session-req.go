@@ -1139,11 +1139,11 @@ func (c *CreateSessionRequest) TEID() uint32 {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (msg *CreateSessionRequest) MarshalTo1(Payload []byte, marshalLen int, debug bool) error {
+func (c *CreateSessionRequest) MarshalTo1(Payload []byte, marshalLen int, debug bool) error {
 
-	msg.Header.Payload = make([]byte, marshalLen-msg.Header.MarshalLen())
+	c.Header.Payload = make([]byte, marshalLen-c.Header.MarshalLen())
 
-	itemVal := reflect.ValueOf(*msg)
+	itemVal := reflect.ValueOf(*c)
 	var IElen, offset int64
 	for i := 1; i < itemVal.NumField(); i++ { //loop over fields in msg
 		fieldVal := itemVal.Field(i)        //get a field
@@ -1159,8 +1159,8 @@ func (msg *CreateSessionRequest) MarshalTo1(Payload []byte, marshalLen int, debu
 				MarshalLenResult := MarshalLenMethod.Call([]reflect.Value{}) //call method (i *IE) MarshalLen()
 				IElen = MarshalLenResult[0].Int()
 
-				MarshalToMethod := fieldVal.MethodByName("MarshalTo")                                                  //get method (i *IE) MarshalTo()
-				MarshalToResult := MarshalToMethod.Call([]reflect.Value{reflect.ValueOf(msg.Header.Payload[offset:])}) //call method (i *IE) MarshalTo()
+				MarshalToMethod := fieldVal.MethodByName("MarshalTo")                                                //get method (i *IE) MarshalTo()
+				MarshalToResult := MarshalToMethod.Call([]reflect.Value{reflect.ValueOf(c.Header.Payload[offset:])}) //call method (i *IE) MarshalTo()
 				if debug {
 					fmt.Println(i, " MarshalToResult[0] ==> ", MarshalToResult[0], "IElen = ", IElen)
 					fmt.Println(i, " ==> fieldVal1 ", fieldVal1.Kind(),
@@ -1177,10 +1177,10 @@ func (msg *CreateSessionRequest) MarshalTo1(Payload []byte, marshalLen int, debu
 		}
 	}
 	if debug {
-		fmt.Println("MarshalTo(msg *CreateSessionRequest) ==> msg.Header.Payload =  ", hex.Dump(msg.Header.Payload))
+		fmt.Println("MarshalTo(msg *CreateSessionRequest) ==> msg.Header.Payload =  ", hex.Dump(c.Header.Payload))
 	}
-	msg.Header.SetLength()
-	return msg.Header.MarshalTo(Payload)
+	c.Header.SetLength()
+	return c.Header.MarshalTo(Payload)
 
 }
 
