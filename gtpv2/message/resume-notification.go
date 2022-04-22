@@ -94,7 +94,6 @@ func (c *ResumeNotification) MarshalTo(b []byte) error {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
-		offset += ie.MarshalLen()
 	}
 
 	c.Header.SetLength()
