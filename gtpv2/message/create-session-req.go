@@ -1184,11 +1184,11 @@ func (c *CreateSessionRequest) MarshalTo1(Payload []byte, marshalLen int, debug 
 
 }
 
-func (msg *CreateSessionRequest) MarshalLen1(debug bool) int64 {
+func (c *CreateSessionRequest) MarshalLen1(debug bool) int64 {
 	if debug {
-		fmt.Printf(" CreateSessionRequest ==> len(msg.Header.Payload) =  %d \n", len(msg.Header.Payload))
+		fmt.Printf(" CreateSessionRequest ==> len(msg.Header.Payload) =  %d \n", len(c.Header.Payload))
 	}
-	itemVal := reflect.ValueOf(*msg)
+	itemVal := reflect.ValueOf(*c)
 	var Totlen, IElen int64
 	for i := 0; i < itemVal.NumField(); i++ { //loop over fields in msg
 		fieldVal := itemVal.Field(i)        //get a field

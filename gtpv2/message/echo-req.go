@@ -225,11 +225,11 @@ func (e *EchoRequest) MarshalTo1(Payload []byte, marshalLen int, debug bool) err
 
 }
 
-func (msg *EchoRequest) MarshalLen1(debug bool) int64 {
+func (e *EchoRequest) MarshalLen1(debug bool) int64 {
 	if debug {
-		fmt.Printf(" EchoRequest ==> len(msg.Header.Payload) =  %d \n", len(msg.Header.Payload))
+		fmt.Printf(" EchoRequest ==> len(msg.Header.Payload) =  %d \n", len(e.Header.Payload))
 	}
-	itemVal := reflect.ValueOf(*msg)
+	itemVal := reflect.ValueOf(*e)
 	var Totlen, IElen int64
 	for i := 0; i < itemVal.NumField(); i++ { //loop over fields in msg
 		fieldVal := itemVal.Field(i)        //get a field
