@@ -176,10 +176,10 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 159     | UE Registration Query Response                  |           |
 | 160     | Create Forwarding Tunnel Request                |           |
 | 161     | Create Forwarding Tunnel Response               |           |
-| 162     | Suspend Notification                            |           |
-| 163     | Suspend Acknowledge                             |           |
-| 164     | Resume Notification                             |           |
-| 165     | Resume Acknowledge                              |           |
+| 162     | Suspend Notification                            | Yes       |
+| 163     | Suspend Acknowledge                             | Yes       |
+| 164     | Resume Notification                             | Yes       |
+| 165     | Resume Acknowledge                              | Yes       |
 | 166     | Create Indirect Data Forwarding Tunnel Request  |           |
 | 167     | Create Indirect Data Forwarding Tunnel Response |           |
 | 168     | Delete Indirect Data Forwarding Tunnel Request  |           |
