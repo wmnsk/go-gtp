@@ -6,6 +6,7 @@ package ie
 
 import (
 	"io"
+	"strings"
 
 	"github.com/wmnsk/go-gtp/utils"
 )
@@ -27,7 +28,8 @@ func (i *IE) IMEISV() (string, error) {
 	if len(i.Payload) == 0 {
 		return "", io.ErrUnexpectedEOF
 	}
-	return utils.SwappedBytesToStr(i.Payload, true), nil
+	str := utils.SwappedBytesToStr(i.Payload, false)
+	return strings.TrimSuffix(str, "f"), nil
 }
 
 // MustIMEISV returns IMEISV in string if type matches.

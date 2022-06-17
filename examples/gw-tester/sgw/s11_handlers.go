@@ -215,8 +215,8 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, 
 	csRspFromSGW = csRspFromPGW
 	csRspFromSGW.SenderFTEIDC = s11sgwFTEID
 	csRspFromSGW.SGWFQCSID = ie.NewFullyQualifiedCSID(s.s1uIP, 1).WithInstance(1)
-	csRspFromSGW.BearerContextsCreated.Add(s1usgwFTEID)
-	csRspFromSGW.BearerContextsCreated.Remove(ie.ChargingID, 0)
+	csRspFromSGW.BearerContextsCreated[0].Add(s1usgwFTEID)
+	csRspFromSGW.BearerContextsCreated[0].Remove(ie.ChargingID, 0)
 	csRspFromSGW.SetTEID(s11mmeTEID)
 	csRspFromSGW.SetLength()
 
@@ -274,7 +274,7 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, m
 	var enbIP string
 	mbReqFromMME := msg.(*message.ModifyBearerRequest)
 	if brCtxIE := mbReqFromMME.BearerContextsToBeModified; brCtxIE != nil {
-		for _, childIE := range brCtxIE.ChildIEs {
+		for _, childIE := range brCtxIE[0].ChildIEs {
 			switch childIE.Type {
 			case ie.Indication:
 				// do nothing in this implementation.
@@ -309,15 +309,28 @@ func (s *sgw) handleModifyBearerRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, m
 		return err
 	}
 
-	if err := s.s1uConn.AddTunnelOverride(
-		net.ParseIP(enbIP), net.ParseIP(s1uBearer.SubscriberIP), s1uBearer.OutgoingTEID(), s1usgwTEID,
-	); err != nil {
-		return err
-	}
-	if err := s.s5uConn.AddTunnelOverride(
-		net.ParseIP(pgwIP), net.ParseIP(s5uBearer.SubscriberIP), s5uBearer.OutgoingTEID(), s5usgwTEID,
-	); err != nil {
-		return err
+	if s.useKernelGTP {
+		if err := s.s1uConn.AddTunnelOverride(
+			net.ParseIP(enbIP), net.ParseIP(s1uBearer.SubscriberIP), s1uBearer.OutgoingTEID(), s1usgwTEID,
+		); err != nil {
+			return err
+		}
+		if err := s.s5uConn.AddTunnelOverride(
+			net.ParseIP(pgwIP), net.ParseIP(s5uBearer.SubscriberIP), s5uBearer.OutgoingTEID(), s5usgwTEID,
+		); err != nil {
+			return err
+		}
+	} else {
+		if err := s.s1uConn.RelayTo(
+			s.s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID(), s5uBearer.RemoteAddress(),
+		); err != nil {
+			return err
+		}
+		if err := s.s5uConn.RelayTo(
+			s.s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID(), s1uBearer.RemoteAddress(),
+		); err != nil {
+			return err
+		}
 	}
 
 	mbRspFromSGW := message.NewModifyBearerResponse(

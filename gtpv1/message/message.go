@@ -7,6 +7,14 @@ Package message provides encoding/decoding feature of GTPv1 protocol.
 */
 package message
 
+import (
+	"fmt"
+	"reflect"
+	"strings"
+
+	"github.com/wmnsk/go-gtp/gtpv1/ie"
+)
+
 // Message Type definitions.
 const (
 	_ uint8 = iota
@@ -40,7 +48,7 @@ const (
 	MsgTypePDUNotificationResponse
 	MsgTypePDUNotificationRejectRequest
 	MsgTypePDUNotificationRejectResponse
-	_
+	MsgTypeSupportedExtensionHeaderNotification
 	MsgTypeSendRoutingInfoRequest
 	MsgTypeSendRoutingInfoResponse
 	MsgTypeFailureReportRequest
@@ -127,7 +135,7 @@ func Parse(b []byte) (Message, error) {
 		m = &VersionNotSupported{}
 	case MsgTypeDeletePDPContextResponse:
 		m = &DeletePDPContextResponse{}
-	/* XXX - Implement!
+	/* TODO: Implement!
 	case MsgTypeNodeAliveRequest:
 		m = &NodeAliveReq{}
 	case MsgTypeNodeAliveResponse:
@@ -147,7 +155,7 @@ func Parse(b []byte) (Message, error) {
 	*/
 	case MsgTypeErrorIndication:
 		m = &ErrorIndication{}
-	/* XXX - Implement!
+	/* TODO: Implement!
 	case MsgTypePduNotificationRequest:
 		m = &PduNotificationReq{}
 	case MsgTypePduNotificationResponse:
@@ -156,6 +164,10 @@ func Parse(b []byte) (Message, error) {
 		m = &PduNotificationRejectReq{}
 	case MsgTypePduNotificationRejectResponse:
 		m = &PduNotificationRejectRes{}
+	*/
+	case MsgTypeSupportedExtensionHeaderNotification:
+		m = &SupportedExtensionHeaderNotification{}
+	/* TODO: Implement!
 	case MsgTypeSendRoutingInfoRequest:
 		m = &SendRoutingInfoReq{}
 	case MsgTypeSendRoutingInfoResponse:
@@ -193,4 +205,59 @@ func Parse(b []byte) (Message, error) {
 		return nil, err
 	}
 	return m, nil
+}
+
+// Prettify returns a Message in prettified representation in string.
+//
+// Note that this relies much on reflect package, and thus the frequent use of
+// this function may have a serious impact on the performance of your software.
+func Prettify(m Message) string {
+	name := m.MessageTypeName()
+	header := strings.TrimSuffix(fmt.Sprint(m), "}")
+
+	v := reflect.Indirect(reflect.ValueOf(m))
+	n := v.NumField() - 1
+	fields := make([]*field, n)
+	for i := 1; i < n+1; i++ { // Skip *Header
+		fields[i-1] = &field{name: v.Type().Field(i).Name, maybeIE: v.Field(i).Interface()}
+	}
+
+	return fmt.Sprintf("{%s: %s, IEs: [%v]}", name, header, strings.Join(prettifyFields(fields), ", "))
+}
+
+type field struct {
+	name    string
+	maybeIE interface{}
+}
+
+func prettifyFields(fields []*field) []string {
+	ret := []string{}
+	for _, field := range fields {
+		if field.maybeIE == nil {
+			ret = append(ret, prettifyIE(field.name, nil))
+			continue
+		}
+
+		// TODO: do this recursively?
+		v, ok := field.maybeIE.(*ie.IE)
+		if !ok {
+			// only for AdditionalIEs field
+			if ies, ok := field.maybeIE.([]*ie.IE); ok {
+				vals := make([]string, len(ies))
+				for i, val := range ies {
+					vals[i] = fmt.Sprint(val)
+				}
+				ret = append(ret, fmt.Sprintf("{%s: [%v]}", field.name, strings.Join(vals, ", ")))
+			}
+			continue
+		}
+
+		ret = append(ret, prettifyIE(field.name, v))
+	}
+
+	return ret
+}
+
+func prettifyIE(name string, i *ie.IE) string {
+	return fmt.Sprintf("{%s: %v}", name, i)
 }

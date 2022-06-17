@@ -15,7 +15,7 @@ type ErrorIndication struct {
 	AdditionalIEs    []*ie.IE
 }
 
-// NewErrorIndication creates a new GTPv1 NewErrorIndication.
+// NewErrorIndication creates a new GTPv1 ErrorIndication.
 func NewErrorIndication(teid uint32, seq uint16, ies ...*ie.IE) *ErrorIndication {
 	e := &ErrorIndication{
 		Header: NewHeader(0x32, MsgTypeErrorIndication, teid, seq, nil),

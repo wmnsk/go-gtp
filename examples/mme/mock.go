@@ -89,9 +89,15 @@ func handleAttach(raddr net.Addr, c *gtpv2.Conn, sub *gtpv2.Subscriber, br *gtpv
 		ie.NewIMSI(sub.IMSI),
 		ie.NewMSISDN(sub.MSISDN),
 		ie.NewMobileEquipmentIdentity(sub.IMEI),
-		ie.NewUserLocationInformation(
-			0, 0, 0, 1, 1, 0, 0, 0,
-			sub.MCC, sub.MCC, sub.LAC, sub.CI, sub.SAI, sub.RAI, sub.TAI, sub.ECI, sub.MeNBI, sub.EMeNBI,
+		ie.NewUserLocationInformationStruct(
+			ie.NewCGI(sub.MCC, sub.MNC, sub.LAC, sub.CI),
+			ie.NewSAI(sub.MCC, sub.MNC, sub.LAC, sub.SAI),
+			ie.NewRAI(sub.MCC, sub.MNC, sub.LAC, sub.RAI),
+			ie.NewTAI(sub.MCC, sub.MNC, sub.TAI),
+			ie.NewECGI(sub.MCC, sub.MNC, sub.ECI),
+			ie.NewLAI(sub.MCC, sub.MNC, sub.LAC),
+			ie.NewMENBI(sub.MCC, sub.MNC, sub.MeNBI),
+			ie.NewEMENBI(sub.MCC, sub.MNC, sub.EMeNBI),
 		),
 		ie.NewRATType(sub.RATType),
 		ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),

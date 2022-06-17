@@ -32,7 +32,7 @@ func getSubscriberIP(sub *gtpv2.Subscriber) (string, error) {
 	if ip, ok := subIPMap[sub.IMSI]; ok {
 		return ip, nil
 	}
-	return "", fmt.Errorf("Subscriber %s not found", sub.IMSI)
+	return "", fmt.Errorf("subscriber %s not found", sub.IMSI)
 }
 
 var (
@@ -128,7 +128,7 @@ func handleCreateSessionRequest(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Mes
 
 	var teidOut uint32
 	if brCtxIE := csReqFromSGW.BearerContextsToBeCreated; brCtxIE != nil {
-		for _, childIE := range brCtxIE.ChildIEs {
+		for _, childIE := range brCtxIE[0].ChildIEs {
 			switch childIE.Type {
 			case ie.EPSBearerID:
 				bearer.EBI, err = childIE.EPSBearerID()

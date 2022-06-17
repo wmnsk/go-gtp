@@ -268,9 +268,15 @@ func (m *mme) CreateSession(sess *Session) (*gtpv2.Session, error) {
 		ie.NewIMSI(sess.IMSI),
 		ie.NewMSISDN(sess.MSISDN),
 		ie.NewMobileEquipmentIdentity(sess.IMEISV),
-		ie.NewUserLocationInformation(
-			0, 0, 0, 1, 1, 0, 0, 0,
-			m.enb.mcc, m.enb.mnc, 0, 0, 0, 0, 1, 1, 0, 0,
+		ie.NewUserLocationInformationStruct(
+			ie.NewCGI(m.enb.mcc, m.enb.mnc, 0x1111, 0x2222),
+			ie.NewSAI(m.enb.mcc, m.enb.mnc, 0x1111, 0x3333),
+			ie.NewRAI(m.enb.mcc, m.enb.mnc, 0x1111, 0x4444),
+			ie.NewTAI(m.enb.mcc, m.enb.mnc, 0x5555),
+			ie.NewECGI(m.enb.mcc, m.enb.mnc, 0x66666666),
+			ie.NewLAI(m.enb.mcc, m.enb.mnc, 0x1111),
+			ie.NewMENBI(m.enb.mcc, m.enb.mnc, 0x11111111),
+			ie.NewEMENBI(m.enb.mcc, m.enb.mnc, 0x22222222),
 		),
 		ie.NewRATType(gtpv2.RATTypeEUTRAN),
 		ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),

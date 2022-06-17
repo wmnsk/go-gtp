@@ -29,8 +29,8 @@ type CreateSessionRequest struct {
 	LinkedEBI                          *ie.IE
 	TWMI                               *ie.IE
 	PCO                                *ie.IE
-	BearerContextsToBeCreated          *ie.IE
-	BearerContextsToBeRemoved          *ie.IE
+	BearerContextsToBeCreated          []*ie.IE
+	BearerContextsToBeRemoved          []*ie.IE
 	TraceInformation                   *ie.IE
 	Recovery                           *ie.IE
 	MMEFQCSID                          *ie.IE
@@ -54,7 +54,7 @@ type CreateSessionRequest struct {
 	TWANIdentifier                     *ie.IE
 	EPDGIPAddress                      *ie.IE
 	CNOperatorSelectionEntity          *ie.IE
-	PresenceReportingAreaInformation   *ie.IE
+	PresenceReportingAreaInformation   []*ie.IE
 	MMESGSNOverloadControlInformation  *ie.IE
 	SGWOverloadControlInformation      *ie.IE
 	TWANePDGOverloadControlInformation *ie.IE
@@ -63,7 +63,7 @@ type CreateSessionRequest struct {
 	WLANLocationInformation            *ie.IE
 	WLANLocationTimeStamp              *ie.IE
 	NBIFOMContainer                    *ie.IE
-	RemoteUEContextConnected           *ie.IE
+	RemoteUEContextConnected           []*ie.IE
 	TGPPAAAServerIdentifier            *ie.IE
 	EPCO                               *ie.IE
 	ServingPLMNRateControl             *ie.IE
@@ -72,7 +72,7 @@ type CreateSessionRequest struct {
 	MappedUEUsageType                  *ie.IE
 	ULIForSGW                          *ie.IE
 	SGWUNodeName                       *ie.IE
-	SecondaryRATUsageDataReport        *ie.IE
+	SecondaryRATUsageDataReport        []*ie.IE
 	UPFunctionSelectionIndicationFlags *ie.IE
 	APNRateControlStatus               *ie.IE
 	PrivateExtension                   *ie.IE
@@ -144,9 +144,9 @@ func NewCreateSessionRequest(teid, seq uint32, ies ...*ie.IE) *CreateSessionRequ
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				c.BearerContextsToBeCreated = i
+				c.BearerContextsToBeCreated = append(c.BearerContextsToBeCreated, i)
 			case 1:
-				c.BearerContextsToBeRemoved = i
+				c.BearerContextsToBeRemoved = append(c.BearerContextsToBeCreated, i)
 			default:
 				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
@@ -224,7 +224,7 @@ func NewCreateSessionRequest(teid, seq uint32, ies ...*ie.IE) *CreateSessionRequ
 		case ie.CNOperatorSelectionEntity:
 			c.CNOperatorSelectionEntity = i
 		case ie.PresenceReportingAreaInformation:
-			c.PresenceReportingAreaInformation = i
+			c.PresenceReportingAreaInformation = append(c.PresenceReportingAreaInformation, i)
 		case ie.OverloadControlInformation:
 			switch i.Instance() {
 			case 0:
@@ -245,7 +245,7 @@ func NewCreateSessionRequest(teid, seq uint32, ies ...*ie.IE) *CreateSessionRequ
 		case ie.FContainer:
 			c.NBIFOMContainer = i
 		case ie.RemoteUEContext:
-			c.RemoteUEContextConnected = i
+			c.RemoteUEContextConnected = append(c.RemoteUEContextConnected, i)
 		case ie.NodeIdentifier:
 			c.TGPPAAAServerIdentifier = i
 		case ie.ExtendedProtocolConfigurationOptions:
@@ -259,7 +259,7 @@ func NewCreateSessionRequest(teid, seq uint32, ies ...*ie.IE) *CreateSessionRequ
 		case ie.FullyQualifiedDomainName:
 			c.SGWUNodeName = i
 		case ie.SecondaryRATUsageDataReport:
-			c.SecondaryRATUsageDataReport = i
+			c.SecondaryRATUsageDataReport = append(c.SecondaryRATUsageDataReport, i)
 		case ie.UPFunctionSelectionIndicationFlags:
 			c.UPFunctionSelectionIndicationFlags = i
 		case ie.APNRateControlStatus:
@@ -400,13 +400,13 @@ func (c *CreateSessionRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.BearerContextsToBeCreated; ie != nil {
+	for _, ie := range c.BearerContextsToBeCreated {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.BearerContextsToBeRemoved; ie != nil {
+	for _, ie := range c.BearerContextsToBeRemoved {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -550,7 +550,7 @@ func (c *CreateSessionRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.PresenceReportingAreaInformation; ie != nil {
+	for _, ie := range c.PresenceReportingAreaInformation {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -604,7 +604,7 @@ func (c *CreateSessionRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.RemoteUEContextConnected; ie != nil {
+	for _, ie := range c.RemoteUEContextConnected {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -658,7 +658,7 @@ func (c *CreateSessionRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range c.SecondaryRATUsageDataReport {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -777,9 +777,9 @@ func (c *CreateSessionRequest) UnmarshalBinary(b []byte) error {
 		case ie.BearerContext:
 			switch i.Instance() {
 			case 0:
-				c.BearerContextsToBeCreated = i
+				c.BearerContextsToBeCreated = append(c.BearerContextsToBeCreated, i)
 			case 1:
-				c.BearerContextsToBeRemoved = i
+				c.BearerContextsToBeRemoved = append(c.BearerContextsToBeCreated, i)
 			default:
 				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
@@ -859,7 +859,7 @@ func (c *CreateSessionRequest) UnmarshalBinary(b []byte) error {
 		case ie.CNOperatorSelectionEntity:
 			c.CNOperatorSelectionEntity = i
 		case ie.PresenceReportingAreaInformation:
-			c.PresenceReportingAreaInformation = i
+			c.PresenceReportingAreaInformation = append(c.PresenceReportingAreaInformation, i)
 		case ie.OverloadControlInformation:
 			switch i.Instance() {
 			case 0:
@@ -880,7 +880,7 @@ func (c *CreateSessionRequest) UnmarshalBinary(b []byte) error {
 		case ie.FContainer:
 			c.NBIFOMContainer = i
 		case ie.RemoteUEContext:
-			c.RemoteUEContextConnected = i
+			c.RemoteUEContextConnected = append(c.PresenceReportingAreaInformation, i)
 		case ie.NodeIdentifier:
 			c.TGPPAAAServerIdentifier = i
 		case ie.ExtendedProtocolConfigurationOptions:
@@ -894,7 +894,7 @@ func (c *CreateSessionRequest) UnmarshalBinary(b []byte) error {
 		case ie.FullyQualifiedDomainName:
 			c.SGWUNodeName = i
 		case ie.SecondaryRATUsageDataReport:
-			c.SecondaryRATUsageDataReport = i
+			c.SecondaryRATUsageDataReport = append(c.PresenceReportingAreaInformation, i)
 		case ie.UPFunctionSelectionIndicationFlags:
 			c.UPFunctionSelectionIndicationFlags = i
 		case ie.APNRateControlStatus:
@@ -967,10 +967,10 @@ func (c *CreateSessionRequest) MarshalLen() int {
 	if ie := c.PCO; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.BearerContextsToBeCreated; ie != nil {
+	for _, ie := range c.BearerContextsToBeCreated {
 		l += ie.MarshalLen()
 	}
-	if ie := c.BearerContextsToBeRemoved; ie != nil {
+	for _, ie := range c.BearerContextsToBeRemoved {
 		l += ie.MarshalLen()
 	}
 	if ie := c.TraceInformation; ie != nil {
@@ -1042,7 +1042,7 @@ func (c *CreateSessionRequest) MarshalLen() int {
 	if ie := c.CNOperatorSelectionEntity; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.PresenceReportingAreaInformation; ie != nil {
+	for _, ie := range c.PresenceReportingAreaInformation {
 		l += ie.MarshalLen()
 	}
 	if ie := c.MMESGSNOverloadControlInformation; ie != nil {
@@ -1069,7 +1069,7 @@ func (c *CreateSessionRequest) MarshalLen() int {
 	if ie := c.NBIFOMContainer; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.RemoteUEContextConnected; ie != nil {
+	for _, ie := range c.RemoteUEContextConnected {
 		l += ie.MarshalLen()
 	}
 	if ie := c.TGPPAAAServerIdentifier; ie != nil {
@@ -1096,7 +1096,7 @@ func (c *CreateSessionRequest) MarshalLen() int {
 	if ie := c.SGWUNodeName; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range c.SecondaryRATUsageDataReport {
 		l += ie.MarshalLen()
 	}
 	if ie := c.UPFunctionSelectionIndicationFlags; ie != nil {

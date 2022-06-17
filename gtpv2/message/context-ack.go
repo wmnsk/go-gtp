@@ -14,7 +14,7 @@ type ContextAcknowledge struct {
 	Cause                  *ie.IE
 	IndicationFlags        *ie.IE
 	ForwardingFTEID        *ie.IE
-	BearerContexts         *ie.IE
+	BearerContexts         []*ie.IE
 	SGSNNumber             *ie.IE
 	MMENumberForMTSMS      *ie.IE
 	SGSNIdentifierForMTSMS *ie.IE
@@ -44,7 +44,7 @@ func NewContextAcknowledge(teid, seq uint32, ies ...*ie.IE) *ContextAcknowledge 
 		case ie.FullyQualifiedTEID:
 			c.ForwardingFTEID = i
 		case ie.BearerContext:
-			c.BearerContexts = i
+			c.BearerContexts = append(c.BearerContexts, i)
 		case ie.NodeNumber:
 			switch i.Instance() {
 			case 0:
@@ -109,7 +109,7 @@ func (c *ContextAcknowledge) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.BearerContexts; ie != nil {
+	for _, ie := range c.BearerContexts {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -196,7 +196,7 @@ func (c *ContextAcknowledge) UnmarshalBinary(b []byte) error {
 		case ie.FullyQualifiedTEID:
 			c.ForwardingFTEID = i
 		case ie.BearerContext:
-			c.BearerContexts = i
+			c.BearerContexts = append(c.BearerContexts, i)
 		case ie.NodeNumber:
 			switch i.Instance() {
 			case 0:
@@ -238,7 +238,7 @@ func (c *ContextAcknowledge) MarshalLen() int {
 	if ie := c.ForwardingFTEID; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.BearerContexts; ie != nil {
+	for _, ie := range c.BearerContexts {
 		l += ie.MarshalLen()
 	}
 	if ie := c.SGSNNumber; ie != nil {

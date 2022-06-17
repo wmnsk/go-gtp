@@ -20,9 +20,9 @@ func TestDeleteSessionRequest(t *testing.T) {
 			Structured: message.NewDeleteSessionRequest(
 				testutils.TestBearerInfo.TEID, testutils.TestBearerInfo.Seq,
 				ie.NewEPSBearerID(5),
-				ie.NewUserLocationInformationLazy(
-					"123", "45",
-					-1, -1, -1, -1, 0x0001, 0x00000101, -1, -1,
+				ie.NewUserLocationInformationStruct(
+					nil, nil, nil, ie.NewTAI("123", "45", 0x0001),
+					ie.NewECGI("123", "45", 0x00000101), nil, nil, nil,
 				),
 				ie.NewIndicationFromOctets(0xa1, 0x08, 0x15, 0x10, 0x88, 0x81, 0x40),
 				ie.NewULITimestamp(time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)),
