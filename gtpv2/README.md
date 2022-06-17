@@ -1,6 +1,6 @@
-# v2: GTPv2 in Golang
+# gtpv2: GTPv2 in Golang
 
-Package v2 provides the simple and painless handling of GTPv2-C protocol in pure Golang.
+Package v2 provides simple and painless handling of GTPv2-C protocol in pure Golang.
 
 ## Getting Started
 
@@ -35,7 +35,7 @@ if err := srvConn.ListenAndServe(ctx); err != nil {
 
 ### Handling incoming messages
 
-Prepare functions that comform to [`HandlerFunc`](https://godoc.org/github.com/wmnsk/go-gtp/v2#Conn.AddHandler), and register them to `Conn` with `AddHandler`. This should be done as soon as you get `Conn` not to miss the incoming messages.
+Prepare functions that comform to [`HandlerFunc`](https://pkg.go.dev/github.com/wmnsk/go-gtp/gtpv2#Conn.AddHandler), and register them to `Conn` with `AddHandler`. This should be done as soon as you get `Conn` not to miss the incoming messages.
 
 `HandlerFunc` is to handle the incoming messages by message type. See [example](../examples) for how it is like.  
 Also consider using `AddHandlers` when you have many `HandlerFunc`s.
@@ -139,8 +139,8 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 74-94   | (Spare/Reserved)                                | -         |
 | 95      | Create Bearer Request                           | Yes       |
 | 96      | Create Bearer Response                          | Yes       |
-| 97      | Update Bearer Request                           |           |
-| 98      | Update Bearer Response                          |           |
+| 97      | Update Bearer Request                           | Yes       |
+| 98      | Update Bearer Response                          | Yes       |
 | 99      | Delete Bearer Request                           | Yes       |
 | 100     | Delete Bearer Response                          | Yes       |
 | 101     | Delete PDN Connection Set Request               | Yes       |
@@ -176,10 +176,10 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 159     | UE Registration Query Response                  |           |
 | 160     | Create Forwarding Tunnel Request                |           |
 | 161     | Create Forwarding Tunnel Response               |           |
-| 162     | Suspend Notification                            |           |
-| 163     | Suspend Acknowledge                             |           |
-| 164     | Resume Notification                             |           |
-| 165     | Resume Acknowledge                              |           |
+| 162     | Suspend Notification                            | Yes       |
+| 163     | Suspend Acknowledge                             | Yes       |
+| 164     | Resume Notification                             | Yes       |
+| 165     | Resume Acknowledge                              | Yes       |
 | 166     | Create Indirect Data Forwarding Tunnel Request  |           |
 | 167     | Create Indirect Data Forwarding Tunnel Response |           |
 | 168     | Delete Indirect Data Forwarding Tunnel Request  |           |
@@ -238,7 +238,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ie.Ne
 | 81      | Flow Quality of Service (Flow QoS)                             | Yes       |
 | 82      | RAT Type                                                       | Yes       |
 | 83      | Serving Network                                                | Yes       |
-| 84      | EPS Bearer Level Traffic Flow Template (Bearer TFT)            |           |
+| 84      | EPS Bearer Level Traffic Flow Template (Bearer TFT)            | Yes       |
 | 85      | Traffic Aggregation Description (TAD)                          |           |
 | 86      | User Location Information (ULI)                                | Yes       |
 | 87      | Fully Qualified Tunnel Endpoint Identifier (F-TEID)            | Yes       |

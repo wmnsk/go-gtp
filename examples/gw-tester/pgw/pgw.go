@@ -26,6 +26,8 @@ type pgw struct {
 	s5c, s5u string
 	sgiIF    string
 
+	useKernelGTP bool
+
 	routeSubnet *net.IPNet
 	addedRoutes []*netlink.Route
 	addedRules  []*netlink.Rule
@@ -38,9 +40,10 @@ type pgw struct {
 
 func newPGW(cfg *Config) (*pgw, error) {
 	p := &pgw{
-		s5c:   cfg.LocalAddrs.S5CIP + gtpv2.GTPCPort,
-		s5u:   cfg.LocalAddrs.S5UIP + gtpv2.GTPUPort,
-		sgiIF: cfg.SGiIFName,
+		s5c:          cfg.LocalAddrs.S5CIP + gtpv2.GTPCPort,
+		s5u:          cfg.LocalAddrs.S5UIP + gtpv2.GTPUPort,
+		useKernelGTP: cfg.UseKernelGTP,
+		sgiIF:        cfg.SGiIFName,
 
 		errCh: make(chan error, 1),
 	}
@@ -57,6 +60,10 @@ func newPGW(cfg *Config) (*pgw, error) {
 			return nil, err
 		}
 		p.promAddr = cfg.PromAddr
+	}
+
+	if !p.useKernelGTP {
+		log.Println("WARN: U-Plane does not work without GTP kernel module")
 	}
 
 	return p, nil
@@ -87,8 +94,10 @@ func (p *pgw) run(ctx context.Context) error {
 		return err
 	}
 	p.uConn = gtpv1.NewUPlaneConn(uAddr)
-	if err := p.uConn.EnableKernelGTP("gtp-pgw", gtpv1.RoleGGSN); err != nil {
-		return err
+	if p.useKernelGTP {
+		if err := p.uConn.EnableKernelGTP("gtp-pgw", gtpv1.RoleGGSN); err != nil {
+			return err
+		}
 	}
 	go func() {
 		if err = p.uConn.ListenAndServe(ctx); err != nil {
@@ -138,9 +147,6 @@ func (p *pgw) close() error {
 	}
 
 	if p.uConn != nil {
-		if err := netlink.LinkDel(p.uConn.KernelGTP.Link); err != nil {
-			errs = append(errs, err)
-		}
 		if err := p.uConn.Close(); err != nil {
 			errs = append(errs, err)
 		}

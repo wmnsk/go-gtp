@@ -83,7 +83,7 @@ func (s *sgw) handleCreateSessionResponse(s5cConn *gtpv2.Conn, pgwAddr net.Addr,
 	}
 
 	if brCtxIE := csRspFromPGW.BearerContextsCreated; brCtxIE != nil {
-		for _, childIE := range brCtxIE.ChildIEs {
+		for _, childIE := range brCtxIE[0].ChildIEs {
 			switch childIE.Type {
 			case ie.Cause:
 				cause, err := childIE.Cause()
@@ -202,7 +202,8 @@ func (s *sgw) handleDeleteBearerRequest(s5cConn *gtpv2.Conn, pgwAddr net.Addr, m
 		ebi = ie
 	}
 
-	if ebiIE := dbReqFromPGW.EBI; ebiIE != nil {
+	if e := dbReqFromPGW.EBIs; e != nil {
+		ebiIE := e[0]
 		// shouldn't be both.
 		if ebi != nil {
 			dbRspFromSGW = message.NewDeleteBearerResponse(

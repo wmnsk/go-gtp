@@ -13,7 +13,7 @@ type DeleteBearerResponse struct {
 	*Header
 	Cause                              *ie.IE
 	LinkedEBI                          *ie.IE
-	BearerContexts                     *ie.IE
+	BearerContexts                     []*ie.IE
 	Recovery                           *ie.IE
 	MMEFQCSID                          *ie.IE
 	SGWFQCSID                          *ie.IE
@@ -35,7 +35,7 @@ type DeleteBearerResponse struct {
 	UEUDPPort                          *ie.IE
 	NBIFOMContainer                    *ie.IE
 	UETCPPort                          *ie.IE
-	SecondaryRATUsageDataReport        *ie.IE
+	SecondaryRATUsageDataReport        []*ie.IE
 	PrivateExtension                   *ie.IE
 	AdditionalIEs                      []*ie.IE
 }
@@ -59,7 +59,7 @@ func NewDeleteBearerResponse(teid, seq uint32, ies ...*ie.IE) *DeleteBearerRespo
 		case ie.EPSBearerID:
 			d.LinkedEBI = i
 		case ie.BearerContext:
-			d.BearerContexts = i
+			d.BearerContexts = append(d.BearerContexts, i)
 		case ie.Recovery:
 			d.Recovery = i
 		case ie.FullyQualifiedCSID:
@@ -133,7 +133,7 @@ func NewDeleteBearerResponse(teid, seq uint32, ies ...*ie.IE) *DeleteBearerRespo
 		case ie.FContainer:
 			d.NBIFOMContainer = i
 		case ie.SecondaryRATUsageDataReport:
-			d.SecondaryRATUsageDataReport = i
+			d.SecondaryRATUsageDataReport = append(d.SecondaryRATUsageDataReport, i)
 		case ie.PrivateExtension:
 			d.PrivateExtension = i
 		default:
@@ -174,7 +174,7 @@ func (d *DeleteBearerResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := d.BearerContexts; ie != nil {
+	for _, ie := range d.BearerContexts {
 		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
@@ -306,7 +306,7 @@ func (d *DeleteBearerResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := d.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range d.SecondaryRATUsageDataReport {
 		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
@@ -368,7 +368,7 @@ func (d *DeleteBearerResponse) UnmarshalBinary(b []byte) error {
 		case ie.EPSBearerID:
 			d.LinkedEBI = i
 		case ie.BearerContext:
-			d.BearerContexts = i
+			d.BearerContexts = append(d.BearerContexts, i)
 		case ie.Recovery:
 			d.Recovery = i
 		case ie.FullyQualifiedCSID:
@@ -442,7 +442,7 @@ func (d *DeleteBearerResponse) UnmarshalBinary(b []byte) error {
 		case ie.FContainer:
 			d.NBIFOMContainer = i
 		case ie.SecondaryRATUsageDataReport:
-			d.SecondaryRATUsageDataReport = i
+			d.SecondaryRATUsageDataReport = append(d.SecondaryRATUsageDataReport, i)
 		case ie.PrivateExtension:
 			d.PrivateExtension = i
 		default:
@@ -463,7 +463,7 @@ func (d *DeleteBearerResponse) MarshalLen() int {
 	if ie := d.LinkedEBI; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := d.BearerContexts; ie != nil {
+	for _, ie := range d.BearerContexts {
 		l += ie.MarshalLen()
 	}
 	if ie := d.Recovery; ie != nil {
@@ -529,7 +529,7 @@ func (d *DeleteBearerResponse) MarshalLen() int {
 	if ie := d.UETCPPort; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := d.SecondaryRATUsageDataReport; ie != nil {
+	for _, ie := range d.SecondaryRATUsageDataReport {
 		l += ie.MarshalLen()
 	}
 	if ie := d.PrivateExtension; ie != nil {

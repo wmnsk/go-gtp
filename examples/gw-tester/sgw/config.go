@@ -19,7 +19,8 @@ type Config struct {
 		S5UIP string `yaml:"s5u_ip"`
 	} `yaml:"local_addresses"`
 
-	PromAddr string `yaml:"prom_addr"`
+	UseKernelGTP bool   `yaml:"use_kernel_gtp"`
+	PromAddr     string `yaml:"prom_addr"`
 }
 
 func loadConfig(path string) (*Config, error) {

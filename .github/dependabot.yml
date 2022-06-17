@@ -1,0 +1,25 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "20:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: google.golang.org/grpc
+    versions:
+    - ">= 1.36.a, < 1.37"
+  - dependency-name: google.golang.org/grpc
+    versions:
+    - ">= 1.37.a, < 1.38"
+  - dependency-name: github.com/golang/protobuf
+    versions:
+    - 1.5.1
+    - 1.5.2
+  - dependency-name: github.com/google/go-cmp
+    versions:
+    - 0.5.5
+  - dependency-name: google.golang.org/grpc
+    versions:
+    - 1.35.0

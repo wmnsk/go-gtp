@@ -109,7 +109,7 @@ func (p *pgw) handleCreateSessionRequest(c *gtpv2.Conn, sgwAddr net.Addr, msg me
 	var s5sgwuIP string
 	var oteiU uint32
 	if brCtxIE := csReqFromSGW.BearerContextsToBeCreated; brCtxIE != nil {
-		for _, childIE := range brCtxIE.ChildIEs {
+		for _, childIE := range brCtxIE[0].ChildIEs {
 			switch childIE.Type {
 			case ie.EPSBearerID:
 				bearer.EBI, err = childIE.EPSBearerID()
@@ -191,8 +191,10 @@ func (p *pgw) handleCreateSessionRequest(c *gtpv2.Conn, sgwAddr net.Addr, msg me
 	}
 	c.RegisterSession(s5pgwTEID, session)
 
-	if err := p.setupUPlane(net.ParseIP(s5sgwuIP), net.ParseIP(bearer.SubscriberIP), oteiU, s5uFTEID.MustTEID()); err != nil {
-		return err
+	if p.useKernelGTP {
+		if err := p.setupUPlane(net.ParseIP(s5sgwuIP), net.ParseIP(bearer.SubscriberIP), oteiU, s5uFTEID.MustTEID()); err != nil {
+			return err
+		}
 	}
 
 	log.Printf("Session created with S-GW for subscriber: %s;\n\tS5C S-GW: %s, TEID->: %#x, TEID<-: %#x",

@@ -10,7 +10,7 @@ import "github.com/wmnsk/go-gtp/gtpv2/ie"
 type DeleteBearerFailureIndication struct {
 	*Header
 	Cause                         *ie.IE
-	BearerContexts                *ie.IE
+	BearerContexts                []*ie.IE
 	Recovery                      *ie.IE
 	IndicationFlags               *ie.IE
 	PGWOverloadControlInformation *ie.IE
@@ -36,7 +36,7 @@ func NewDeleteBearerFailureIndication(teid, seq uint32, ies ...*ie.IE) *DeleteBe
 		case ie.Cause:
 			d.Cause = i
 		case ie.BearerContext:
-			d.BearerContexts = i
+			d.BearerContexts = append(d.BearerContexts, i)
 		case ie.Recovery:
 			d.Recovery = i
 		case ie.Indication:
@@ -82,7 +82,7 @@ func (d *DeleteBearerFailureIndication) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := d.BearerContexts; ie != nil {
+	for _, ie := range d.BearerContexts {
 		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func (d *DeleteBearerFailureIndication) UnmarshalBinary(b []byte) error {
 		case ie.Cause:
 			d.Cause = i
 		case ie.BearerContext:
-			d.BearerContexts = i
+			d.BearerContexts = append(d.BearerContexts, i)
 		case ie.Recovery:
 			d.Recovery = i
 		case ie.Indication:
@@ -193,7 +193,7 @@ func (d *DeleteBearerFailureIndication) MarshalLen() int {
 	if ie := d.Cause; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := d.BearerContexts; ie != nil {
+	for _, ie := range d.BearerContexts {
 		l += ie.MarshalLen()
 	}
 	if ie := d.Recovery; ie != nil {

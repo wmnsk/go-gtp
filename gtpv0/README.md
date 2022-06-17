@@ -1,11 +1,11 @@
 # v0: GTPv0 in Golang
 
-Package v0 provides the simple and painless handling of GTPv2-C protocol in pure Golang.
+Package v0 provides simple and painless handling of GTPv0 protocol in pure Golang.
 
 ## Getting Started
 
 This package is still under construction.
-See message and ie directory for what you can do with the current implementation. 
+See the source codes for what you can do with the current implementation. 
 
 ### Creating a PDP Context as a client
 

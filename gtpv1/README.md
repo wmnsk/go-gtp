@@ -1,6 +1,6 @@
 # v1: GTPv1 in Golang
 
-Package v1 provides the simple and painless handling of GTPv1-C and GTPv1-U protocols in pure Golang.
+Package v1 provides simple and painless handling of GTPv1-C and GTPv1-U protocols in pure Golang.
 
 ## Getting Started
 
@@ -162,6 +162,65 @@ s1uConn.RelayTo(s5uConn, s1usgwTEID, s5uBearer.OutgoingTEID, s5uBearer.RemoteAdd
 s5uConn.RelayTo(s1uConn, s5usgwTEID, s1uBearer.OutgoingTEID, s1uBearer.RemoteAddress)
 ```
 
+### Handling Extension Headers
+
+`AddExtensionHeaders` adds ExtensionHeader(s) to the Header of a Message, set the E flag, and checks if the types given are consistent (error will be returned if not).
+
+```go
+msg := message.NewTPDU(0x11223344, []byte{0xde, 0xad, 0xbe, 0xef})
+if err := msg.AddExtensionHeaders(
+	// We don't support construction of the specific type of an ExtensionHeader.
+	// The second parameter should be the serialized bytes of contents.
+	message.NewExtensionHeader(
+		message.ExtHeaderTypeUDPPort,
+		[]byte{0x22, 0xb8},
+		message.ExtHeaderTypePDUSessionContainer,
+	),
+	message.NewExtensionHeader(
+		message.ExtHeaderTypePDUSessionContainer,
+		[]byte{0x00, 0xc2},
+		message.ExtHeaderTypeNoMoreExtensionHeaders,
+	),
+); err != nil {
+	// ...
+}
+```
+
+ExtensionHeaders decoded or added are stored in `ExtensionHeaders` field in the Header, which can be accessed like this.
+
+```go
+// no need to write msg.Header.ExtensionHeaders, as the Header is embedded in messages.
+for _, eh := range msg.ExtensionHeaders {
+	log.Println(eh.Type)     // ExtensionHeader type has its own Type while it's not actually included in a packet. 
+	log.Println(eh.Content)  // We do not support decoding of each type of content yet. Decode them on your own.
+	log.Println(eh.NextType) // Don't sort the slice - it ruins the packet, or even cause a panic.
+}
+```
+
+When you are directly manipulating a Header for some reason, `WithExtensionHeaders` would help you simplify your operation.
+Be sure not to call it on a Message, as it returns `*Header`, not a `Message` interface.
+
+```go
+header := message.NewHeader(
+	0x30, // no need to set E flag here - With... method will do that instead.
+	message.MsgTypeEchoRequest,
+	0xdeadbeef,
+	0x00,
+	[]byte{0xde, 0xad, 0xbe, 0xef},
+).WithExtensionHeaders(
+	message.NewExtensionHeader(
+		message.ExtHeaderTypeUDPPort,
+		[]byte{0x22, 0xb8},
+		message.ExtHeaderTypePDUSessionContainer,
+	),
+	message.NewExtensionHeader(
+		message.ExtHeaderTypePDUSessionContainer,
+		[]byte{0x00, 0xc2},
+		message.ExtHeaderTypeNoMoreExtensionHeaders,
+	),
+)
+```
+
 ## Supported Features
 
 ### Messages
@@ -195,7 +254,7 @@ _Even there are some missing Messages, you can create any kind of Message by usi
 | 28        | PDU Notification Response                   |           |
 | 29        | PDU Notification Reject Request             |           |
 | 30        | PDU Notification Reject Response            |           |
-| 31        | Supported Extension Headers Notification    |           |
+| 31        | Supported Extension Headers Notification    | Yes       |
 | 32        | Send Routeing Information for GPRS Request  |           |
 | 33        | Send Routeing Information for GPRS Response |           |
 | 34        | Failure Report Request                      |           |
@@ -305,7 +364,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ie.Ne
 | 138     | Target Identification                     |           |
 | 139     | UTRAN Transparent Container               |           |
 | 140     | RAB Setup Information                     |           |
-| 141     | Extension Header Type List                |           |
+| 141     | Extension Header Type List                | Yes       |
 | 142     | Trigger Id                                |           |
 | 143     | OMC Identity                              |           |
 | 144     | RAN Transparent Container                 |           |

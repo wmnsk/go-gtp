@@ -12,7 +12,7 @@ import (
 type DeleteBearerRequest struct {
 	*Header
 	LinkedEBI                     *ie.IE
-	EBI                           *ie.IE
+	EBIs                          []*ie.IE
 	FailedBearerContext           *ie.IE
 	PTI                           *ie.IE
 	PCO                           *ie.IE
@@ -51,7 +51,7 @@ func NewDeleteBearerRequest(teid, seq uint32, ies ...*ie.IE) *DeleteBearerReques
 			case 0:
 				d.LinkedEBI = i
 			case 1:
-				d.EBI = i
+				d.EBIs = append(d.EBIs, i)
 			default:
 				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
@@ -135,7 +135,7 @@ func (d *DeleteBearerRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := d.EBI; ie != nil {
+	for _, ie := range d.EBIs {
 		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
@@ -286,7 +286,7 @@ func (d *DeleteBearerRequest) UnmarshalBinary(b []byte) error {
 			case 0:
 				d.LinkedEBI = i
 			case 1:
-				d.EBI = i
+				d.EBIs = append(d.EBIs, i)
 			default:
 				d.AdditionalIEs = append(d.AdditionalIEs, i)
 			}
@@ -352,7 +352,7 @@ func (d *DeleteBearerRequest) MarshalLen() int {
 	if ie := d.LinkedEBI; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := d.EBI; ie != nil {
+	for _, ie := range d.EBIs {
 		l += ie.MarshalLen()
 	}
 	if ie := d.FailedBearerContext; ie != nil {

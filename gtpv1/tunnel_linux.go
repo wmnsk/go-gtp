@@ -40,13 +40,13 @@ const (
 func (u *UPlaneConn) EnableKernelGTP(devname string, role Role) error {
 	if u.pktConn == nil {
 		var err error
-		u.pktConn, err = net.ListenPacket(u.laddr.Network(), u.laddr.String())
+		u.pktConn, err = newPktConn(u.laddr)
 		if err != nil {
 			return err
 		}
 	}
 
-	f, err := u.pktConn.(*net.UDPConn).File()
+	f, err := u.pktConn.File()
 	if err != nil {
 		return fmt.Errorf("failed to retrieve file from conn: %w", err)
 	}

@@ -14,13 +14,13 @@ type CreateBearerRequest struct {
 	PTI                           *ie.IE
 	LinkedEBI                     *ie.IE
 	PCO                           *ie.IE
-	BearerContexts                *ie.IE
+	BearerContexts                []*ie.IE
 	PGWFQCSID                     *ie.IE
 	SGWFQCSID                     *ie.IE
 	ChangeReportingAction         *ie.IE
 	CSGInformationReportingAction *ie.IE
 	HeNBInformationReporting      *ie.IE
-	PresenceReportingAreaAction   *ie.IE
+	PresenceReportingAreaAction   []*ie.IE
 	IndicationFlags               *ie.IE
 	PGWNodeLoadControlInformation *ie.IE
 	PGWAPNLoadControlInformation  *ie.IE
@@ -53,7 +53,7 @@ func NewCreateBearerRequest(teid, seq uint32, ies ...*ie.IE) *CreateBearerReques
 		case ie.ProtocolConfigurationOptions:
 			c.PCO = i
 		case ie.BearerContext:
-			c.BearerContexts = i
+			c.BearerContexts = append(c.BearerContexts, i)
 		case ie.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
@@ -70,7 +70,7 @@ func NewCreateBearerRequest(teid, seq uint32, ies ...*ie.IE) *CreateBearerReques
 		case ie.HeNBInformationReporting:
 			c.HeNBInformationReporting = i
 		case ie.PresenceReportingAreaAction:
-			c.PresenceReportingAreaAction = i
+			c.PresenceReportingAreaAction = append(c.PresenceReportingAreaAction, i)
 		case ie.Indication:
 			c.IndicationFlags = i
 		case ie.LoadControlInformation:
@@ -141,7 +141,7 @@ func (c *CreateBearerRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.BearerContexts; ie != nil {
+	for _, ie := range c.BearerContexts {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -177,7 +177,7 @@ func (c *CreateBearerRequest) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.PresenceReportingAreaAction; ie != nil {
+	for _, ie := range c.PresenceReportingAreaAction {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -279,7 +279,7 @@ func (c *CreateBearerRequest) UnmarshalBinary(b []byte) error {
 		case ie.ProtocolConfigurationOptions:
 			c.PCO = i
 		case ie.BearerContext:
-			c.BearerContexts = i
+			c.BearerContexts = append(c.BearerContexts, i)
 		case ie.FullyQualifiedCSID:
 			switch i.Instance() {
 			case 0:
@@ -296,7 +296,7 @@ func (c *CreateBearerRequest) UnmarshalBinary(b []byte) error {
 		case ie.HeNBInformationReporting:
 			c.HeNBInformationReporting = i
 		case ie.PresenceReportingAreaAction:
-			c.PresenceReportingAreaAction = i
+			c.PresenceReportingAreaAction = append(c.PresenceReportingAreaAction, i)
 		case ie.Indication:
 			c.IndicationFlags = i
 		case ie.LoadControlInformation:
@@ -344,7 +344,7 @@ func (c *CreateBearerRequest) MarshalLen() int {
 	if ie := c.PCO; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.BearerContexts; ie != nil {
+	for _, ie := range c.BearerContexts {
 		l += ie.MarshalLen()
 	}
 	if ie := c.PGWFQCSID; ie != nil {
@@ -362,7 +362,7 @@ func (c *CreateBearerRequest) MarshalLen() int {
 	if ie := c.HeNBInformationReporting; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.PresenceReportingAreaAction; ie != nil {
+	for _, ie := range c.PresenceReportingAreaAction {
 		l += ie.MarshalLen()
 	}
 	if ie := c.IndicationFlags; ie != nil {

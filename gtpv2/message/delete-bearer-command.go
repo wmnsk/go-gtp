@@ -9,14 +9,14 @@ import "github.com/wmnsk/go-gtp/gtpv2/ie"
 // DeleteBearerCommand is a DeleteBearerCommand Header and its IEs above.
 type DeleteBearerCommand struct {
 	*Header
-	BearerContexts                    *ie.IE
+	BearerContexts                    []*ie.IE
 	ULI                               *ie.IE
 	ULITimestamp                      *ie.IE
 	UETimeZone                        *ie.IE
 	MMESGSNOverloadControlInformation *ie.IE
 	SGWOverloadControlInformation     *ie.IE
 	SenderFTEIDC                      *ie.IE
-	SecondaryRATDataUsageReport       *ie.IE
+	SecondaryRATDataUsageReport       []*ie.IE
 	PrivateExtension                  *ie.IE
 	AdditionalIEs                     []*ie.IE
 }
@@ -36,7 +36,7 @@ func NewDeleteBearerCommand(teid, seq uint32, ies ...*ie.IE) *DeleteBearerComman
 		}
 		switch i.Type {
 		case ie.BearerContext:
-			d.BearerContexts = i
+			d.BearerContexts = append(d.BearerContexts, i)
 		case ie.UserLocationInformation:
 			d.ULI = i
 		case ie.ULITimestamp:
@@ -53,7 +53,7 @@ func NewDeleteBearerCommand(teid, seq uint32, ies ...*ie.IE) *DeleteBearerComman
 		case ie.FullyQualifiedTEID:
 			d.SenderFTEIDC = i
 		case ie.SecondaryRATUsageDataReport:
-			d.SecondaryRATDataUsageReport = i
+			d.SecondaryRATDataUsageReport = append(d.SecondaryRATDataUsageReport, i)
 		case ie.PrivateExtension:
 			d.PrivateExtension = i
 		default:
@@ -82,7 +82,7 @@ func (d *DeleteBearerCommand) MarshalTo(b []byte) error {
 	d.Header.Payload = make([]byte, d.MarshalLen()-d.Header.MarshalLen())
 
 	offset := 0
-	if ie := d.BearerContexts; ie != nil {
+	for _, ie := range d.BearerContexts {
 		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
@@ -124,7 +124,7 @@ func (d *DeleteBearerCommand) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := d.SecondaryRATDataUsageReport; ie != nil {
+	for _, ie := range d.SecondaryRATDataUsageReport {
 		if err := ie.MarshalTo(d.Payload[offset:]); err != nil {
 			return err
 		}
@@ -181,7 +181,7 @@ func (d *DeleteBearerCommand) UnmarshalBinary(b []byte) error {
 		}
 		switch i.Type {
 		case ie.BearerContext:
-			d.BearerContexts = i
+			d.BearerContexts = append(d.BearerContexts, i)
 		case ie.UserLocationInformation:
 			d.ULI = i
 		case ie.ULITimestamp:
@@ -198,7 +198,7 @@ func (d *DeleteBearerCommand) UnmarshalBinary(b []byte) error {
 		case ie.FullyQualifiedTEID:
 			d.SenderFTEIDC = i
 		case ie.SecondaryRATUsageDataReport:
-			d.SecondaryRATDataUsageReport = i
+			d.SecondaryRATDataUsageReport = append(d.SecondaryRATDataUsageReport, i)
 		case ie.PrivateExtension:
 			d.PrivateExtension = i
 		default:
@@ -212,7 +212,7 @@ func (d *DeleteBearerCommand) UnmarshalBinary(b []byte) error {
 // MarshalLen returns the serial length in int.
 func (d *DeleteBearerCommand) MarshalLen() int {
 	l := d.Header.MarshalLen() - len(d.Header.Payload)
-	if ie := d.BearerContexts; ie != nil {
+	for _, ie := range d.BearerContexts {
 		l += ie.MarshalLen()
 	}
 	if ie := d.ULI; ie != nil {
@@ -233,7 +233,7 @@ func (d *DeleteBearerCommand) MarshalLen() int {
 	if ie := d.SenderFTEIDC; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := d.SecondaryRATDataUsageReport; ie != nil {
+	for _, ie := range d.SecondaryRATDataUsageReport {
 		l += ie.MarshalLen()
 	}
 	if ie := d.PrivateExtension; ie != nil {
