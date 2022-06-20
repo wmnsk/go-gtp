@@ -6,6 +6,17 @@ package ie
 
 import "encoding/binary"
 
+// ProtocolIdentifier definitions.
+//
+// [Table 10.5.154/3GPP TS 24.008]
+//
+// At least the following protocol identifiers (as defined in RFC 3232 [103]) shall be
+// supported in this version of the protocol:
+//  - 8021H (IPCP).
+const (
+	PCOProtocolIdentifierIPCP uint16 = 0x8021
+)
+
 // ConfigurationProtocolOption represents a Configuration protocol option in PCO.
 type ConfigurationProtocolOption struct {
 	ProtocolID uint16
@@ -56,13 +67,14 @@ func ParseConfigurationProtocolOption(b []byte) (*ConfigurationProtocolOption, e
 
 // UnmarshalBinary decodes given bytes into ConfigurationProtocolOption.
 func (c *ConfigurationProtocolOption) UnmarshalBinary(b []byte) error {
-	if len(b) < 4 {
+	l := len(b)
+	if l < 3 {
 		return ErrTooShortToParse
 	}
 	c.ProtocolID = binary.BigEndian.Uint16(b[0:2])
 	c.Length = b[2]
-	if c.Length != 0 {
-		copy(c.Contents, b[3:])
+	if c.Length != 0 && l >= 3+int(c.Length) {
+		copy(c.Contents, b[3:3+int(c.Length)])
 	}
 
 	return nil
@@ -72,6 +84,11 @@ func (c *ConfigurationProtocolOption) UnmarshalBinary(b []byte) error {
 func (c *ConfigurationProtocolOption) MarshalLen() int {
 	return 3 + len(c.Contents)
 }
+
+// ConfigurationProtocol definitions.
+const (
+	ConfigurationProtocolPPPForUseWithIPPDPTypeOrIPPDNType uint8 = 0b000
+)
 
 // PCOPayload is a Payload of ProtocolConfigurationPayload IE.
 type PCOPayload struct {
