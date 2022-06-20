@@ -74,6 +74,7 @@ func (c *ConfigurationProtocolOption) UnmarshalBinary(b []byte) error {
 	c.ProtocolID = binary.BigEndian.Uint16(b[0:2])
 	c.Length = b[2]
 	if c.Length != 0 && l >= 3+int(c.Length) {
+		c.Contents = make([]byte, c.Length)
 		copy(c.Contents, b[3:3+int(c.Length)])
 	}
 
