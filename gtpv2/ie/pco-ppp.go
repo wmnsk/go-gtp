@@ -10,6 +10,11 @@ import (
 	"net"
 )
 
+const (
+	PCOPPPConfigurationRequest = 0x01
+	PCOPPPConfigurationAck     = 0x02
+)
+
 // PCOPPP represents a PPP header and its contents used in PCO.
 //
 // TODO: create another package with full implementation.
@@ -31,31 +36,27 @@ func NewPCOPPP(code, id uint8, payload []byte) *PCOPPP {
 }
 
 // NewPCOPPPWithPAP creates a new PCOPPP with given PAP.
-func NewPCOPPPWithPAP(id uint8, peer, pass string) *PCOPPP {
+func NewPCOPPPWithPAP(code, id uint8, peer, pass string) *PCOPPP {
 	pap, err := NewPAPFields(peer, pass).Marshal()
 	if err != nil {
 		return nil
 	}
 
-	// 1: Authentication-Request
-	// TODO: other codes needed?
-	return NewPCOPPP(1, id, pap)
+	return NewPCOPPP(code, id, pap)
 }
 
 // NewPCOPPPWithCHAP creates a new PCOPPP with given CHAP.
-func NewPCOPPPWithCHAP(id uint8, val []byte, pass string) *PCOPPP {
+func NewPCOPPPWithCHAP(code, id uint8, val []byte, pass string) *PCOPPP {
 	pap, err := NewCHAPFields(val, pass).Marshal()
 	if err != nil {
 		return nil
 	}
 
-	// 1: Authentication-Request
-	// TODO: other codes needed?
-	return NewPCOPPP(1, id, pap)
+	return NewPCOPPP(code, id, pap)
 }
 
 // NewPCOPPPWithIPCPOptions creates a new PCOPPP with given IPCPOptions.
-func NewPCOPPPWithIPCPOptions(id uint8, opts ...*IPCPOption) *PCOPPP {
+func NewPCOPPPWithIPCPOptions(code, id uint8, opts ...*IPCPOption) *PCOPPP {
 	offset := 0
 	b := make([]byte, offset)
 	for _, o := range opts {
@@ -68,9 +69,7 @@ func NewPCOPPPWithIPCPOptions(id uint8, opts ...*IPCPOption) *PCOPPP {
 		offset += l
 	}
 
-	// 1: Configuration-Request
-	// TODO: other codes needed?
-	return NewPCOPPP(1, id, b)
+	return NewPCOPPP(code, id, b)
 }
 
 // Marshal serializes PCOPPP.

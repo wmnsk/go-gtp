@@ -25,15 +25,16 @@ func TestPCOPPP(t *testing.T) {
 	}{
 		{
 			"PAP",
-			ie.NewPCOPPPWithPAP(0, "foo", "bar"),
+			ie.NewPCOPPPWithPAP(ie.PCOPPPConfigurationRequest, 0, "foo", "bar"),
 			[]byte{0x01, 0x00, 0x00, 0x0c, 0x03, 0x66, 0x6f, 0x6f, 0x03, 0x62, 0x61, 0x72},
 		}, {
 			"CHAP",
-			ie.NewPCOPPPWithCHAP(0, []byte{0xde, 0xad, 0xbe, 0xef}, "foo"),
+			ie.NewPCOPPPWithCHAP(ie.PCOPPPConfigurationRequest, 0, []byte{0xde, 0xad, 0xbe, 0xef}, "foo"),
 			[]byte{0x01, 0x00, 0x00, 0x0c, 0x04, 0xde, 0xad, 0xbe, 0xef, 0x66, 0x6f, 0x6f},
 		}, {
 			"IPCPOptions/IPAddress+PrimaryDNS",
 			ie.NewPCOPPPWithIPCPOptions(
+				ie.PCOPPPConfigurationRequest,
 				0,
 				ie.NewIPCPOptionIPAddress(ip1),
 				ie.NewIPCPOptionPrimaryDNS(ip2),
