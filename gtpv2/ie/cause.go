@@ -61,7 +61,7 @@ func (i *IE) MustCause() uint8 {
 func (i *IE) CauseFlags() (uint8, error) {
 	switch i.Type {
 	case Cause:
-		if len(i.Payload) < 1 {
+		if len(i.Payload) < 2 {
 			return 0, io.ErrUnexpectedEOF
 		}
 

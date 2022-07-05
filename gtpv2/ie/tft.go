@@ -162,6 +162,10 @@ func (f *TrafficFlowTemplate) UnmarshalBinary(b []byte) error {
 			offset += filter.MarshalLen()
 		}
 	case TFTOpDeletePacketFiltersFromExistingTFT:
+		if len(b) < offset+filterLen {
+			return io.ErrUnexpectedEOF
+		}
+
 		f.PacketFilterIdentifiers = b[offset : offset+filterLen]
 		offset += filterLen
 	}
@@ -931,10 +935,10 @@ func (p *TFTParameter) UnmarshalBinary(b []byte) error {
 
 	p.Identifier = b[0]
 	p.Length = b[1]
-	if l < int(2+p.Length) {
+	if l < 2+int(p.Length) {
 		return io.ErrUnexpectedEOF
 	}
-	p.Contents = b[2 : 2+p.Length]
+	p.Contents = b[2 : 2+int(p.Length)]
 
 	return nil
 }
