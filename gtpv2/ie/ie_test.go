@@ -752,3 +752,20 @@ func TestIEAddRemove(t *testing.T) {
 		t.Error(diff)
 	}
 }
+
+func FuzzParse(f *testing.F) {
+	testcases := [][]byte{
+		{0x02, 0x00, 0x02, 0x00, 0x10, 0x00},
+		{0x03, 0x00, 0x01, 0x00, 0xff},
+		{0x93, 0x00, 0x04, 0x00, 0x00, 0xff, 0xff, 0xff},
+	}
+	for _, tc := range testcases {
+		f.Add(tc)
+	}
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		if v, err := ie.Parse(data); err == nil && v == nil {
+			t.Errorf("nil without error")
+		}
+	})
+}
