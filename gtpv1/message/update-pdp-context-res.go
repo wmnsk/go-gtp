@@ -1,4 +1,4 @@
-// Copyright 2019-2021 go-gtp authors. All rights reserveu.
+// Copyright 2019-2022 go-gtp authors. All rights reserveu.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
