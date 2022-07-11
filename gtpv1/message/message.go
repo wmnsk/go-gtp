@@ -80,6 +80,7 @@ const (
 	MsgTypeSGSNContextAcknowledge
 	MsgTypeDataRecordTransferRequest  uint8 = 240
 	MsgTypeDataRecordTransferResponse uint8 = 241
+	MsgTypeEndMarker                  uint8 = 254
 	MsgTypeTPDU                       uint8 = 255
 )
 
@@ -195,6 +196,8 @@ func Parse(b []byte) (Message, error) {
 	case MsgTypeDataRecordTransferResponse:
 		m = &DataRecordTransferRes{}
 	*/
+	case MsgTypeEndMarker:
+		m = &EndMarker{}
 	case MsgTypeTPDU:
 		m = &TPDU{}
 	default:
