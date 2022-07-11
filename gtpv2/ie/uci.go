@@ -107,7 +107,7 @@ func (f *UserCSGInformationFields) UnmarshalBinary(b []byte) error {
 		return err
 	}
 
-	if l < 7 {
+	if l <= 7 {
 		return io.ErrUnexpectedEOF
 	}
 

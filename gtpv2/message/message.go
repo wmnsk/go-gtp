@@ -9,6 +9,7 @@ package message
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 
@@ -307,6 +308,10 @@ func Marshal(m Message) ([]byte, error) {
 // Parse decodes the given bytes as Message.
 func Parse(b []byte) (Message, error) {
 	var m Message
+
+	if len(b) < 2 {
+		return nil, io.ErrUnexpectedEOF
+	}
 
 	switch b[1] {
 	case MsgTypeEchoRequest:

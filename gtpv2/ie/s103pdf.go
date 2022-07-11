@@ -155,12 +155,18 @@ func (f *S103PDNDataForwardingInfoFields) UnmarshalBinary(b []byte) error {
 	f.GREKey = binary.BigEndian.Uint32(b[offset : offset+4])
 	offset += 4
 
+	if l <= offset {
+		return io.ErrUnexpectedEOF
+	}
+
 	f.EPSBearerIDNumber = b[offset]
 	offset++
 
 	if l < offset+int(f.EPSBearerIDNumber) {
 		return io.ErrUnexpectedEOF
 	}
+
+	f.EPSBearerIDs = make([]uint8, f.EPSBearerIDNumber)
 	for n := 0; n < int(f.EPSBearerIDNumber); n++ {
 		f.EPSBearerIDs[n] = b[offset]
 		offset++
@@ -202,13 +208,13 @@ func (i *IE) EBIs() ([]uint8, error) {
 	var n, offset int
 	switch i.Payload[0] {
 	case 4:
-		if len(i.Payload) < 9 {
+		if len(i.Payload) <= 9 {
 			return nil, io.ErrUnexpectedEOF
 		}
 		n = int(i.Payload[9])
 		offset = 10
 	case 16:
-		if len(i.Payload) < 21 {
+		if len(i.Payload) <= 21 {
 			return nil, io.ErrUnexpectedEOF
 		}
 		n = int(i.Payload[21])
