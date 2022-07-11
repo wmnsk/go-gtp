@@ -56,13 +56,15 @@ func ParseConfigurationProtocolOption(b []byte) (*ConfigurationProtocolOption, e
 
 // UnmarshalBinary decodes given bytes into ConfigurationProtocolOption.
 func (c *ConfigurationProtocolOption) UnmarshalBinary(b []byte) error {
-	if len(b) < 4 {
+	l := len(b)
+	if l < 3 {
 		return ErrTooShortToParse
 	}
 	c.ProtocolID = binary.BigEndian.Uint16(b[0:2])
 	c.Length = b[2]
-	if c.Length != 0 {
-		copy(c.Contents, b[3:])
+	if c.Length != 0 && l >= 3+int(c.Length) {
+		c.Contents = make([]byte, c.Length)
+		copy(c.Contents, b[3:3+int(c.Length)])
 	}
 
 	return nil
