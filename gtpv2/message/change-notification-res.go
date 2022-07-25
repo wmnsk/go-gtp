@@ -9,9 +9,9 @@ import "github.com/wmnsk/go-gtp/gtpv2/ie"
 // ChangeNotificationResponse is a ChangeNotificationResponse Header and its IEs above.
 type ChangeNotificationResponse struct {
 	*Header
-	Cause                         *ie.IE
 	IMSI                          *ie.IE
 	MEI                           *ie.IE
+	Cause                         *ie.IE
 	ChangeReportingAction         *ie.IE
 	CSGInformationReportingAction *ie.IE
 	PresenceReportingAreaAction   []*ie.IE
@@ -33,12 +33,12 @@ func NewChangeNotificationResponse(teid, seq uint32, ies ...*ie.IE) *ChangeNotif
 			continue
 		}
 		switch i.Type {
-		case ie.Cause:
-			c.Cause = i
 		case ie.IMSI:
 			c.IMSI = i
 		case ie.MobileEquipmentIdentity:
 			c.MEI = i
+		case ie.Cause:
+			c.Cause = i
 		case ie.ChangeReportingAction:
 			c.ChangeReportingAction = i
 		case ie.CSGInformationReportingAction:
@@ -73,12 +73,6 @@ func (c *ChangeNotificationResponse) MarshalTo(b []byte) error {
 	c.Header.Payload = make([]byte, c.MarshalLen()-c.Header.MarshalLen())
 
 	offset := 0
-	if ie := c.Cause; ie != nil {
-		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
-			return err
-		}
-		offset += ie.MarshalLen()
-	}
 	if ie := c.IMSI; ie != nil {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
@@ -86,6 +80,12 @@ func (c *ChangeNotificationResponse) MarshalTo(b []byte) error {
 		offset += ie.MarshalLen()
 	}
 	if ie := c.MEI; ie != nil {
+		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
+			return err
+		}
+		offset += ie.MarshalLen()
+	}
+	if ie := c.Cause; ie != nil {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -156,12 +156,12 @@ func (c *ChangeNotificationResponse) UnmarshalBinary(b []byte) error {
 	}
 	for _, i := range decodedIEs {
 		switch i.Type {
-		case ie.Cause:
-			c.Cause = i
 		case ie.IMSI:
 			c.IMSI = i
 		case ie.MobileEquipmentIdentity:
 			c.MEI = i
+		case ie.Cause:
+			c.Cause = i
 		case ie.ChangeReportingAction:
 			c.ChangeReportingAction = i
 		case ie.CSGInformationReportingAction:
@@ -182,13 +182,13 @@ func (c *ChangeNotificationResponse) UnmarshalBinary(b []byte) error {
 func (c *ChangeNotificationResponse) MarshalLen() int {
 	l := c.Header.MarshalLen() - len(c.Header.Payload)
 
-	if ie := c.Cause; ie != nil {
-		l += ie.MarshalLen()
-	}
 	if ie := c.IMSI; ie != nil {
 		l += ie.MarshalLen()
 	}
 	if ie := c.MEI; ie != nil {
+		l += ie.MarshalLen()
+	}
+	if ie := c.Cause; ie != nil {
 		l += ie.MarshalLen()
 	}
 	if ie := c.ChangeReportingAction; ie != nil {
