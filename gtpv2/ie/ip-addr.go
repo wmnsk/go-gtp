@@ -165,13 +165,22 @@ func (i *IE) IPv6() (net.IP, error) {
 	}
 
 	switch i.Type {
-	case IPAddress, PDNAddressAllocation, S103PDNDataForwardingInfo, S1UDataForwarding:
+	case IPAddress, S103PDNDataForwardingInfo, S1UDataForwarding:
 		ip, err := i.IP()
 		if err != nil {
 			return nil, err
 		}
 
 		if v := ip.To16(); v != nil {
+			return v, nil
+		}
+		return nil, ErrIEValueNotFound
+	case PDNAddressAllocation:
+		paa, err := ParsePDNAddressAllocationFields(i.Payload)
+		if err != nil {
+			return nil, err
+		}
+		if v := paa.IPv6Address.To16(); v != nil {
 			return v, nil
 		}
 		return nil, ErrIEValueNotFound
