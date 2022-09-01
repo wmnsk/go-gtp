@@ -145,6 +145,7 @@ func (f *ProtocolConfigurationOptionsFields) MarshalLen() int {
 // ProtocolIdentifier definitions.
 //
 // [Table 10.5.154/3GPP TS 24.008]
+//
 // At least the following protocol identifiers (as defined in RFC 3232 [103]) shall be
 // supported in this version of the protocol:
 // - C021H (LCP);

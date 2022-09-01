@@ -335,12 +335,12 @@ func (c *Conn) handleMessage(senderAddr net.Addr, msg message.Message) error {
 // EnableValidation turns on automatic validation of incoming message.
 // This is expected to be used only after DisableValidation() is used, as the validation
 // is enabled by default.
-
+//
 // Conn checks if;
 //
-//  GTP Version is 2
-//  TEID is known to Conn
-
+//	GTP Version is 2
+//	TEID is known to Conn
+//
 // Even the validation is failed, it does not return error to user. Instead, it just logs
 // and discards the packets so that the HandlerFunc won't get the invalid message.
 // Extra validations should be done in HandlerFunc.
