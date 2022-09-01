@@ -29,8 +29,8 @@ const (
 // After enabled, users should add tunnels by AddTunnel func, and also add appropriate
 // routing entries. For handling downlink traffic on P-GW, for example;
 //
-//	ip route add <UE's IP> dev <devname> table <table ID>
-//	ip rule add from <SGi side of I/F> lookup <table ID>
+// ip route add <UE's IP> dev <devname> table <table ID>
+// ip rule add from <SGi side of I/F> lookup <table ID>
 //
 // This let the traffic from SGi side of network I/F to be forwarded to GTP device,
 // and if the UE's IP is known to Kernel GTP-U(by AddTunnel), it is encapsulated and
