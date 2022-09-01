@@ -5,7 +5,7 @@
 package gtpv1
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"sync"
@@ -47,7 +47,7 @@ func DisableLogging() {
 	logMu.Lock()
 	defer logMu.Unlock()
 
-	logger.SetOutput(ioutil.Discard)
+	logger.SetOutput(io.Discard)
 }
 
 func setLogger(l *log.Logger) {
