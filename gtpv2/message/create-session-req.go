@@ -146,7 +146,7 @@ func NewCreateSessionRequest(teid, seq uint32, ies ...*ie.IE) *CreateSessionRequ
 			case 0:
 				c.BearerContextsToBeCreated = append(c.BearerContextsToBeCreated, i)
 			case 1:
-				c.BearerContextsToBeRemoved = append(c.BearerContextsToBeCreated, i)
+				c.BearerContextsToBeRemoved = append(c.BearerContextsToBeRemoved, i)
 			default:
 				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
@@ -779,7 +779,7 @@ func (c *CreateSessionRequest) UnmarshalBinary(b []byte) error {
 			case 0:
 				c.BearerContextsToBeCreated = append(c.BearerContextsToBeCreated, i)
 			case 1:
-				c.BearerContextsToBeRemoved = append(c.BearerContextsToBeCreated, i)
+				c.BearerContextsToBeRemoved = append(c.BearerContextsToBeRemoved, i)
 			default:
 				c.AdditionalIEs = append(c.AdditionalIEs, i)
 			}
@@ -880,7 +880,7 @@ func (c *CreateSessionRequest) UnmarshalBinary(b []byte) error {
 		case ie.FContainer:
 			c.NBIFOMContainer = i
 		case ie.RemoteUEContext:
-			c.RemoteUEContextConnected = append(c.PresenceReportingAreaInformation, i)
+			c.RemoteUEContextConnected = append(c.RemoteUEContextConnected, i)
 		case ie.NodeIdentifier:
 			c.TGPPAAAServerIdentifier = i
 		case ie.ExtendedProtocolConfigurationOptions:
@@ -894,7 +894,7 @@ func (c *CreateSessionRequest) UnmarshalBinary(b []byte) error {
 		case ie.FullyQualifiedDomainName:
 			c.SGWUNodeName = i
 		case ie.SecondaryRATUsageDataReport:
-			c.SecondaryRATUsageDataReport = append(c.PresenceReportingAreaInformation, i)
+			c.SecondaryRATUsageDataReport = append(c.SecondaryRATUsageDataReport, i)
 		case ie.UPFunctionSelectionIndicationFlags:
 			c.UPFunctionSelectionIndicationFlags = i
 		case ie.APNRateControlStatus:
