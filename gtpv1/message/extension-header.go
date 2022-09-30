@@ -108,10 +108,6 @@ func ParseMultiExtensionHeaders(b []byte) ([]*ExtensionHeader, error) {
 	var ehs []*ExtensionHeader
 	next := ExtHeaderTypeNoMoreExtensionHeaders
 	for {
-		if len(b) == 0 {
-			break
-		}
-
 		eh, err := ParseExtensionHeader(b)
 		if err != nil {
 			return nil, err
