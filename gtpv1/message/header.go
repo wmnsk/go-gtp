@@ -166,6 +166,9 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 		}
 	}
 
+	if l < int(8+h.Length) {
+		return ErrTooShortToParse
+	}
 	h.Payload = b[offset : 8+h.Length]
 	return nil
 }

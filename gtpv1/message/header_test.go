@@ -228,6 +228,19 @@ func TestHeaderErrorDetection(t *testing.T) {
 			},
 			Error: message.ErrTooShortToParse, // Expect too short to parse error, as missing ext header has length 0
 		},
+		{
+			Description: "IncorrectLength",
+			Serialized: []byte{
+				0b00110010, // Version (3 bits), PT, (*), E, S, PN
+				0x03,       // Message Type
+				0x30, 0x33, // Length (2 octets)
+				0x00, 0x00, 0x00, 0x00, // TEID (4 octets)
+				0x00, 0x06, // Seqence Number (2 octets)
+				0xff,       // N-PDU Number (to be ignored)
+				0b00000000, // Next Extension Header Type
+			},
+			Error: message.ErrTooShortToParse, // Expect too short to parse error, as missing ext header has length 0
+		},
 	}
 
 	for _, c := range cases {
