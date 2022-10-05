@@ -132,6 +132,10 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 	h.TEID = binary.BigEndian.Uint32(b[4:8])
 	offset += 4
 
+	if l < int(h.Length)+8 {
+		return ErrTooShortToParse
+	}
+
 	s, pn, e := h.HasSequence(), h.HasNPDUNumber(), h.HasExtensionHeader()
 	// The optional 4 bytes will append to mandatory GTP header if any one or more S, E flags are set.
 	if s || pn || e {
@@ -166,8 +170,8 @@ func (h *Header) UnmarshalBinary(b []byte) error {
 		}
 	}
 
-	if l < int(8+h.Length) {
-		return ErrTooShortToParse
+	if offset > int(h.Length)+8 {
+		return ErrInvalidLength
 	}
 	h.Payload = b[offset : 8+h.Length]
 	return nil

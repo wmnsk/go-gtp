@@ -92,6 +92,9 @@ func (e *ExtensionHeader) UnmarshalBinary(b []byte) error {
 	}
 
 	e.Length = b[0]
+	if e.Length == 0 {
+		return ErrInvalidLength
+	}
 	offset := int(e.Length)*4 - 1
 	if l < offset+1 {
 		return ErrTooShortToParse
