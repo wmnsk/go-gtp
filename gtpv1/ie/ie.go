@@ -177,7 +177,11 @@ func (i *IE) MarshalTo(b []byte) error {
 
 	var offset = 1
 	b[0] = i.Type
-	if !i.IsTV() {
+
+	if i.Type == ExtensionHeaderTypeList {
+		b[1] = uint8(i.Length)
+		offset++
+	} else if !i.IsTV() {
 		binary.BigEndian.PutUint16(b[1:3], i.Length)
 		offset += 2
 	}
@@ -201,9 +205,14 @@ func (i *IE) UnmarshalBinary(b []byte) error {
 	}
 
 	i.Type = b[0]
+	if i.Type == ExtensionHeaderTypeList {
+		return decodeExtensionHeaderTypeList(i, b)
+	}
+
 	if i.IsTV() {
 		return decodeTVFromBytes(i, b)
 	}
+
 	return decodeTLVFromBytes(i, b)
 }
 
@@ -234,6 +243,21 @@ func decodeTLVFromBytes(i *IE, b []byte) error {
 	}
 
 	i.Payload = b[3 : 3+int(i.Length)]
+	return nil
+}
+
+func decodeExtensionHeaderTypeList(i *IE, b []byte) error {
+	l := len(b)
+	if l < 2 {
+		return ErrTooShortToParse
+	}
+	if i.MarshalLen() > l {
+		return ErrInvalidLength
+	}
+
+	i.Length = uint16(b[1])
+	i.Payload = b[2 : 2+int(i.Length)]
+
 	return nil
 }
 
@@ -278,8 +302,13 @@ func (i *IE) MarshalLen() int {
 	if l, ok := tvLengthMap[int(i.Type)]; ok {
 		return l + 1
 	}
+
 	if i.Type < 128 {
 		return 1 + len(i.Payload)
+	}
+
+	if i.Type == ExtensionHeaderTypeList {
+		return 2 + len(i.Payload)
 	}
 
 	return 3 + len(i.Payload)

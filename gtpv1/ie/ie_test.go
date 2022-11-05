@@ -143,7 +143,7 @@ func TestIEs(t *testing.T) {
 				message.ExtHeaderTypePDUSessionContainer,
 				message.ExtHeaderTypeUDPPort,
 			),
-			[]byte{0x8d, 0x00, 0x02, 0x85, 0x40},
+			[]byte{0x8d, 0x02, 0x85, 0x40},
 		}, {
 			"CommonFlags",
 			ie.NewCommonFlags(0, 1, 0, 0, 0, 0, 0, 0),
