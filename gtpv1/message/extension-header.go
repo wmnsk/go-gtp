@@ -92,6 +92,9 @@ func (e *ExtensionHeader) UnmarshalBinary(b []byte) error {
 	}
 
 	e.Length = b[0]
+	if e.Length == 0 {
+		return ErrInvalidLength
+	}
 	offset := int(e.Length)*4 - 1
 	if l < offset+1 {
 		return ErrTooShortToParse
@@ -108,10 +111,6 @@ func ParseMultiExtensionHeaders(b []byte) ([]*ExtensionHeader, error) {
 	var ehs []*ExtensionHeader
 	next := ExtHeaderTypeNoMoreExtensionHeaders
 	for {
-		if len(b) == 0 {
-			break
-		}
-
 		eh, err := ParseExtensionHeader(b)
 		if err != nil {
 			return nil, err

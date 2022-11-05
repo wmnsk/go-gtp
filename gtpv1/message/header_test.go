@@ -207,3 +207,61 @@ func TestHeader(t *testing.T) {
 		return v, nil
 	})
 }
+
+func TestHeaderErrorDetection(t *testing.T) {
+	cases := []struct {
+		Description string
+		Serialized  []byte
+		Error       error
+	}{
+		{
+			Description: "ExtFlagSetButMissingExt",
+			Serialized: []byte{
+				0b00110110, // Version (3 bits), PT, (*), E, S, PN
+				0x03,       // Message Type
+				0x00, 0x04, // Length (2 octets)
+				0x00, 0x00, 0x00, 0x00, // TEID (4 octets)
+				0x00, 0x06, // Seqence Number (2 octets)
+				0xff,       // N-PDU Number (to be ignored)
+				0b11000001, // Next Extension Header Type
+				// Extension Header would go here, but is missing
+			},
+			Error: message.ErrTooShortToParse, // Expect too short to parse error, as missing ext header has length 0
+		},
+		{
+			Description: "IncorrectLength",
+			Serialized: []byte{
+				0b00110010, // Version (3 bits), PT, (*), E, S, PN
+				0x03,       // Message Type
+				0x30, 0x33, // Length (2 octets)
+				0x00, 0x00, 0x00, 0x00, // TEID (4 octets)
+				0x00, 0x06, // Seqence Number (2 octets)
+				0xff,       // N-PDU Number (to be ignored)
+				0b00000000, // Next Extension Header Type
+			},
+			Error: message.ErrTooShortToParse, // Expect too short to parse error, as missing ext header has length 0
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.Description, func(t *testing.T) {
+			_, err := message.ParseHeader(c.Serialized)
+			if err != c.Error {
+				t.Fatalf("got '%v' want '%v'", err, c.Error)
+			}
+		})
+	}
+}
+
+func FuzzHeader(f *testing.F) {
+	f.Add([]byte("10000000"))
+	f.Add([]byte("70\x00\x0400000000\x000"))
+	f.Add([]byte("70\x00\x0400000000\x0100\x00"))
+
+	f.Fuzz(func(t *testing.T, pkt []byte) {
+		header, err := message.ParseHeader(pkt)
+		if header == nil && err == nil {
+			t.Errorf("nil without error")
+		}
+	})
+}
