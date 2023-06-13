@@ -8,7 +8,7 @@ require (
 	github.com/pascaldekloe/goe v0.1.1
 	github.com/prometheus/client_golang v1.15.1
 	github.com/vishvananda/netlink v1.1.0
-	golang.org/x/net v0.10.0
+	golang.org/x/net v0.11.0
 	google.golang.org/grpc v1.45.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -23,8 +23,8 @@ require (
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
+	golang.org/x/text v0.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 )
