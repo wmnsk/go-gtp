@@ -256,7 +256,12 @@ func decodeExtensionHeaderTypeList(i *IE, b []byte) error {
 	}
 
 	i.Length = uint16(b[1])
-	i.Payload = b[2 : 2+int(i.Length)]
+	n := 2 + int(i.Length)
+	if n > l {
+		return ErrInvalidLength
+	}
+
+	i.Payload = b[2:n]
 
 	return nil
 }

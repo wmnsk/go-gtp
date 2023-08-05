@@ -23,3 +23,11 @@ func FuzzParse(f *testing.F) {
 		}
 	})
 }
+
+func FuzzHeaderParse(f *testing.F) {
+	f.Fuzz(func(t *testing.T, b []byte) {
+		if _, err := message.ParseHeader(b); err != nil {
+			t.Skip()
+		}
+	})
+}
