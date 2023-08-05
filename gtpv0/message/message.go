@@ -102,8 +102,12 @@ func Marshal(g Message) ([]byte, error) {
 	return b, nil
 }
 
-// Parse Parses the given bytes as Message.
+// Parse parses the given bytes as a Message.
 func Parse(b []byte) (Message, error) {
+	if len(b) < 2 {
+		return nil, ErrTooShortToParse
+	}
+
 	var g Message
 
 	switch b[1] {

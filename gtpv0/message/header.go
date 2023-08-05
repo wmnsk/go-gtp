@@ -85,7 +85,7 @@ func ParseHeader(b []byte) (*Header, error) {
 // UnmarshalBinary sets the values retrieved from byte sequence in GTPv1 header.
 func (h *Header) UnmarshalBinary(b []byte) error {
 	l := len(b)
-	if l < 11 {
+	if l < 20 {
 		return ErrTooShortToParse
 	}
 	h.Flags = b[0]

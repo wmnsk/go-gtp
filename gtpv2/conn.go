@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"strings"
 	"sync"
 	"time"
 
@@ -184,9 +183,7 @@ func (c *Conn) Serve(ctx context.Context) error {
 			if errors.Is(err, io.EOF) {
 				return nil
 			}
-			// TODO: Use net.ErrClosed instead (available from Go 1.16).
-			// https://github.com/golang/go/commit/e9ad52e46dee4b4f9c73ff44f44e1e234815800f
-			if strings.Contains(err.Error(), "use of closed network connection") {
+			if errors.Is(err, net.ErrClosed) {
 				return nil
 			}
 			return fmt.Errorf("error reading from Conn %s: %w", c.LocalAddr(), err)
