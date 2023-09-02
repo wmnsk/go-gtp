@@ -32,6 +32,30 @@ func TestUserLocationInformationWithCGI(t *testing.T) {
 			t.Errorf("wrong mnc, got %v", mnc)
 		}
 	})
+
+	t.Run("Test UserLocationInformation with CGI (3-digit MNC)", func(t *testing.T) {
+		ie := NewUserLocationInformationWithCGI("123", "456", 111, 222)
+
+		cgi := ie.MustCGI()
+		if cgi != 222 {
+			t.Errorf("wrong cgi, got %v", cgi)
+		}
+
+		lac := ie.MustLAC()
+		if lac != 111 {
+			t.Errorf("wrong lac, got %v", lac)
+		}
+
+		mcc := ie.MustMCC()
+		if mcc != "123" {
+			t.Errorf("wrong mcc, got %v", mcc)
+		}
+
+		mnc := ie.MustMNC()
+		if mnc != "456" {
+			t.Errorf("wrong mnc, got %v", mnc)
+		}
+	})
 }
 
 func TestUserLocationInformationWithRAI(t *testing.T) {

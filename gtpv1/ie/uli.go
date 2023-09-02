@@ -20,11 +20,7 @@ const (
 
 // NewUserLocationInformationWithCGI creates a new UserLocationInformation IE with LAC.
 func NewUserLocationInformationWithCGI(mcc, mnc string, lac, cgi uint16) *IE {
-	mc, err := utils.StrToSwappedBytes(mcc, "f")
-	if err != nil {
-		return nil
-	}
-	mn, err := utils.StrToSwappedBytes(mnc, "f")
+	plmn, err := utils.EncodePLMN(mcc, mnc)
 	if err != nil {
 		return nil
 	}
@@ -34,8 +30,7 @@ func NewUserLocationInformationWithCGI(mcc, mnc string, lac, cgi uint16) *IE {
 		make([]byte, 8),
 	)
 	uli.Payload[0] = locTypeCGI
-	copy(uli.Payload[1:3], mc)
-	uli.Payload[3] = mn[0]
+	copy(uli.Payload[1:4], plmn)
 	binary.BigEndian.PutUint16(uli.Payload[4:6], lac)
 	binary.BigEndian.PutUint16(uli.Payload[6:8], cgi)
 
@@ -44,11 +39,7 @@ func NewUserLocationInformationWithCGI(mcc, mnc string, lac, cgi uint16) *IE {
 
 // NewUserLocationInformationWithSAI creates a new UserLocationInformation IE with LAC.
 func NewUserLocationInformationWithSAI(mcc, mnc string, lac, sac uint16) *IE {
-	mc, err := utils.StrToSwappedBytes(mcc, "f")
-	if err != nil {
-		return nil
-	}
-	mn, err := utils.StrToSwappedBytes(mnc, "f")
+	plmn, err := utils.EncodePLMN(mcc, mnc)
 	if err != nil {
 		return nil
 	}
@@ -58,8 +49,7 @@ func NewUserLocationInformationWithSAI(mcc, mnc string, lac, sac uint16) *IE {
 		make([]byte, 8),
 	)
 	uli.Payload[0] = locTypeSAI
-	copy(uli.Payload[1:3], mc)
-	uli.Payload[3] = mn[0]
+	copy(uli.Payload[1:4], plmn)
 	binary.BigEndian.PutUint16(uli.Payload[4:6], lac)
 	binary.BigEndian.PutUint16(uli.Payload[6:8], sac)
 
@@ -68,11 +58,7 @@ func NewUserLocationInformationWithSAI(mcc, mnc string, lac, sac uint16) *IE {
 
 // NewUserLocationInformationWithRAI creates a new UserLocationInformation IE with LAC.
 func NewUserLocationInformationWithRAI(mcc, mnc string, lac uint16, rac uint8) *IE {
-	mc, err := utils.StrToSwappedBytes(mcc, "f")
-	if err != nil {
-		return nil
-	}
-	mn, err := utils.StrToSwappedBytes(mnc, "f")
+	plmn, err := utils.EncodePLMN(mcc, mnc)
 	if err != nil {
 		return nil
 	}
@@ -82,8 +68,7 @@ func NewUserLocationInformationWithRAI(mcc, mnc string, lac uint16, rac uint8) *
 		make([]byte, 7),
 	)
 	uli.Payload[0] = locTypeRAI
-	copy(uli.Payload[1:3], mc)
-	uli.Payload[3] = mn[0]
+	copy(uli.Payload[1:4], plmn)
 	binary.BigEndian.PutUint16(uli.Payload[4:6], lac)
 	uli.Payload[6] = rac
 
