@@ -275,7 +275,7 @@ func (h *Header) MessageType() uint8 {
 // String returns the GTPv1 header values in human readable format.
 func (h *Header) String() string {
 	return fmt.Sprintf(
-		"{Flags: %#x, Type: %#x, Length: %d, TEID: %#08x, SequenceNumber: %#04x, NPDUNumber: %#x"+
+		"{Flags: %#x, Type: %#x, Length: %d, TEID: %#08x, SequenceNumber: %#04x, NPDUNumber: %#x, "+
 			"ExtensionHeaderType: %#x, ExtensionHeaders: %v, Payload: %#v}",
 		h.Flags,
 		h.Type,

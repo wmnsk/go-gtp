@@ -95,12 +95,12 @@ func TestHeader(t *testing.T) {
 			).WithExtensionHeaders(
 				message.NewExtensionHeader(
 					message.ExtHeaderTypeUDPPort,
-					[]byte{0x022, 0xb8},
+					[]byte{0x22, 0xb8},
 					message.ExtHeaderTypeUDPPort,
 				),
 				message.NewExtensionHeader(
 					message.ExtHeaderTypeUDPPort,
-					[]byte{0x022, 0xb8},
+					[]byte{0x22, 0xb8},
 					message.ExtHeaderTypeNoMoreExtensionHeaders,
 				),
 			),

@@ -9,7 +9,7 @@ type TPDU struct {
 	*Header
 }
 
-// NewTPDU creates a new G-PDU message.
+// NewTPDU creates a new T-PDU message.
 func NewTPDU(teid uint32, payload []byte) *TPDU {
 	t := &TPDU{Header: NewHeader(0x30, MsgTypeTPDU, teid, 0, payload)}
 
@@ -17,9 +17,17 @@ func NewTPDU(teid uint32, payload []byte) *TPDU {
 	return t
 }
 
-// NewTPDUWithSequence creates a new G-PDU message.
+// NewTPDUWithSequence creates a new T-PDU message with the given Sequence Number.
 func NewTPDUWithSequence(teid uint32, seq uint16, payload []byte) *TPDU {
 	t := &TPDU{Header: NewHeader(0x32, MsgTypeTPDU, teid, seq, payload)}
+
+	t.SetLength()
+	return t
+}
+
+// NewTPDUWithExtentionHeader creates a new T-PDU message with the given Extension Headers.
+func NewTPDUWithExtentionHeader(teid uint32, payload []byte, extHdrs ...*ExtensionHeader) *TPDU {
+	t := &TPDU{Header: NewHeaderWithExtensionHeaders(0x34, MsgTypeTPDU, teid, 0, payload, extHdrs...)}
 
 	t.SetLength()
 	return t
