@@ -1,6 +1,6 @@
 # go-gtp: GTP in Golang
 
-Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol), implemented in the Go Programming Language.
+Package gtp provides simple and painless handling of GTP (GPRS Tunneling Protocol), implemented in the Go Programming Language.
 
 ![CI status](https://github.com/wmnsk/go-gtp/actions/workflows/go.yml/badge.svg)
 [![golangci-lint](https://github.com/wmnsk/go-gtp/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/wmnsk/go-gtp/actions/workflows/golangci-lint.yml)
@@ -9,18 +9,16 @@ Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol
 
 ## Features
 
-* Flexible enough to **control everything in GTP protocol**.;
-  * For developing mobile core network nodes (see [examples](./examples)).
-  * For developing testing tools like traffic simulators or fuzzers.
-* Many **helpers kind to developers** provided, like session, bearer, and TEID associations.
-* Easy handling of **multiple connections with fixed IP and Port** with UDP (or other `net.PacketConn`).
-* ~~No platform-specific codes inside, so it **works almost everywhere Golang works**.~~ _Currently, it works only on Linux and macOS since netlink support is introduced. I'll make them separated from the base to let it work even on Windows in the future._
+* Flexible enough to control everything in the GTP protocol, making it suitable for developing mobile core network nodes or testing tools for them.
+* Provides many helpers that are kind to developers, such as session, bearer, and TEID management.
+* Makes it easy to handle multiple connections with fixed IP and Port with UDP (or other `net.PacketConn`).
+* Currently works only on Linux and macOS since netlink support is introduced. However, the plan is to make it work on Windows in the future.
 
 ## Getting Started
 
 ### Prerequisites
 
-go-gtp supports Go Modules. Just run go mod tidy in your project's directory to collect the required packages automatically.
+go-gtp supports Go Modules. Run `go mod tidy`` in your project's directory to collect the required packages automatically.
 
 ```
 go mod tidy
@@ -32,13 +30,13 @@ _This project follows [the Release Policy of Go](https://golang.org/doc/devel/re
 
 #### End-to-end
 
-We have a set of tools called GW Tester at [`examples/gw-tester`](./examples/gw-tester). See the [document](./examples/gw-tester/README.md) for how it works and how to run it. It is also used for the integration test of this project. [Workflow setting](./.github/workflows/go.yml) may help as well.
+We have a set of tools called GW Tester at [`examples/gw-tester`](./examples/gw-tester). See the [document](./examples/gw-tester/README.md) for how it works and how to run it. It is also used for the integration test of this project. [Workflow setting](./.github/workflows/go.yml) may help you understand it as well.
 
 #### Individual node
 
-Examples work as it is by `go build` and executing commands in the following way.
+[The examples](examples/) work as it is by `go build` and executing commands in the following way.
 
-*Note for MacOs users*: before running any go service, make sure to execute `./mac_local_host_enabler.sh` you will find at [examples/utils](examples/utils)
+*Note for macOS users*: before running any go service, make sure to execute `./mac_local_host_enabler.sh` you will find at [examples/utils](examples/utils).
 
 1. Open four terminals on a machine and start capturing on the loopback interface.
 
@@ -67,7 +65,7 @@ Examples work as it is by `go build` and executing commands in the following way
 
 5. You will see the nodes exchanging Create Session and Modify Bearer on C-Plane, and ICMP Echo on U-Plane afterwards.
 
-_If you want to see fewer subscribers, please comment-out the `v2.Subscriber` definitions in `example/mme/main.go`._
+_The "mme" is not an MME per se. In addition to S11 interface, it also mocks UEs and an eNB to establish sessions and send packets on U-Plane._
 
 ### Developing by your own
 
@@ -81,7 +79,7 @@ The basic idea behind the current implementation is;
 For the detailed usage of a specific version, see README.md under each version's directory.
 
 | Version | Details                      |
-|---------|------------------------------|
+| ------- | ---------------------------- |
 | GTPv0   | [README.md](gtpv0/README.md) |
 | GTPv1   | [README.md](gtpv1/README.md) |
 | GTPv2   | [README.md](gtpv2/README.md) |
@@ -101,12 +99,12 @@ In other words, even if a message/IE is not marked as "Yes", you can make it wor
 
 Your contribution is welcome to implement helpers for all the types, of course!
 
-| Version           | Messages | IEs   | Networking (state machine)                           | Details                                                  |
-|-------------------|----------|-------|------------------------------------------------------|----------------------------------------------------------|
-| GTPv0             | 35.7%    | 81.8% | not implemented yet                                  | [Supported Features](gtpv0/README.md#supported-features) |
-| GTPv1             | 26.6%    | 30.1% | v1-U is functional, <br> v1-C is not implemented yet | [Supported Features](gtpv1/README.md#supported-features) |
-| GTPv2             | 41.0%    | 43.2% | almost functional                                    | [Supported Features](gtpv2/README.md#supported-features) |
-| GTP' <br> (Prime) | N/A      | N/A   | N/A                                                  | _not planned_                                            |
+| Version           | Messages | IEs  | Networking (state machine)                  | Details                                                  |
+| ----------------- | -------- | ---- | ------------------------------------------- | -------------------------------------------------------- |
+| GTPv0             | ~35%     | ~80% | not implemented yet                         | [gtpv0/README](gtpv0/README.md#supported-features) |
+| GTPv1             | ~25%     | ~30% | v1-U: functional <br> v1-C: not implemented | [gtpv1/README](gtpv1/README.md#supported-features) |
+| GTPv2             | ~40.0%   | ~45% | functional                                  | [gtpv2/README](gtpv2/README.md#supported-features) |
+| GTP' <br> (Prime) | N/A      | N/A  | N/A                                         | _not planned_                                            |
 
 ## Disclaimer
 
@@ -114,7 +112,7 @@ This is still an experimental project. Any part of implementations(including exp
 
 ## Author(s)
 
-Yoshiyuki Kurauchi ([Website](https://wmnsk.com/) / [Twitter](https://twitter.com/wmnskdmms))
+Yoshiyuki Kurauchi ([Website](https://wmnsk.com/)
 
 _I'm always open to welcome co-authors! Please feel free to talk to me._
 
