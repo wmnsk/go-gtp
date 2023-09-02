@@ -112,7 +112,7 @@ This is still an experimental project. Any part of implementations(including exp
 
 ## Author(s)
 
-Yoshiyuki Kurauchi ([Website](https://wmnsk.com/)
+[Yoshiyuki Kurauchi](https://wmnsk.com/)
 
 _I'm always open to welcome co-authors! Please feel free to talk to me._
 
