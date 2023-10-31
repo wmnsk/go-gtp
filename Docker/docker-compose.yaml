@@ -1,0 +1,30 @@
+version: '3'
+services:
+  gogtpdocker:
+    image: go-gtp-docker
+    container_name: go-gtp-docker
+    privileged: true
+    env_file:
+      - .env
+    volumes:
+      - ./enb.yml:/mnt/enb.yml
+      - ./mme.yml:/mnt/mme.yml
+    expose:
+      - "2123/udp"
+      - "2152/udp"
+      - "36412/tcp"
+      - "9091/tcp"
+      - "9092/tcp"
+    ports:
+      - "2123:2123/udp"
+      - "2125:2152/udp"
+      - "9091:9091/tcp"
+      - "9092:9092/tcp"
+    networks:
+      default:
+        ipv4_address: ${GTP_DOCKER_IP}
+networks:
+  default:
+    external:
+          name: docker_open5gs_default
+

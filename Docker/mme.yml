@@ -1,0 +1,9 @@
+mcc: "MCC"
+mnc: "MNC"
+apn: "APN"
+local_addresses:
+  s1c_addr: "127.0.1.12:36412"
+  s11_ip: "ETH0_IP"
+sgw_s11_ip: "SGWC_IP"
+pgw_s5c_ip: "SMF_IP"
+prom_addr: "ETH0_IP:9091"
