@@ -12,6 +12,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"fmt"
+	"strconv"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func main() {
@@ -28,6 +31,31 @@ func main() {
 	if err != nil {
 		log.Printf("failed to initialize eNB: %s", err)
 	}
+	IMSI := "001010000000010"
+	MSISDN := "0000000010"
+	IMEISV := "1234500000010"
+	SRCIP := 10
+	SRCIP2 := 100
+	srcip2 := strconv.Itoa(SRCIP2)
+	for i := 0; i < 100; i++ {
+		
+		imsi := imsiGenerator(i, IMSI)
+		msisdn := imsiGenerator(i, MSISDN)
+		imeisv := imsiGenerator(i, IMEISV)
+		srcip := strconv.Itoa(SRCIP)
+		if srcip == "255" {
+			SRCIP = 1	
+			srcip = "1"
+			SRCIP2++
+			srcip2 = strconv.Itoa(SRCIP2)
+		}
+		var sub *Subscriber
+		sub = &Subscriber{IMSI:imsi, MSISDN:msisdn, IMEISV:imeisv, SrcIP: "192.168."+srcip2+"."+srcip}
+		enb.candidateSubs= append(enb.candidateSubs, sub)
+		SRCIP++
+	}
+	spew.Dump(enb.candidateSubs)
+	
 	defer enb.close()
 
 	sigCh := make(chan os.Signal, 1)
@@ -67,4 +95,16 @@ func main() {
 			return
 		}
 	}
+}
+
+func imsiGenerator(i int, msin string) string {
+
+	msin_int, err := strconv.Atoi(msin)
+	if err != nil {
+		log.Fatal("Error in get configuration")
+	}
+	base := msin_int + (i -1)
+
+	imsi := "00" + fmt.Sprintf("%010d", base)
+	return imsi
 }
