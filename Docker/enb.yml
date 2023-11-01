@@ -1,0 +1,67 @@
+mcc: "MCC"
+mnc: "MNC"
+rat_type: 6 # E-UTRAN
+tai: 0x0001
+eci: 0x00000001
+local_addresses:
+  s1c_ip: "127.0.1.11"
+  s1u_ip: "GTP_DOCKER_IP"
+mme_addr: "127.0.1.12:36412"
+use_kernel_gtp: true
+prom_addr: "GTP_DOCKER_IP:9092"
+subscribers:
+  - imsi: "UE1_IMSI"
+    msisdn: "814000000001"
+    imeisv: "UE1_IMEISV"
+    src_ip: "UE_IPV4_INTERNET"
+    i_tei: 1
+    type: "http_get"
+    euu_if_name: "lo"
+    http_url: "http://172.22.0.254/"
+    reattach_on_reload: false
+  # - imsi: "001010000000002"
+  #   msisdn: "814000000002"
+  #   imeisv: "1234500000002"
+  #   src_ip: "192.168.100.3"
+  #   i_tei: 0
+  #   type: "http_get"
+  #   euu_if_name: "lo"
+  #   http_url: "http://172.16.0.102/"
+  #   reattach_on_reload: true
+  # - imsi: "001010000000003"
+  #   msisdn: "814000000003"
+  #   imeisv: "1234500000003"
+  #   src_ip: "192.168.100.4"
+  #   i_tei: 0
+  #   type: "http_get"
+  #   euu_if_name: "lo"
+  #   http_url: "http://172.16.0.102/"
+  #   reattach_on_reload: false
+  # - imsi: "001010000000004"
+  #   msisdn: "814000000004"
+  #   imeisv: "1234500000004"
+  #   src_ip: "192.168.100.5"
+  #   i_tei: 0
+  #   type: "http_get"
+  #   euu_if_name: "lo"
+  #   http_url: "http://172.16.0.102/"
+  #   reattach_on_reload: true
+  # - imsi: "001010000000005"
+  #   msisdn: "814000000005"
+  #   imeisv: "1234500000005"
+  #   src_ip: "192.168.100.6"
+  #   i_tei: 0
+  #   type: "http_get"
+  #   euu_if_name: "lo"
+  #   http_url: "http://172.16.0.102/"
+  #   reattach_on_reload: false
+  # example for external client
+  #- imsi: "001010000000006"
+  #  msisdn: "814000000006"
+  #  imeisv: "1234500000006"
+  #  src_ip: "192.168.101.101"
+  #  i_tei: 1
+  #  type: "external"
+  #  euu_if_name: "eth0"
+  #  http_url: ""
+  #  reattach_on_reload: true

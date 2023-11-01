@@ -1,0 +1,9 @@
+mcc: "MCC"
+mnc: "MNC"
+apn: "internet"
+local_addresses:
+  s1c_addr: "127.0.1.12:36412"
+  s11_ip: "GTP_DOCKER_IP"
+sgw_s11_ip: "SGWC_IP"
+pgw_s5c_ip: "SMF_IP"
+prom_addr: "GTP_DOCKER_IP:9091"
