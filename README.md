@@ -1,11 +1,16 @@
-# go-gtp: GTP in Golang
+# go-gtp: GTP in Go
 
-Package gtp provides simple and painless handling of GTP (GPRS Tunneling Protocol), implemented in the Go Programming Language.
+Package gtp provides simple and painless handling of GTP (GPRS Tunneling Protocol) in the Go programming language.
 
 ![CI status](https://github.com/wmnsk/go-gtp/actions/workflows/go.yml/badge.svg)
 [![golangci-lint](https://github.com/wmnsk/go-gtp/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/wmnsk/go-gtp/actions/workflows/golangci-lint.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/wmnsk/go-gtp.svg)](https://pkg.go.dev/github.com/wmnsk/go-gtp)
 [![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/wmnsk/go-gtp/blob/master/LICENSE)
+
+## Project Status
+
+This project is still EXPERIMENTAL.  
+Any part of the implementations (including exported APIs) may be changed before released as v1.0.0.
 
 ## Features
 
@@ -18,7 +23,7 @@ Package gtp provides simple and painless handling of GTP (GPRS Tunneling Protoco
 
 ### Prerequisites
 
-go-gtp supports Go Modules. Run `go mod tidy`` in your project's directory to collect the required packages automatically.
+go-gtp supports Go Modules. Run `go mod tidy` in your project's directory to collect the required packages automatically.
 
 ```
 go mod tidy
@@ -67,15 +72,9 @@ We have a set of tools called GW Tester at [`examples/gw-tester`](./examples/gw-
 
 _The "mme" is not an MME per se. In addition to S11 interface, it also mocks UEs and an eNB to establish sessions and send packets on U-Plane._
 
-### Developing by your own
+## Developing with go-gtp
 
-Each version has `net.PacketConn`-like APIs and GTP-specific ones, which are often version-specific.
-The basic idea behind the current implementation is;
-
-* `Dial` or `ListenAndServe` to create a connection(`Conn`) between nodes.
-* Register handlers to the `Conn` for specific messages with `AddHandler`, allowing users to handle the messages coming from the remote endpoint as flexible as possible, with less pain.
-* `CreateXXX` to create session or PDP context with arbitrary IEs given. Session/PDP context is structured, and they also have some helpers like `AddTEID` to handle known TEID properly.
-
+This section briefly describes how to develop your own GTP node with go-gtp.
 For the detailed usage of a specific version, see README.md under each version's directory.
 
 | Version | Details                      |
@@ -84,13 +83,30 @@ For the detailed usage of a specific version, see README.md under each version's
 | GTPv1   | [README.md](gtpv1/README.md) |
 | GTPv2   | [README.md](gtpv2/README.md) |
 
-And don't forget testing once you are done with your changes 
-```shell-session
-go test ./...
-```
+### Establishing a connection between nodes
 
-*Note for MacOs users*: the first time you run any test, make sure to execute `./mac_local_host_enabler.sh` you will find at [examples/utils](examples/utils). 
-You will have to run the script again after each reboot.
+Each version has `net.PacketConn`-like APIs and GTP-specific ones, which are often version-specific.
+The basic idea behind the current implementation is;
+
+* `Dial` or `ListenAndServe` to create a connection (`Conn`) between nodes.
+* Register handlers to the `Conn` for specific messages with `AddHandler`, allowing users to handle the messages coming from the remote endpoint as flexible as possible, with less pain.
+* `CreateXXX` to create session or PDP context with arbitrary IEs given. Session/PDP context is structured, and they also have some helpers like `AddTEID` to handle known TEID properly.
+
+### Handling messages and IEs
+
+#### Messages
+
+All the messages implement the same interface: `message.Message`, and have their own structs named `<MessageName>`, which can be created by `New<MessageName>` with given `ie.IE`s. `message.Message` can be sent on top of `Conn` with `SendMessageTo`, or can be serialized into `[]byte` with `Marshal`.
+
+To parse the message from `[]byte`, use `message.Parse`. The parsed message will be one of the structs that implement `message.Message`, and you can type-assert it to the corresponding struct to access the fields which are a set of `ie.IE`s.
+
+#### IEs
+
+All the IEs are of the same type: `ie.IE` (not an interface). An IE can be created either with `New<IEName>`, with `ie.New`, or with `ie.New<TypeIE>`. The latter two are useful when you want to create an IE with an unsupported type or our constructor does not work well for you.
+
+To parse the IE from `[]byte`, use `ie.Parse` (note that `message.Parse` parses all the IEs on a message - you don't need to call `ie.Parse` when you're handling IEs on a message). The value of the parsed `ie.IE` can be retrieved with `<IEName>`, `ValueAs<IEType>`. Some of the complicated IEs have their own struct named `<IEName>Fields` to get the values by accessing the fields.
+
+For grouped IEs, accesing the `ChildIEs` field and iterating over the list of IEs contained is the most efficient way in most cases. Though there are the methods to get the specific IE value from the list (e.g., `BearerFlags` can be called upon `BearerContext` IE), they are not recommended since they always parse the whole list of IEs again.
 
 ## Supported Features
 
@@ -106,15 +122,24 @@ Your contribution is welcome to implement helpers for all the types, of course!
 | GTPv2             | ~40.0%   | ~45% | functional                                  | [gtpv2/README](gtpv2/README.md#supported-features) |
 | GTP' <br> (Prime) | N/A      | N/A  | N/A                                         | _not planned_                                            |
 
-## Disclaimer
+_You may also be interested in the sibling project [go-pfcp](https://github.com/wmnsk/go-pfcp) which is a PFCP implementation in Go._
 
-This is still an experimental project. Any part of implementations(including exported APIs) may be changed before released as v1.0.0.
+## Contributing
 
-## Author(s)
+With the design goal of being flexible and easy to use, go-gtp is still in the early stage of development. Any contribution is welcome! Please feel free to open an issue or a pull request.
 
-[Yoshiyuki Kurauchi](https://wmnsk.com/)
+Please don't forget to run tests once you are done with your changes. Additionally, running the fuzz test is recommended to make sure that the implementation is robust enough.
 
-_I'm always open to welcome co-authors! Please feel free to talk to me._
+```shell-session
+go test ./...
+go test -fuzz .
+```
+
+*Note for macOS users*: the first time you run any test, make sure to execute `./mac_local_host_enabler.sh` you will find at [examples/utils](examples/utils). You will have to run the script again after each reboot.
+
+## Authors
+
+[Yoshiyuki Kurauchi](https://wmnsk.com/) and [contributors](https://github.com/wmnsk/go-gtp/graphs/contributors).
 
 ## LICENSE
 

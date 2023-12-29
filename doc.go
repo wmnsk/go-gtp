@@ -2,11 +2,9 @@
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
-// Package gtp provides simple and painless handling of GTP(GPRS Tunneling Protocol),
-// implemented in the Go Programming Language.
+// Package gtp provides simple and painless handling of GTP (GPRS Tunneling Protocol).
 //
-// This package is the wrapper of all versions of GTP that is available.
-// Please see the godocs of each version instead.
+// This package is the wrapper for all versions of GTP.  Please see the godocs of each version instead.
 //
 // GTPv0: https://pkg.go.dev/github.com/wmnsk/go-gtp/v0
 //
