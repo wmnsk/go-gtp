@@ -4,11 +4,9 @@
 
 package ie
 
-import "io"
-
 // NewAPNRestriction creates a new APNRestriction IE.
 func NewAPNRestriction(restriction uint8) *IE {
-	return newUint8ValIE(APNRestriction, restriction)
+	return NewUint8IE(APNRestriction, restriction)
 }
 
 // APNRestriction returns APNRestriction in uint8 if the type of IE matches.
@@ -17,11 +15,7 @@ func (i *IE) APNRestriction() (uint8, error) {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
 
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustAPNRestriction returns APNRestriction in uint8, ignoring errors.
@@ -29,4 +23,9 @@ func (i *IE) APNRestriction() (uint8, error) {
 func (i *IE) MustAPNRestriction() uint8 {
 	v, _ := i.APNRestriction()
 	return v
+}
+
+// RestrictionType returns RestrictionType in uint8 if the type of IE matches.
+func (i *IE) RestrictionType() (uint8, error) {
+	return i.APNRestriction()
 }

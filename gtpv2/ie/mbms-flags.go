@@ -4,8 +4,6 @@
 
 package ie
 
-import "io"
-
 // NewMBMSFlags creates a new MBMSFlags IE.
 func NewMBMSFlags(lmri, msri uint8) *IE {
 	i := New(MBMSFlags, 0x00, make([]byte, 1))
@@ -18,11 +16,7 @@ func (i *IE) MBMSFlags() (uint8, error) {
 	if i.Type != MBMSFlags {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustMBMSFlags returns MBMSFlags in uint8, ignoring errors.
@@ -55,27 +49,19 @@ func (i *IE) HasLMRI() bool {
 // LocalMBMSBearerContextRelease reports whether the MBMS Session Stop Request
 // message is used to release the MBMS Bearer Context locally in the MME/SGSN.
 func (i *IE) LocalMBMSBearerContextRelease() bool {
-	if len(i.Payload) < 1 {
+	v, err := i.MBMSFlags()
+	if err != nil {
 		return false
 	}
-	switch i.Type {
-	case MBMSFlags:
-		return i.Payload[0]&0x02 == 1
-	default:
-		return false
-	}
+	return v&0x02 == 1
 }
 
 // MBMSSessionReEstablishment reports whether the MBMS Session Start Request
 // message is used to re-establish an MBMS session.
 func (i *IE) MBMSSessionReEstablishment() bool {
-	if len(i.Payload) < 1 {
+	v, err := i.MBMSFlags()
+	if err != nil {
 		return false
 	}
-	switch i.Type {
-	case MBMSFlags:
-		return i.Payload[0]&0x01 == 1
-	default:
-		return false
-	}
+	return v&0x01 == 1
 }

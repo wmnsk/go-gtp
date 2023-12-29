@@ -4,14 +4,9 @@
 
 package ie
 
-import "io"
-
 // NewSelectionMode creates a new SelectionMode IE.
-//
-// Note that exactly one of the parameters should be set to true.
-// Otherwise, you'll get the unexpected result.
 func NewSelectionMode(mode uint8) *IE {
-	return newUint8ValIE(SelectionMode, mode)
+	return NewUint8IE(SelectionMode, mode)
 }
 
 // SelectionMode returns SelectionMode value if the type of IE matches.
@@ -19,11 +14,7 @@ func (i *IE) SelectionMode() (uint8, error) {
 	if i.Type != SelectionMode {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustSelectionMode returns SelectionMode in uint8, ignoring errors.

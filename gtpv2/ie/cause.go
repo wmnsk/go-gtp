@@ -28,11 +28,7 @@ func NewCause(cause uint8, pce, bce, cs uint8, offendingIE *IE) *IE {
 func (i *IE) Cause() (uint8, error) {
 	switch i.Type {
 	case Cause:
-		if len(i.Payload) < 1 {
-			return 0, io.ErrUnexpectedEOF
-		}
-
-		return i.Payload[0], nil
+		return i.ValueAsUint8()
 	case BearerContext:
 		ies, err := i.BearerContext()
 		if err != nil {

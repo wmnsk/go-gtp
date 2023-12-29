@@ -11,18 +11,14 @@ import (
 
 // NewCSGID creates a new CSGID IE.
 func NewCSGID(id uint32) *IE {
-	return newUint32ValIE(CSGID, id&0x7ffffff)
+	return NewUint32IE(CSGID, id&0x7ffffff)
 }
 
 // CSGID returns CSGID in uint32 if the type of IE matches.
 func (i *IE) CSGID() (uint32, error) {
-	if len(i.Payload) < 4 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
 	switch i.Type {
 	case CSGID:
-		return binary.BigEndian.Uint32(i.Payload[0:4]) & 0x7ffffff, nil
+		return i.ValueAsUint32()
 	case UserCSGInformation:
 		if len(i.Payload) < 7 {
 			return 0, io.ErrUnexpectedEOF

@@ -4,11 +4,6 @@
 
 package ie
 
-import (
-	"fmt"
-	"io"
-)
-
 // NewBearerFlags creates a new BearerFlags IE.
 func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
 	i := New(BearerFlags, 0x00, make([]byte, 1))
@@ -20,15 +15,11 @@ func NewBearerFlags(asi, vInd, vb, ppc uint8) *IE {
 func (i *IE) BearerFlags() (uint8, error) {
 	switch i.Type {
 	case BearerFlags:
-		if len(i.Payload) < 1 {
-			return 0, io.ErrUnexpectedEOF
-		}
-
-		return i.Payload[0], nil
+		return i.ValueAsUint8()
 	case BearerContext:
 		ies, err := i.BearerContext()
 		if err != nil {
-			return 0, fmt.Errorf("failed to retrieve BearerFlags: %w", err)
+			return 0, err
 		}
 
 		for _, child := range ies {
@@ -92,54 +83,38 @@ func (i *IE) HasASI() bool {
 // ActivityStatusIndicator reports whether the bearer context is preserved in
 // the CN without corresponding Radio Access Bearer established.
 func (i *IE) ActivityStatusIndicator() bool {
-	if len(i.Payload) < 1 {
+	v, err := i.BearerFlags()
+	if err != nil {
 		return false
 	}
-	switch i.Type {
-	case BearerFlags:
-		return i.Payload[0]&0x08 == 1
-	default:
-		return false
-	}
+	return v&0x08 == 1
 }
 
 // VSRVCC reports whether this bearer is an IMS video bearer and is candidate
 // for PS-to-CS vSRVCC handover.
 func (i *IE) VSRVCC() bool {
-	if len(i.Payload) < 1 {
+	v, err := i.BearerFlags()
+	if err != nil {
 		return false
 	}
-	switch i.Type {
-	case BearerFlags:
-		return i.Payload[0]&0x04 == 1
-	default:
-		return false
-	}
+	return v&0x04 == 1
 }
 
 // VoiceBearer reports whether a voice bearer when doing PS-to-CS (v)SRVCC handover.
 func (i *IE) VoiceBearer() bool {
-	if len(i.Payload) < 1 {
+	v, err := i.BearerFlags()
+	if err != nil {
 		return false
 	}
-	switch i.Type {
-	case BearerFlags:
-		return i.Payload[0]&0x02 == 1
-	default:
-		return false
-	}
+	return v&0x02 == 1
 }
 
 // ProhibitPayloadCompression reports whether an SGSN should attempt to
 // compress the payload of user data when the users asks for it to be compressed.
 func (i *IE) ProhibitPayloadCompression() bool {
-	if len(i.Payload) < 1 {
+	v, err := i.BearerFlags()
+	if err != nil {
 		return false
 	}
-	switch i.Type {
-	case BearerFlags:
-		return i.Payload[0]&0x01 == 1
-	default:
-		return false
-	}
+	return v&0x01 == 1
 }

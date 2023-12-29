@@ -4,22 +4,16 @@
 
 package ie
 
-import "io"
-
 // NewRATType creates a new RATType IE.
 func NewRATType(rat uint8) *IE {
-	return newUint8ValIE(RATType, rat)
+	return NewUint8IE(RATType, rat)
 }
 
 // RATType returns RATType in uint8 if the type of IE matches.
 func (i *IE) RATType() (uint8, error) {
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
 	switch i.Type {
 	case RATType:
-		return i.Payload[0], nil
+		return i.ValueAsUint8()
 	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}

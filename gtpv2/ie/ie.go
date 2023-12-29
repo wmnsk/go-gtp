@@ -11,6 +11,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+
+	"github.com/wmnsk/go-gtp/utils"
 )
 
 // IE definitions.
@@ -321,90 +323,6 @@ func (i *IE) String() string {
 	)
 }
 
-var grouped = []uint8{
-	BearerContext,
-	PDNConnection,
-	OverloadControlInformation,
-	LoadControlInformation,
-	RemoteUEContext,
-	SCEFPDNConnection,
-	V2XContext,
-	PC5QoSParameters,
-}
-
-// IsGrouped reports whether an IE is grouped type or not.
-func (i *IE) IsGrouped() bool {
-	for _, itype := range grouped {
-		if i.Type == itype {
-			return true
-		}
-	}
-	return false
-}
-
-// Add adds variable number of IEs to a IE if the IE is grouped type and update length.
-// Otherwise, this does nothing(no errors).
-func (i *IE) Add(ies ...*IE) {
-	if !i.IsGrouped() {
-		return
-	}
-
-	i.Payload = nil
-	i.ChildIEs = append(i.ChildIEs, ies...)
-	for _, ie := range i.ChildIEs {
-		serialized, err := ie.Marshal()
-		if err != nil {
-			continue
-		}
-		i.Payload = append(i.Payload, serialized...)
-	}
-	i.SetLength()
-}
-
-// Remove removes an IE looked up by type and instance.
-func (i *IE) Remove(typ, instance uint8) {
-	if !i.IsGrouped() {
-		return
-	}
-
-	i.Payload = nil
-	newChildren := make([]*IE, len(i.ChildIEs))
-	idx := 0
-	for _, ie := range i.ChildIEs {
-		if ie.Type == typ && ie.Instance() == instance {
-			newChildren = newChildren[:len(newChildren)-1]
-			continue
-		}
-		newChildren[idx] = ie
-		idx++
-
-		serialized, err := ie.Marshal()
-		if err != nil {
-			continue
-		}
-		i.Payload = append(i.Payload, serialized...)
-	}
-	i.ChildIEs = newChildren
-	i.SetLength()
-}
-
-// FindByType returns IE looked up by type and instance.
-//
-// The program may be slower when calling this method multiple times
-// because this ranges over a ChildIEs each time it is called.
-func (i *IE) FindByType(typ, instance uint8) (*IE, error) {
-	if !i.IsGrouped() {
-		return nil, ErrInvalidType
-	}
-
-	for _, ie := range i.ChildIEs {
-		if ie.Type == typ && ie.Instance() == instance {
-			return ie, nil
-		}
-	}
-	return nil, ErrIENotFound
-}
-
 // ParseMultiIEs decodes multiple IEs at a time.
 // This is easy and useful but slower than decoding one by one.
 // When you don't know the number of IEs, this is the only way to decode them.
@@ -426,46 +344,106 @@ func ParseMultiIEs(b []byte) ([]*IE, error) {
 	return ies, nil
 }
 
-func newUint8ValIE(t, v uint8) *IE {
+// NewUint8IE creates a new IE with uint8 value.
+func NewUint8IE(t, v uint8) *IE {
 	return New(t, 0x00, []byte{v})
 }
 
-func newUint16ValIE(t uint8, v uint16) *IE {
+// NewUint16IE creates a new IE with uint16 value.
+func NewUint16IE(t uint8, v uint16) *IE {
 	i := New(t, 0x00, make([]byte, 2))
 	binary.BigEndian.PutUint16(i.Payload, v)
 	return i
 }
 
-func newUint32ValIE(t uint8, v uint32) *IE {
+// NewUint32IE creates a new IE with uint32 value.
+func NewUint32IE(t uint8, v uint32) *IE {
 	i := New(t, 0x00, make([]byte, 4))
 	binary.BigEndian.PutUint32(i.Payload, v)
 	return i
 }
 
-// unused for now.
-// func newUint64ValIE(t uint8, v uint64) *IE {
-// 	i := New(t, 0x00, make([]byte, 8))
-// 	binary.BigEndian.PutUint64(i.Payload, v)
-// 	return i
-// }
+// NewUint64IE creates a new IE with uint64 value.
+func NewUint64IE(t uint8, v uint64) *IE {
+	i := New(t, 0x00, make([]byte, 8))
+	binary.BigEndian.PutUint64(i.Payload, v)
+	return i
+}
 
-func newStringIE(t uint8, v string) *IE {
+// NewStringIE creates a new IE with string value.
+func NewStringIE(t uint8, v string) *IE {
 	return New(t, 0x00, []byte(v))
 }
 
-func newGroupedIE(itype uint8, ies ...*IE) *IE {
-	i := New(itype, 0x00, make([]byte, 0))
-	i.ChildIEs = ies
-	for _, ie := range i.ChildIEs {
-		serialized, err := ie.Marshal()
-		if err != nil {
-			return nil
-		}
-		i.Payload = append(i.Payload, serialized...)
-	}
-	i.SetLength()
+// NewFQDNIE creates a new IE with FQDN value.
+func NewFQDNIE(t uint8, v string) *IE {
+	return New(t, 0x00, utils.EncodeFQDN(v))
+}
 
-	return i
+// ValueAsUint8 returns the value of IE as uint8.
+func (i *IE) ValueAsUint8() (uint8, error) {
+	if i.IsGrouped() {
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
+	if len(i.Payload) < 1 {
+		return 0, io.ErrUnexpectedEOF
+	}
+
+	return i.Payload[0], nil
+}
+
+// ValueAsUint16 returns the value of IE as uint16.
+func (i *IE) ValueAsUint16() (uint16, error) {
+	if i.IsGrouped() {
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
+	if len(i.Payload) < 2 {
+		return 0, io.ErrUnexpectedEOF
+	}
+
+	return binary.BigEndian.Uint16(i.Payload[0:2]), nil
+}
+
+// ValueAsUint32 returns the value of IE as uint32.
+func (i *IE) ValueAsUint32() (uint32, error) {
+	if i.IsGrouped() {
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
+	if len(i.Payload) < 4 {
+		return 0, io.ErrUnexpectedEOF
+	}
+
+	return binary.BigEndian.Uint32(i.Payload[0:4]), nil
+}
+
+// ValueAsUint64 returns the value of IE as uint64.
+func (i *IE) ValueAsUint64() (uint64, error) {
+	if i.IsGrouped() {
+		return 0, &InvalidTypeError{Type: i.Type}
+	}
+	if len(i.Payload) < 8 {
+		return 0, io.ErrUnexpectedEOF
+	}
+
+	return binary.BigEndian.Uint64(i.Payload[0:8]), nil
+}
+
+// ValueAsString returns the value of IE as string.
+func (i *IE) ValueAsString() (string, error) {
+	if i.IsGrouped() {
+		return "", &InvalidTypeError{Type: i.Type}
+	}
+
+	return string(i.Payload), nil
+}
+
+// ValueAsFQDN returns the value of IE as string, decoded as FQDN.
+func (i *IE) ValueAsFQDN() (string, error) {
+	if i.IsGrouped() {
+		return "", &InvalidTypeError{Type: i.Type}
+	}
+
+	return utils.DecodeFQDN(i.Payload), nil
 }
 
 var ieTypeNameMap = map[uint8]string{

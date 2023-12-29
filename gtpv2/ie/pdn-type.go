@@ -4,22 +4,16 @@
 
 package ie
 
-import "io"
-
 // NewPDNType creates a new PDNType IE.
 func NewPDNType(pdn uint8) *IE {
-	return newUint8ValIE(PDNType, pdn)
+	return NewUint8IE(PDNType, pdn)
 }
 
 // PDNType returns the PDNType value in uint8 if the type of IE matches.
 func (i *IE) PDNType() (uint8, error) {
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
 	switch i.Type {
 	case PDNType, PDNAddressAllocation:
-		return i.Payload[0], nil
+		return i.ValueAsUint8()
 	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}

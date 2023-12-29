@@ -4,28 +4,16 @@
 
 package ie
 
-import (
-	"encoding/binary"
-	"io"
-)
-
 // NewPortNumber creates a new PortNumber IE.
 func NewPortNumber(port uint16) *IE {
-	return newUint16ValIE(PortNumber, port)
+	return NewUint16IE(PortNumber, port)
 }
 
 // PortNumber returns PortNumber in uint16 if the type of IE matches.
 func (i *IE) PortNumber() (uint16, error) {
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
 	switch i.Type {
 	case PortNumber:
-		if len(i.Payload) < 2 {
-			return 0, io.ErrUnexpectedEOF
-		}
-		return binary.BigEndian.Uint16(i.Payload[0:2]), nil
+		return i.ValueAsUint16()
 	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}

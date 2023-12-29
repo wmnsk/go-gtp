@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// NewEPCTimer creates a new Timer IE.
+// NewEPCTimer creates a new EPCTimer IE.
 func NewEPCTimer(duration time.Duration) *IE {
 	// 8.87 EPC Timer
 	// Timer unit
@@ -49,10 +49,18 @@ func NewEPCTimer(duration time.Duration) *IE {
 		value = 0
 	}
 
-	return newUint8ValIE(EPCTimer, unit+(value&0x1f))
+	return NewUint8IE(EPCTimer, unit+(value&0x1f))
+}
+
+// NewEPCTimerRaw creates a new EPCTimer IE from a uint8 value.
+func NewEPCTimerRaw(duration uint8) *IE {
+	return NewUint8IE(EPCTimer, duration)
 }
 
 // EPCTimer returns EPCTimer in time.Duration if the type of IE matches.
+//
+// The returned value is in time.Duration. To get the raw value as uint8,
+// use ValueAsUint8 or access Payload field directly instead.
 func (i *IE) EPCTimer() (time.Duration, error) {
 	return i.Timer()
 }

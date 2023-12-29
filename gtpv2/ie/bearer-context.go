@@ -8,13 +8,7 @@ import "io"
 
 // NewBearerContext creates a new BearerContext IE.
 func NewBearerContext(ies ...*IE) *IE {
-	var omitted []*IE
-	for _, ie := range ies {
-		if ie != nil {
-			omitted = append(omitted, ie)
-		}
-	}
-	return newGroupedIE(BearerContext, omitted...)
+	return NewGroupedIE(BearerContext, ies...)
 }
 
 // NewBearerContextWithinCreateBearerRequest creates a new BearerContext used within CreateBearerRequest.

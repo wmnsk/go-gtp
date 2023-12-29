@@ -8,23 +8,19 @@ import "io"
 
 // NewCSGMembershipIndication creates a new CSGMembershipIndication IE.
 func NewCSGMembershipIndication(cmi uint8) *IE {
-	return newUint8ValIE(CSGMembershipIndication, cmi)
+	return NewUint8IE(CSGMembershipIndication, cmi)
 }
 
 // CMI returns CMI in uint8 if the type of IE matches.
 func (i *IE) CMI() (uint8, error) {
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
 	switch i.Type {
 	case CSGMembershipIndication:
-		return i.Payload[0] & 0x01, nil
+		return i.ValueAsUint8()
 	case UserCSGInformation:
 		if len(i.Payload) < 8 {
 			return 0, io.ErrUnexpectedEOF
 		}
-		return i.Payload[7] & 0x01, nil
+		return i.Payload[7], nil
 	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}

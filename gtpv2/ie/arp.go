@@ -4,8 +4,6 @@
 
 package ie
 
-import "io"
-
 // NewAllocationRetensionPriority creates a new AllocationRetensionPriority IE.
 func NewAllocationRetensionPriority(pci, pl, pvi uint8) *IE {
 	i := New(AllocationRetensionPriority, 0x00, make([]byte, 1))
@@ -13,15 +11,12 @@ func NewAllocationRetensionPriority(pci, pl, pvi uint8) *IE {
 	return i
 }
 
+// AllocationRetensionPriority returns AllocationRetensionPriority in uint8 if the type of IE matches.
 func (i *IE) AllocationRetensionPriority() (uint8, error) {
 	if i.Type != AllocationRetensionPriority {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // HasPVI reports whether an IE has PVI bit.

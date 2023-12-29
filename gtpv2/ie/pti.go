@@ -4,11 +4,9 @@
 
 package ie
 
-import "io"
-
 // NewProcedureTransactionID creates a new ProcedureTransactionID IE.
 func NewProcedureTransactionID(pti uint8) *IE {
-	return newUint8ValIE(ProcedureTransactionID, pti)
+	return NewUint8IE(ProcedureTransactionID, pti)
 }
 
 // ProcedureTransactionID returns ProcedureTransactionID in uint8 if the type of IE matches.
@@ -16,11 +14,7 @@ func (i *IE) ProcedureTransactionID() (uint8, error) {
 	if i.Type != ProcedureTransactionID {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustProcedureTransactionID returns ProcedureTransactionID in uint8, ignoring errors.

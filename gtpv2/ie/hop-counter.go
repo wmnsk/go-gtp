@@ -4,11 +4,9 @@
 
 package ie
 
-import "io"
-
 // NewHopCounter creates a new HopCounter IE.
 func NewHopCounter(hop uint8) *IE {
-	return newUint8ValIE(HopCounter, hop)
+	return NewUint8IE(HopCounter, hop)
 }
 
 // HopCounter returns HopCounter in uint8 if the type of IE matches.
@@ -16,11 +14,7 @@ func (i *IE) HopCounter() (uint8, error) {
 	if i.Type != HopCounter {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustHopCounter returns HopCounter in uint8, ignoring errors.

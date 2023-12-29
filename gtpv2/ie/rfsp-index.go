@@ -4,11 +4,9 @@
 
 package ie
 
-import "io"
-
 // NewRFSPIndex creates a new RFSPIndex IE.
 func NewRFSPIndex(idx uint8) *IE {
-	return newUint8ValIE(RFSPIndex, idx)
+	return NewUint8IE(RFSPIndex, idx)
 }
 
 // RFSPIndex returns RFSPIndex in uint8 if the type of IE matches.
@@ -16,11 +14,7 @@ func (i *IE) RFSPIndex() (uint8, error) {
 	if i.Type != RFSPIndex {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustRFSPIndex returns RFSPIndex in uint8, ignoring errors.
