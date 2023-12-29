@@ -4,25 +4,16 @@
 
 package ie
 
-import (
-	"encoding/binary"
-	"io"
-)
-
 // NewTMSI creates a new TMSI IE.
 func NewTMSI(tmsi uint32) *IE {
-	return newUint32ValIE(TMSI, tmsi)
+	return NewUint32IE(TMSI, tmsi)
 }
 
 // TMSI returns TMSI in uint32 if the type of IE matches.
 func (i *IE) TMSI() (uint32, error) {
-	if len(i.Payload) < 4 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
 	switch i.Type {
 	case TMSI:
-		return binary.BigEndian.Uint32(i.Payload), nil
+		return i.ValueAsUint32()
 	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}

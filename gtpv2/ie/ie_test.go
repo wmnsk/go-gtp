@@ -727,6 +727,7 @@ func TestIEAddRemove(t *testing.T) {
 		ie.NewMSISDN("819012345678"),
 	)
 	i.Add(ie.NewAccessPointName("foo.example"))
+	i.Add(nil) // ignored
 
 	added := ie.NewBearerContext(
 		ie.NewIMSI("123451234567890").WithInstance(1),

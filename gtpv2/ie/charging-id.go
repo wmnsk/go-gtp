@@ -4,30 +4,20 @@
 
 package ie
 
-import (
-	"encoding/binary"
-	"fmt"
-	"io"
-)
-
 // NewChargingID creates a new ChargingID IE.
 func NewChargingID(id uint32) *IE {
-	return newUint32ValIE(ChargingID, id)
+	return NewUint32IE(ChargingID, id)
 }
 
 // ChargingID returns the ChargingID value in uint32 if the type of IE matches.
 func (i *IE) ChargingID() (uint32, error) {
 	switch i.Type {
 	case ChargingID:
-		if len(i.Payload) < 4 {
-			return 0, io.ErrUnexpectedEOF
-		}
-
-		return binary.BigEndian.Uint32(i.Payload[:4]), nil
+		return i.ValueAsUint32()
 	case BearerContext:
 		ies, err := i.BearerContext()
 		if err != nil {
-			return 0, fmt.Errorf("failed to retrieve ChargingID: %w", err)
+			return 0, err
 		}
 
 		for _, child := range ies {

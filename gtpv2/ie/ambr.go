@@ -11,9 +11,6 @@ import (
 
 // NewAggregateMaximumBitRate creates a new AggregateMaximumBitRate IE.
 func NewAggregateMaximumBitRate(up, down uint32) *IE {
-	// this is more efficient but removed for consistency with other structured IEs.
-	// return newUint64ValIE(AggregateMaximumBitRate, (uint64(up)<<32 | uint64(down)))
-
 	v := NewAggregateMaximumBitRateFields(up, down)
 	b, err := v.Marshal()
 	if err != nil {

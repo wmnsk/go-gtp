@@ -134,10 +134,7 @@ func (i *IE) QCILabel() (uint8, error) {
 		}
 		return i.Payload[1], nil
 	case FlowQoS:
-		if len(i.Payload) < 1 {
-			return 0, io.ErrUnexpectedEOF
-		}
-		return i.Payload[0], nil
+		return i.ValueAsUint8()
 	default:
 		return 0, &InvalidTypeError{Type: i.Type}
 	}

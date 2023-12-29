@@ -4,11 +4,9 @@
 
 package ie
 
-import "io"
-
 // NewRecovery creates a new Recovery IE.
 func NewRecovery(recovery uint8) *IE {
-	return newUint8ValIE(Recovery, recovery)
+	return NewUint8IE(Recovery, recovery)
 }
 
 // Recovery returns Recovery value if the type of IE matches.
@@ -16,10 +14,7 @@ func (i *IE) Recovery() (uint8, error) {
 	if i.Type != Recovery {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustRecovery returns Recovery in uint8, ignoring errors.

@@ -4,11 +4,9 @@
 
 package ie
 
-import "io"
-
 // NewNodeType creates a new NodeType IE.
 func NewNodeType(nodeType uint8) *IE {
-	return newUint8ValIE(NodeType, nodeType)
+	return NewUint8IE(NodeType, nodeType)
 }
 
 // NodeType returns NodeType in uint8 if the type of IE matches.
@@ -16,11 +14,7 @@ func (i *IE) NodeType() (uint8, error) {
 	if i.Type != NodeType {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustNodeType returns NodeType in uint8, ignoring errors.

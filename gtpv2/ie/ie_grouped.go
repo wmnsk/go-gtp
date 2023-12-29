@@ -6,6 +6,29 @@ package ie
 
 import "sync"
 
+// NewGroupedIE creates a new IE with the given IEs.
+//
+// The IEs with nil value will be ignored.
+func NewGroupedIE(itype uint8, ies ...*IE) *IE {
+	i := New(itype, 0x00, make([]byte, 0))
+	for _, ie := range ies {
+		if ie == nil {
+			continue
+		}
+
+		serialized, err := ie.Marshal()
+		if err != nil {
+			return nil
+		}
+
+		i.Payload = append(i.Payload, serialized...)
+		i.ChildIEs = append(i.ChildIEs, ie)
+	}
+	i.SetLength()
+
+	return i
+}
+
 // We're using map to avoid iterating over a list.
 // The value `true` is not actually used.
 // TODO: consider using a slice with utils in slices package introduced in Go 1.21.
@@ -65,9 +88,12 @@ func (i *IE) Add(ies ...*IE) {
 		return
 	}
 
-	i.Payload = nil
-	i.ChildIEs = append(i.ChildIEs, ies...)
-	for _, ie := range i.ChildIEs {
+	for _, ie := range ies {
+		if ie == nil {
+			continue
+		}
+		i.ChildIEs = append(i.ChildIEs, ie)
+
 		serialized, err := ie.Marshal()
 		if err != nil {
 			continue

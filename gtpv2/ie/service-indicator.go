@@ -4,11 +4,9 @@
 
 package ie
 
-import "io"
-
 // NewServiceIndicator creates a new ServiceIndicator IE.
 func NewServiceIndicator(ind uint8) *IE {
-	return newUint8ValIE(ServiceIndicator, ind)
+	return NewUint8IE(ServiceIndicator, ind)
 }
 
 // ServiceIndicator returns ServiceIndicator in uint8 if the type of IE matches.
@@ -16,11 +14,7 @@ func (i *IE) ServiceIndicator() (uint8, error) {
 	if i.Type != ServiceIndicator {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustServiceIndicator returns ServiceIndicator in uint8, ignoring errors.

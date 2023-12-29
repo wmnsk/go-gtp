@@ -8,6 +8,7 @@ package utils
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"strings"
 )
 
 // StrToSwappedBytes returns swapped bits from a byte.
@@ -141,4 +142,43 @@ func ParseECI(eci uint32) (enbID uint32, cellID uint8, err error) {
 	cellID = buf[3]
 	enbID = binary.BigEndian.Uint32([]byte{0, buf[0], buf[1], buf[2]})
 	return
+}
+
+// EncodeFQDN encodes the given string as the Name Syntax defined
+// in RFC 2181, RFC 1035 and RFC 1123.
+func EncodeFQDN(fqdn string) []byte {
+	b := make([]byte, len(fqdn)+1)
+
+	var offset = 0
+	for _, label := range strings.Split(fqdn, ".") {
+		l := len(label)
+		b[offset] = uint8(l)
+		copy(b[offset+1:], label)
+		offset += l + 1
+	}
+
+	return b
+}
+
+// DecodeFQDN decodes the given Name Syntax-encoded []byte as a string.
+func DecodeFQDN(b []byte) string {
+	var (
+		fqdn   []string
+		offset int
+	)
+
+	max := len(b)
+	for {
+		if offset >= max {
+			break
+		}
+		l := int(b[offset])
+		if offset+l+1 > max {
+			break
+		}
+		fqdn = append(fqdn, string(b[offset+1:offset+l+1]))
+		offset += l + 1
+	}
+
+	return strings.Join(fqdn, ".")
 }

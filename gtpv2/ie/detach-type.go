@@ -4,13 +4,9 @@
 
 package ie
 
-import (
-	"io"
-)
-
 // NewDetachType creates a new DetachType IE.
 func NewDetachType(dtype uint8) *IE {
-	return newUint8ValIE(DetachType, dtype)
+	return NewUint8IE(DetachType, dtype)
 }
 
 // DetachType returns DetachType in uint8 if the type of IE matches.
@@ -18,11 +14,7 @@ func (i *IE) DetachType() (uint8, error) {
 	if i.Type != DetachType {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustDetachType returns DetachType in uint8, ignoring errors.

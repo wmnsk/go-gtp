@@ -11,10 +11,20 @@ import (
 
 // NewDelayValue creates a new DelayValue IE.
 func NewDelayValue(delay time.Duration) *IE {
-	return newUint8ValIE(DelayValue, uint8(delay.Seconds()*1000/50))
+	return NewUint8IE(DelayValue, uint8(delay.Seconds()*1000/50))
+}
+
+// NewDelayValueRaw creates a new DelayValue IE from a uint8 value.
+//
+// The value should be in multiples of 50ms or zero.
+func NewDelayValueRaw(delay uint8) *IE {
+	return NewUint8IE(DelayValue, delay)
 }
 
 // DelayValue returns DelayValue in time.Duration if the type of IE matches.
+//
+// The returned value is in time.Duration. To get the value in multiples of 50ms,
+// use ValueAsUint8 or access Payload field directly instead.
 func (i *IE) DelayValue() (time.Duration, error) {
 	if i.Type != DelayValue {
 		return 0, &InvalidTypeError{Type: i.Type}

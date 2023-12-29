@@ -4,22 +4,9 @@
 
 package ie
 
-import (
-	"strings"
-)
-
 // NewAccessPointName creates a new AccessPointName IE.
 func NewAccessPointName(apn string) *IE {
-	i := New(AccessPointName, 0x00, make([]byte, len(apn)+1))
-	var offset = 0
-	for _, label := range strings.Split(apn, ".") {
-		l := len(label)
-		i.Payload[offset] = uint8(l)
-		copy(i.Payload[offset+1:], label)
-		offset += l + 1
-	}
-
-	return i
+	return NewFQDNIE(AccessPointName, apn)
 }
 
 // AccessPointName returns AccessPointName in string if the type of IE matches.
@@ -27,25 +14,7 @@ func (i *IE) AccessPointName() (string, error) {
 	if i.Type != AccessPointName {
 		return "", &InvalidTypeError{Type: i.Type}
 	}
-
-	var (
-		apn    []string
-		offset int
-	)
-	max := len(i.Payload)
-	for {
-		if offset >= max {
-			break
-		}
-		l := int(i.Payload[offset])
-		if offset+l+1 > max {
-			break
-		}
-		apn = append(apn, string(i.Payload[offset+1:offset+l+1]))
-		offset += l + 1
-	}
-
-	return strings.Join(apn, "."), nil
+	return i.ValueAsFQDN()
 }
 
 // MustAccessPointName returns AccessPointName in string, ignoring errors.

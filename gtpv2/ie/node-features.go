@@ -4,13 +4,9 @@
 
 package ie
 
-import (
-	"io"
-)
-
 // NewNodeFeatures creates a new NodeFeatures IE.
 func NewNodeFeatures(flags uint8) *IE {
-	return newUint8ValIE(NodeFeatures, flags)
+	return NewUint8IE(NodeFeatures, flags)
 }
 
 // NodeFeatures returns NodeFeatures in uint8 if the type of IE matches.
@@ -18,12 +14,7 @@ func (i *IE) NodeFeatures() (uint8, error) {
 	if i.Type != NodeFeatures {
 		return 0, &InvalidTypeError{Type: i.Type}
 	}
-
-	if len(i.Payload) < 1 {
-		return 0, io.ErrUnexpectedEOF
-	}
-
-	return i.Payload[0], nil
+	return i.ValueAsUint8()
 }
 
 // MustNodeFeatures returns NodeFeatures in uint8 if the type of IE matches.

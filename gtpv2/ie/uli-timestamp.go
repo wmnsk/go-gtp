@@ -13,7 +13,7 @@ import (
 // NewULITimestamp creates a new ULITimestamp IE.
 func NewULITimestamp(ts time.Time) *IE {
 	u64sec := uint64(ts.Sub(time.Date(1900, time.January, 1, 0, 0, 0, 0, time.UTC))) / 1000000000
-	return newUint32ValIE(ULITimestamp, uint32(u64sec))
+	return NewUint32IE(ULITimestamp, uint32(u64sec))
 }
 
 // Timestamp returns Timestamp in time.Time if the type of IE matches.
