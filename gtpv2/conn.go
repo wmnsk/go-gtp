@@ -401,7 +401,7 @@ func (c *Conn) IncSequence() uint32 {
 	c.sequence++
 
 	// SequenceNumber is 3-octet long
-	if c.sequence > 0xffffff {
+	if c.sequence > 0x7fffff {
 		c.sequence = 0
 	}
 
