@@ -32,7 +32,7 @@ type CreatePDPContextResponse struct {
 	MSInfoChangeReportingAction   *ie.IE
 	BearerControlMode             *ie.IE
 	EvolvedARPI                   *ie.IE
-	ExtendedCommonFlag            *ie.IE
+	ExtendedCommonFlags           *ie.IE
 	CSGInformationReportingAction *ie.IE
 	APNAMBR                       *ie.IE
 	GGSNBackOffTime               *ie.IE
@@ -99,7 +99,7 @@ func NewCreatePDPContextResponse(teid uint32, seq uint16, ies ...*ie.IE) *Create
 		case ie.EvolvedAllocationRetentionPriorityI:
 			c.EvolvedARPI = i
 		case ie.ExtendedCommonFlags:
-			c.ExtendedCommonFlag = i
+			c.ExtendedCommonFlags = i
 		case ie.CSGInformationReportingAction:
 			c.CSGInformationReportingAction = i
 		case ie.AggregateMaximumBitRate:
@@ -263,7 +263,7 @@ func (c *CreatePDPContextResponse) MarshalTo(b []byte) error {
 		}
 		offset += ie.MarshalLen()
 	}
-	if ie := c.ExtendedCommonFlag; ie != nil {
+	if ie := c.ExtendedCommonFlags; ie != nil {
 		if err := ie.MarshalTo(c.Payload[offset:]); err != nil {
 			return err
 		}
@@ -391,7 +391,7 @@ func (c *CreatePDPContextResponse) UnmarshalBinary(b []byte) error {
 		case ie.EvolvedAllocationRetentionPriorityI:
 			c.EvolvedARPI = i
 		case ie.ExtendedCommonFlags:
-			c.ExtendedCommonFlag = i
+			c.ExtendedCommonFlags = i
 		case ie.CSGInformationReportingAction:
 			c.CSGInformationReportingAction = i
 		case ie.AggregateMaximumBitRate:
@@ -477,7 +477,7 @@ func (c *CreatePDPContextResponse) MarshalLen() int {
 	if ie := c.EvolvedARPI; ie != nil {
 		l += ie.MarshalLen()
 	}
-	if ie := c.ExtendedCommonFlag; ie != nil {
+	if ie := c.ExtendedCommonFlags; ie != nil {
 		l += ie.MarshalLen()
 	}
 	if ie := c.CSGInformationReportingAction; ie != nil {

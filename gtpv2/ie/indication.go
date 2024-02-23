@@ -655,8 +655,8 @@ func (i *IE) HasDTCI() bool {
 	return has6thBit(v[4])
 }
 
-// HasUACI reports whether an IE has UACI bit.
-func (i *IE) HasUACI() bool {
+// HasUASI reports whether an IE has UASI bit.
+func (i *IE) HasUASI() bool {
 	v, err := i.Indication()
 	if err != nil {
 		return false
