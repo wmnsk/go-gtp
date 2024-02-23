@@ -416,7 +416,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ie.Ne
 | 190     | Fully Qualified Domain Name               |           |
 | 191     | Evolved Allocation Retention Priority I   |           |
 | 192     | Evolved Allocation Retention Priority II  |           |
-| 193     | Extended Common Flags                     |           |
+| 193     | Extended Common Flags                     | Yes       |
 | 194     | User CSG Information                      |           |
 | 195     | CSG Information Reporting Action          |           |
 | 196     | CSG ID                                    |           |
@@ -441,7 +441,7 @@ _Even there are some missing IEs, you can create any kind of IEs by using `ie.Ne
 | 215     | LHN Id with NSAPI                         |           |
 | 216     | CN Operator Selection Entity              |           |
 | 217     | UE Usage Type                             |           |
-| 218     | Extended Common Flags II                  |           |
+| 218     | Extended Common Flags II                  | Yes       |
 | 219     | Node Identifier                           |           |
 | 220     | CIoT Optimizations Support Indication     |           |
 | 221     | SCEF PDN Connection                       |           |
