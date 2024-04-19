@@ -99,13 +99,12 @@ func EncodePLMN(mcc, mnc string) ([]byte, error) {
 	}
 
 	// 2-digit
-	b := make([]byte, 3)
 	if len(mnc) == 2 {
-		b = append(c, n...)
-		return b, nil
+		return append(c, n...), nil
 	}
 
 	// 3-digit
+	b := make([]byte, 3)
 	b[0] = c[0]
 	b[1] = (c[1] & 0x0f) | (n[1] << 4 & 0xf0)
 	b[2] = n[0]

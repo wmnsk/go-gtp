@@ -197,9 +197,8 @@ func newPktConn(laddr net.Addr) (pktConn, error) {
 			udpConn:    pktC.(*net.UDPConn),
 			PacketConn: ipv6.NewPacketConn(pktC),
 		}, nil
-	} else {
-		return nil, fmt.Errorf("laddr must refer to an IP address")
 	}
+	return nil, fmt.Errorf("laddr must refer to an IP address")
 }
 
 // UPlaneConn represents a U-Plane Connection of GTPv1.

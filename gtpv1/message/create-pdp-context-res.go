@@ -73,13 +73,17 @@ func NewCreatePDPContextResponse(teid uint32, seq uint16, ies ...*ie.IE) *Create
 		case ie.GSNAddress:
 			if c.GGSNAddressForCPlane == nil {
 				c.GGSNAddressForCPlane = i
-			} else if c.GGSNAddressForUserTraffic == nil {
-				c.GGSNAddressForUserTraffic = i
-			} else if c.AltGGSNAddressForCPlane == nil {
-				c.AltGGSNAddressForCPlane = i
-			} else if c.AltGGSNAddressForUserTraffic == nil {
-				c.AltGGSNAddressForUserTraffic = i
+				continue
 			}
+			if c.GGSNAddressForUserTraffic == nil {
+				c.GGSNAddressForUserTraffic = i
+				continue
+			}
+			if c.AltGGSNAddressForCPlane == nil {
+				c.AltGGSNAddressForCPlane = i
+				continue
+			}
+			c.AltGGSNAddressForUserTraffic = i
 		case ie.QoSProfile:
 			c.QoSProfile = i
 		case ie.ChargingGatewayAddress:
@@ -365,21 +369,25 @@ func (c *CreatePDPContextResponse) UnmarshalBinary(b []byte) error {
 		case ie.GSNAddress:
 			if c.GGSNAddressForCPlane == nil {
 				c.GGSNAddressForCPlane = i
-			} else if c.GGSNAddressForUserTraffic == nil {
-				c.GGSNAddressForUserTraffic = i
-			} else if c.AltGGSNAddressForCPlane == nil {
-				c.AltGGSNAddressForCPlane = i
-			} else if c.AltGGSNAddressForUserTraffic == nil {
-				c.AltGGSNAddressForUserTraffic = i
+				continue
 			}
+			if c.GGSNAddressForUserTraffic == nil {
+				c.GGSNAddressForUserTraffic = i
+				continue
+			}
+			if c.AltGGSNAddressForCPlane == nil {
+				c.AltGGSNAddressForCPlane = i
+				continue
+			}
+			c.AltGGSNAddressForUserTraffic = i
 		case ie.QoSProfile:
 			c.QoSProfile = i
 		case ie.ChargingGatewayAddress:
 			if c.ChargingGatewayAddress == nil {
 				c.ChargingGatewayAddress = i
-			} else if c.AltChargingGatewayAddress == nil {
-				c.AltChargingGatewayAddress = i
+				continue
 			}
+			c.AltChargingGatewayAddress = i
 		case ie.CommonFlags:
 			c.CommonFlags = i
 		case ie.APNRestriction:

@@ -99,8 +99,7 @@ func (i *IE) CGI() (uint16, error) {
 		return 0, io.ErrUnexpectedEOF
 	}
 
-	switch i.Payload[0] {
-	case locTypeCGI:
+	if i.Payload[0] == locTypeCGI {
 		if len(i.Payload) < 8 {
 			return 0, io.ErrUnexpectedEOF
 		}
@@ -125,8 +124,7 @@ func (i *IE) SAC() (uint16, error) {
 		return 0, io.ErrUnexpectedEOF
 	}
 
-	switch i.Payload[0] {
-	case locTypeSAI:
+	if i.Payload[0] == locTypeSAI {
 		if len(i.Payload) < 8 {
 			return 0, io.ErrUnexpectedEOF
 		}

@@ -365,8 +365,7 @@ func (c *CreateBearerResponse) UnmarshalBinary(b []byte) error {
 				c.WLANLocationInformation = i
 			}
 		case ie.TWANIdentifierTimestamp:
-			switch i.Instance() {
-			case 1:
+			if i.Instance() == 1 {
 				c.WLANLocationTimestamp = i
 			}
 		case ie.OverloadControlInformation:

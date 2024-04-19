@@ -1,4 +1,4 @@
-// Copyright 2019-2024 go-gtp authors. All rights reserved.
+// Copyright 2019-2023 go-gtp authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -79,11 +79,13 @@ func NewCreatePDPContextRequest(teid uint32, seq uint16, ies ...*ie.IE) *CreateP
 		case ie.NSAPI:
 			if c.NSAPI == nil {
 				c.NSAPI = i
-			} else if c.LinkedNSAPI == nil {
-				c.LinkedNSAPI = i
-			} else {
-				c.AdditionalIEs = append(c.AdditionalIEs, i)
+				continue
 			}
+			if c.LinkedNSAPI == nil {
+				c.LinkedNSAPI = i
+				continue
+			}
+			c.AdditionalIEs = append(c.AdditionalIEs, i)
 		case ie.ChargingCharacteristics:
 			c.ChargingCharacteristics = i
 		case ie.TraceReference:
@@ -99,11 +101,13 @@ func NewCreatePDPContextRequest(teid uint32, seq uint16, ies ...*ie.IE) *CreateP
 		case ie.GSNAddress:
 			if c.SGSNAddressForSignalling == nil {
 				c.SGSNAddressForSignalling = i
-			} else if c.SGSNAddressForUserTraffic == nil {
-				c.SGSNAddressForUserTraffic = i
-			} else {
-				c.AdditionalIEs = append(c.AdditionalIEs, i)
+				continue
 			}
+			if c.SGSNAddressForUserTraffic == nil {
+				c.SGSNAddressForUserTraffic = i
+				continue
+			}
+			c.AdditionalIEs = append(c.AdditionalIEs, i)
 		case ie.MSISDN:
 			c.MSISDN = i
 		case ie.QoSProfile:
@@ -471,11 +475,13 @@ func (c *CreatePDPContextRequest) UnmarshalBinary(b []byte) error {
 		case ie.NSAPI:
 			if c.NSAPI == nil {
 				c.NSAPI = i
-			} else if c.LinkedNSAPI == nil {
-				c.LinkedNSAPI = i
-			} else {
-				c.AdditionalIEs = append(c.AdditionalIEs, i)
+				continue
 			}
+			if c.LinkedNSAPI == nil {
+				c.LinkedNSAPI = i
+				continue
+			}
+			c.AdditionalIEs = append(c.AdditionalIEs, i)
 		case ie.ChargingCharacteristics:
 			c.ChargingCharacteristics = i
 		case ie.TraceReference:
@@ -491,11 +497,13 @@ func (c *CreatePDPContextRequest) UnmarshalBinary(b []byte) error {
 		case ie.GSNAddress:
 			if c.SGSNAddressForSignalling == nil {
 				c.SGSNAddressForSignalling = i
-			} else if c.SGSNAddressForUserTraffic == nil {
-				c.SGSNAddressForUserTraffic = i
-			} else {
-				c.AdditionalIEs = append(c.AdditionalIEs, i)
+				continue
 			}
+			if c.SGSNAddressForUserTraffic == nil {
+				c.SGSNAddressForUserTraffic = i
+				continue
+			}
+			c.AdditionalIEs = append(c.AdditionalIEs, i)
 		case ie.MSISDN:
 			c.MSISDN = i
 		case ie.QoSProfile:

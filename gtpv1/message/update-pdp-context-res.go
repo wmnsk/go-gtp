@@ -61,13 +61,17 @@ func NewUpdatePDPContextResponse(teid uint32, seq uint16, ies ...*ie.IE) *Update
 		case ie.GSNAddress:
 			if u.GGSNAddressForCPlane == nil {
 				u.GGSNAddressForCPlane = i
-			} else if u.GGSNAddressForUserTraffic == nil {
-				u.GGSNAddressForUserTraffic = i
-			} else if u.AltGGSNAddressForCPlane == nil {
-				u.AltGGSNAddressForCPlane = i
-			} else if u.AltGGSNAddressForUserTraffic == nil {
-				u.AltGGSNAddressForUserTraffic = i
+				continue
 			}
+			if u.GGSNAddressForUserTraffic == nil {
+				u.GGSNAddressForUserTraffic = i
+				continue
+			}
+			if u.AltGGSNAddressForCPlane == nil {
+				u.AltGGSNAddressForCPlane = i
+				continue
+			}
+			u.AltGGSNAddressForUserTraffic = i
 		case ie.QoSProfile:
 			u.QoSProfile = i
 		case ie.ChargingGatewayAddress:
@@ -305,13 +309,17 @@ func (u *UpdatePDPContextResponse) UnmarshalBinary(b []byte) error {
 		case ie.GSNAddress:
 			if u.GGSNAddressForCPlane == nil {
 				u.GGSNAddressForCPlane = i
-			} else if u.GGSNAddressForUserTraffic == nil {
-				u.GGSNAddressForUserTraffic = i
-			} else if u.AltGGSNAddressForCPlane == nil {
-				u.AltGGSNAddressForCPlane = i
-			} else if u.AltGGSNAddressForUserTraffic == nil {
-				u.AltGGSNAddressForUserTraffic = i
+				continue
 			}
+			if u.GGSNAddressForUserTraffic == nil {
+				u.GGSNAddressForUserTraffic = i
+				continue
+			}
+			if u.AltGGSNAddressForCPlane == nil {
+				u.AltGGSNAddressForCPlane = i
+				continue
+			}
+			u.AltGGSNAddressForUserTraffic = i
 		case ie.QoSProfile:
 			u.QoSProfile = i
 		case ie.ChargingGatewayAddress:
