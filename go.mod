@@ -6,7 +6,7 @@ require (
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.6.0
 	github.com/pascaldekloe/goe v0.1.1
-	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/client_golang v1.19.1
 	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/net v0.25.0
 	google.golang.org/grpc v1.63.2
