@@ -79,7 +79,7 @@ func newEUAddrV6(v6 []byte) *IE {
 		EndUserAddress,
 		make([]byte, 18),
 	)
-	e.Payload = make([]byte, 18)
+	e.Payload[0] = pdpTypeIETF
 	e.Payload[1] = 0x57
 	copy(e.Payload[2:], v6)
 
