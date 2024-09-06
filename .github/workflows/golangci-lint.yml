@@ -20,9 +20,4 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
-          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
           version: "latest"
-          # Optional: golangci-lint command line arguments.
-          args: --issues-exit-code=1 --timeout=3m0s --tests=false --no-config --max-issues-per-linter=4095 --max-same-issues=1023 --disable-all -E=errcheck -E=gosimple -E=govet -E=ineffassign -E=staticcheck -E=typecheck -E=unused -E=bodyclose -E=dogsled -E=goconst -E=gocritic -E=gofmt -E=goimports -E=goprintffuncname -E=gosec -E=misspell -E=nakedret -E=prealloc -E=rowserrcheck -E=stylecheck -E=unconvert -E=unparam -E=exportloopref -E=gomodguard -E=asciicheck -E=errorlint
-          # Optional: show only new issues if it's a pull request. The default value is `false`.
-          only-new-issues: true

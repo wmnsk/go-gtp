@@ -1,0 +1,41 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - bodyclose
+    - dogsled
+    - goconst
+    - gocritic
+    - gofmt
+    - goimports
+    - goprintffuncname
+    - gosec
+    - misspell
+    - nakedret
+    - prealloc
+    - rowserrcheck
+    - stylecheck
+    - unconvert
+    - unparam
+    - gomodguard
+    - asciicheck
+    - errorlint
+run:
+  timeout: 3m
+  tests: false
+  issues-exit-code: 1
+issues:
+  max-issues-per-linter: 4095
+  max-same-issues: 1023
+  new: true
+linters-settings:
+  gosec:
+    excludes:
+      # too noisy atm. see https://github.com/securego/gosec/issues/1185
+      - G115
