@@ -476,6 +476,8 @@ func (u *UPlaneConn) ReadFromGTP(p []byte) (n int, addr net.Addr, teid uint32, e
 // see SetDeadline and SetWriteDeadline.
 // On packet-oriented connections, write timeouts are rare.
 func (u *UPlaneConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
 	return u.pktConn.WriteToWithDSCPECN(p, addr, 0)
 }
 
