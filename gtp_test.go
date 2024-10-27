@@ -88,13 +88,13 @@ func TestMessage(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if got, want := decoded.Version(), c.structured.(Message).Version(); got != want {
+			if got, want := decoded.Version(), c.structured.Version(); got != want {
 				t.Fatalf("got %v want %v", got, want)
 			}
-			if got, want := decoded.MessageType(), c.structured.(Message).MessageType(); got != want {
+			if got, want := decoded.MessageType(), c.structured.MessageType(); got != want {
 				t.Fatalf("got %v want %v", got, want)
 			}
-			if got, want := decoded.MessageTypeName(), c.structured.(Message).MessageTypeName(); got != want {
+			if got, want := decoded.MessageTypeName(), c.structured.MessageTypeName(); got != want {
 				t.Fatalf("got %v want %v", got, want)
 			}
 		})
