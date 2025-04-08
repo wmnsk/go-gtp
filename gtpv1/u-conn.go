@@ -602,7 +602,7 @@ func (u *UPlaneConn) handleMessage(senderAddr net.Addr, msg message.Message) err
 
 // EchoRequest sends a EchoRequest.
 func (u *UPlaneConn) EchoRequest(raddr net.Addr) error {
-	b, err := message.NewEchoRequest(0, ie.NewRecovery(0)).Marshal()
+	b, err := message.NewEchoRequest(0).Marshal()
 	if err != nil {
 		return err
 	}
