@@ -7,5 +7,5 @@
 // This package is still under construction. The networking feature would be available in the future.
 // Please see README.md for detailed usage of the APIs provided by this package.
 //
-// https://github.com/wmnsk/go-gtp/blob/master/gtpv0/README.md
+// https://github.com/wmnsk/go-gtp/blob/main/gtpv0/README.md
 package gtpv0

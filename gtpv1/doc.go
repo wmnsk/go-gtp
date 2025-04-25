@@ -6,5 +6,5 @@
 //
 // Please see README.md for detailed usage of the APIs provided by this package.
 //
-// https://github.com/wmnsk/go-gtp/blob/master/gtpv1/README.md
+// https://github.com/wmnsk/go-gtp/blob/main/gtpv1/README.md
 package gtpv1

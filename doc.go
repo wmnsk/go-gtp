@@ -15,7 +15,7 @@
 // Please also see README.md for detailed usage of the APIs provided by this package,
 // as well as how to run the examples.
 //
-// https://github.com/wmnsk/go-gtp/blob/master/README.md
+// https://github.com/wmnsk/go-gtp/blob/main/README.md
 //
-// https://github.com/wmnsk/go-gtp/tree/master/examples/gw-tester
+// https://github.com/wmnsk/go-gtp/tree/main/examples/gw-tester
 package gtp
