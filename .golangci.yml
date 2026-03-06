@@ -1,41 +1,56 @@
+version: "2"
+run:
+  issues-exit-code: 1
+  tests: false
 linters:
-  disable-all: true
+  default: none
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - typecheck
-    - unused
+    - asciicheck
     - bodyclose
     - dogsled
+    - errcheck
+    - errorlint
     - goconst
     - gocritic
-    - gofmt
-    - goimports
+    - gomodguard
     - goprintffuncname
     - gosec
+    - govet
+    - ineffassign
     - misspell
     - nakedret
     - prealloc
     - rowserrcheck
-    - stylecheck
+    - staticcheck
     - unconvert
     - unparam
-    - gomodguard
-    - asciicheck
-    - errorlint
-run:
-  timeout: 3m
-  tests: false
-  issues-exit-code: 1
+    - unused
+  settings:
+    gosec:
+      excludes:
+        - G115
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
   max-issues-per-linter: 4095
   max-same-issues: 1023
   new: true
-linters-settings:
-  gosec:
-    excludes:
-      # too noisy atm. see https://github.com/securego/gosec/issues/1185
-      - G115
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
