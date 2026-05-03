@@ -46,7 +46,7 @@ linters:
 issues:
   max-issues-per-linter: 4095
   max-same-issues: 1023
-  #new: true
+  new: true
 formatters:
   enable:
     - gofmt

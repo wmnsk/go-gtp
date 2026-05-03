@@ -19,7 +19,7 @@ func (m *mme) runMetricsCollector() {
 	mc := &metricsCollector{}
 	mc.activeSessions = promauto.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: "mme_active_sessions",
+			Name: "mme_active_sessions_total",
 			Help: "number of session established currently",
 		},
 		func() float64 {
