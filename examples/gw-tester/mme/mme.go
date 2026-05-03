@@ -136,13 +136,19 @@ func (m *mme) run(ctx context.Context) error {
 
 	// start serving Prometheus, if address is given
 	if m.promAddr != "" {
-		if err := m.runMetricsCollector(); err != nil {
-			return err
-		}
+		m.runMetricsCollector()
 
 		http.Handle("/metrics", promhttp.Handler())
 		go func() {
-			if err := http.ListenAndServe(m.promAddr, nil); err != nil {
+			server := &http.Server{
+				Addr:              m.promAddr,
+				Handler:           nil,
+				ReadHeaderTimeout: 5 * time.Second,
+				ReadTimeout:       10 * time.Second,
+				WriteTimeout:      10 * time.Second,
+				IdleTimeout:       60 * time.Second,
+			}
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Println(err)
 			}
 		}()
@@ -206,7 +212,7 @@ func (m *mme) Attach(ctx context.Context, req *s1mme.AttachRequest) (*s1mme.Atta
 			errCh <- fmt.Errorf("timed out: %s", session.IMSI)
 		}
 
-		if _, err = m.ModifyBearer(session, sess); err != nil {
+		if err = m.ModifyBearer(session, sess); err != nil {
 			errCh <- err
 			return
 		}
@@ -306,10 +312,10 @@ func (m *mme) CreateSession(sess *Session) (*gtpv2.Session, error) {
 	return session, nil
 }
 
-func (m *mme) ModifyBearer(sess *gtpv2.Session, sub *Session) (*gtpv2.Bearer, error) {
+func (m *mme) ModifyBearer(sess *gtpv2.Session, sub *Session) error {
 	teid, err := sess.GetTEID(gtpv2.IFTypeS11S4SGWGTPC)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	fteid := ie.NewFullyQualifiedTEID(gtpv2.IFTypeS1UeNodeBGTPU, sub.itei, m.enb.s1uIP, "")
@@ -317,11 +323,11 @@ func (m *mme) ModifyBearer(sess *gtpv2.Session, sub *Session) (*gtpv2.Bearer, er
 		teid, sess, ie.NewIndicationFromOctets(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 		ie.NewBearerContext(ie.NewEPSBearerID(sess.GetDefaultBearer().EBI), fteid, ie.NewPortNumber(2125)),
 	); err != nil {
-		return nil, err
+		return err
 	}
 	if m.mc != nil {
 		m.mc.messagesSent.WithLabelValues(sess.PeerAddr().String(), "Modify Bearer Request").Inc()
 	}
 
-	return nil, nil
+	return nil
 }

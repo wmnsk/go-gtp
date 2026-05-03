@@ -59,20 +59,9 @@ func handleCreateSessionRequest(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Mes
 		if err != nil {
 			return err
 		}
-		session.IMSI = imsi
-
 		// remove previous session for the same subscriber if exists.
-		sess, err := c.GetSessionByIMSI(imsi)
-		if err != nil {
-			switch err.(type) {
-			case *gtpv2.UnknownIMSIError:
-				// whole new session. just ignore.
-			default:
-				return fmt.Errorf("got something unexpected: %w", err)
-			}
-		} else {
-			c.RemoveSession(sess)
-		}
+		c.RemoveSessionByIMSI(imsi)
+		session.IMSI = imsi
 	} else {
 		return &gtpv2.RequiredIEMissingError{Type: ie.IMSI}
 	}

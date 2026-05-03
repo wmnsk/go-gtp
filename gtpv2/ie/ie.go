@@ -329,11 +329,7 @@ func (i *IE) String() string {
 // See benchmarks in diameter_test.go for the detail.
 func ParseMultiIEs(b []byte) ([]*IE, error) {
 	var ies []*IE
-	for {
-		if len(b) == 0 {
-			break
-		}
-
+	for len(b) > 0 {
 		i, err := Parse(b)
 		if err != nil {
 			return nil, err

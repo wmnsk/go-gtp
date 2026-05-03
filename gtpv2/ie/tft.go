@@ -780,11 +780,7 @@ func ParseTFTPFComponent(b []byte) (*TFTPFComponent, error) {
 // ParseMultiTFTPFComponent decodes TFTPFComponent.
 func ParseMultiTFTPFComponent(b []byte) ([]*TFTPFComponent, error) {
 	var comps []*TFTPFComponent
-	for {
-		if len(b) == 0 {
-			break
-		}
-
+	for len(b) > 0 {
 		i, err := ParseTFTPFComponent(b)
 		if err != nil {
 			return nil, err
@@ -911,11 +907,7 @@ func ParseTFTParameter(b []byte) (*TFTParameter, error) {
 // ParseMultiTFTParameters decodes TFTParameter.
 func ParseMultiTFTParameters(b []byte) ([]*TFTParameter, error) {
 	var params []*TFTParameter
-	for {
-		if len(b) == 0 {
-			break
-		}
-
+	for len(b) > 0 {
 		i, err := ParseTFTParameter(b)
 		if err != nil {
 			return nil, err

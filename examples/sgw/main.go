@@ -54,7 +54,7 @@ type sGateway struct {
 	errCh    chan error
 }
 
-func newSGW(s11, s5c, s1u, s5u net.Addr) (*sGateway, error) {
+func newSGW(s11, s5c, s1u, s5u net.Addr) *sGateway {
 	s := &sGateway{
 		loggerCh: make(chan string),
 		errCh:    make(chan error),
@@ -97,7 +97,7 @@ func newSGW(s11, s5c, s1u, s5u net.Addr) (*sGateway, error) {
 		}
 	}()
 
-	return s, nil
+	return s
 }
 
 func (s *sGateway) run() error {
@@ -160,7 +160,7 @@ func main() {
 		return
 	}
 
-	sgw, err = newSGW(s11, s5c, s1u, s5u)
+	sgw = newSGW(s11, s5c, s1u, s5u)
 	if err != nil {
 		log.Println(err)
 		return

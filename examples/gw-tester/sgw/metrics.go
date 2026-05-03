@@ -19,11 +19,11 @@ type metricsCollector struct {
 	messagesReceived *prometheus.CounterVec
 }
 
-func (s *sgw) runMetricsCollector() error {
+func (s *sgw) runMetricsCollector() {
 	mc := &metricsCollector{}
 	mc.activeSessions = promauto.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: "sgw_active_sessions",
+			Name: "sgw_active_sessions_total",
 			Help: "number of session established currently",
 		},
 		func() float64 {
@@ -33,7 +33,7 @@ func (s *sgw) runMetricsCollector() error {
 
 	mc.activeBearers = promauto.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: "sgw_active_bearers",
+			Name: "sgw_active_bearers_total",
 			Help: "number of GTP-U tunnels established currently",
 		},
 		func() float64 {
@@ -63,5 +63,4 @@ func (s *sgw) runMetricsCollector() error {
 	)
 
 	s.mc = mc
-	return nil
 }

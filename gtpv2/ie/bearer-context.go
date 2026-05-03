@@ -13,15 +13,34 @@ func NewBearerContext(ies ...*IE) *IE {
 
 // NewBearerContextWithinCreateBearerRequest creates a new BearerContext used within CreateBearerRequest.
 func NewBearerContextWithinCreateBearerRequest(ebi, tft, qos, chargeID, flags, pco, epco, mplr *IE, fTEIDs ...*IE) *IE {
-	ies := []*IE{ebi, tft, qos, chargeID, flags, pco, epco, mplr}
-	ies = append(ies, fTEIDs...)
+	n := 8 + len(fTEIDs)
+	ies := make([]*IE, n)
+
+	ies[0] = ebi
+	ies[1] = tft
+	ies[2] = qos
+	ies[3] = chargeID
+	ies[4] = flags
+	ies[5] = pco
+	ies[6] = epco
+	ies[7] = mplr
+	copy(ies[8:], fTEIDs)
+
 	return NewBearerContext(ies...)
 }
 
 // NewBearerContextWithinCreateBearerResponse creates a new BearerContext used within CreateBearerResponse.
 func NewBearerContextWithinCreateBearerResponse(ebi, cause, pco, rannasCause, epco *IE, fTEIDs ...*IE) *IE {
-	ies := []*IE{ebi, cause, pco, rannasCause, epco}
-	ies = append(ies, fTEIDs...)
+	n := 5 + len(fTEIDs)
+	ies := make([]*IE, n)
+
+	ies[0] = ebi
+	ies[1] = cause
+	ies[2] = pco
+	ies[3] = rannasCause
+	ies[4] = epco
+	copy(ies[5:], fTEIDs)
+
 	return NewBearerContext(ies...)
 }
 
@@ -47,8 +66,16 @@ func NewBearerContextWithinUpdateBearerRequest(ebi, tft, qos, flags, pco, apco, 
 
 // NewBearerContextWithinUpdateBearerResponse creates a new BearerContext used within UpdateBearerResponse.
 func NewBearerContextWithinUpdateBearerResponse(ebi, cause, pco, rannasCause, epco *IE, fTEIDs ...*IE) *IE {
-	ies := []*IE{ebi, cause, pco, rannasCause, epco}
-	ies = append(ies, fTEIDs...)
+	n := 5 + len(fTEIDs)
+	ies := make([]*IE, n)
+
+	ies[0] = ebi
+	ies[1] = cause
+	ies[2] = pco
+	ies[3] = rannasCause
+	ies[4] = epco
+	copy(ies[5:], fTEIDs)
+
 	return NewBearerContext(ies...)
 }
 
@@ -64,35 +91,67 @@ func NewBearerContextWithinDeleteBearerFailureIndication(ebi, cause *IE) *IE {
 
 // NewBearerContextWithinCreateIndirectDataForwardingTunnelRequest creates a new BearerContext used within CreateIndirectDataForwardingTunnelRequest.
 func NewBearerContextWithinCreateIndirectDataForwardingTunnelRequest(ebi *IE, fTEIDs ...*IE) *IE {
-	ies := []*IE{ebi}
-	ies = append(ies, fTEIDs...)
+	n := 1 + len(fTEIDs)
+	ies := make([]*IE, n)
+
+	ies[0] = ebi
+	copy(ies[1:], fTEIDs)
+
 	return NewBearerContext(ies...)
 }
 
 // NewBearerContextWithinCreateIndirectDataForwardingTunnelResponse creates a new BearerContext used within CreateIndirectDataForwardingTunnelResponse.
 func NewBearerContextWithinCreateIndirectDataForwardingTunnelResponse(ebi, cause *IE, fTEIDs ...*IE) *IE {
-	ies := []*IE{ebi, cause}
-	ies = append(ies, fTEIDs...)
+	n := 2 + len(fTEIDs)
+	ies := make([]*IE, n)
+
+	ies[0] = ebi
+	ies[1] = cause
+	copy(ies[2:], fTEIDs)
+
 	return NewBearerContext(ies...)
 }
 
 // NewBearerContextWithinForwardRelocationRequest creates a new BearerContext used within  ForwardRelocationRequest.
 func NewBearerContextWithinForwardRelocationRequest(ebi, tft, qos, container, ti, flags *IE, fTEIDs ...*IE) *IE {
-	ies := []*IE{ebi, tft, qos, container, ti, flags}
-	ies = append(ies, fTEIDs...)
+	n := 6 + len(fTEIDs)
+	ies := make([]*IE, n)
+
+	ies[0] = ebi
+	ies[1] = tft
+	ies[2] = qos
+	ies[3] = container
+	ies[4] = ti
+	ies[5] = flags
+	copy(ies[6:], fTEIDs)
+
 	return NewBearerContext(ies...)
 }
 
 // NewBearerContextWithinContextResponse creates a new BearerContext used within  ContextResponse.
 func NewBearerContextWithinContextResponse(ebi, tft, qos, container, ti *IE, fTEIDs ...*IE) *IE {
-	ies := []*IE{ebi, tft, qos, container, ti}
-	ies = append(ies, fTEIDs...)
+	n := 5 + len(fTEIDs)
+	ies := make([]*IE, n)
+
+	ies[0] = ebi
+	ies[1] = tft
+	ies[2] = qos
+	ies[3] = container
+	ies[4] = ti
+	copy(ies[5:], fTEIDs)
+
 	return NewBearerContext(ies...)
 }
 
 // NewBearerContextWithinContextAcknowledge creates a new BearerContext used within ContextAcknowledge.
 func NewBearerContextWithinContextAcknowledge(ebi, fwdFTEID *IE) *IE {
-	return NewBearerContext(ebi, fwdFTEID)
+	n := 2
+	ies := make([]*IE, n)
+
+	ies[0] = ebi
+	ies[1] = fwdFTEID
+
+	return NewBearerContext(ies...)
 }
 
 // BearerContext returns the []*IE inside BearerContext IE.

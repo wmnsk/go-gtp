@@ -36,13 +36,13 @@ jobs:
       - name: Verify GW Tester is working
         run: |
           ENB=$(curl -sS http://127.0.10.1:58080/metrics)
-          [ "$(echo "$ENB" | grep "enb_active_sessions [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
+          [ "$(echo "$ENB" | grep "enb_active_sessions_total [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
           MME=$(curl -sS http://127.0.10.2:58080/metrics)
-          [ "$(echo "$MME" | grep "mme_active_sessions [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
+          [ "$(echo "$MME" | grep "mme_active_sessions_total [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
           SGW=$(curl -sS http://127.0.10.3:58080/metrics)
-          [ "$(echo "$SGW" | grep "sgw_active_sessions [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
+          [ "$(echo "$SGW" | grep "sgw_active_sessions_total [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
           PGW=$(curl -sS http://127.0.10.4:58080/metrics)
-          [ "$(echo "$PGW" | grep "pgw_active_sessions [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
+          [ "$(echo "$PGW" | grep "pgw_active_sessions_total [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
   test-macos:
     strategy:
       matrix:

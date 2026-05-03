@@ -5,7 +5,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"strings"
@@ -30,25 +29,15 @@ func (p *pgw) handleCreateSessionRequest(c *gtpv2.Conn, sgwAddr net.Addr, msg me
 	session := gtpv2.NewSession(sgwAddr, &gtpv2.Subscriber{Location: &gtpv2.Location{}})
 	bearer := session.GetDefaultBearer()
 	var err error
+
 	if imsiIE := csReqFromSGW.IMSI; imsiIE != nil {
 		imsi, err := imsiIE.IMSI()
 		if err != nil {
 			return err
 		}
-		session.IMSI = imsi
-
 		// remove previous session for the same subscriber if exists.
-		sess, err := c.GetSessionByIMSI(imsi)
-		if err != nil {
-			switch err.(type) {
-			case *gtpv2.UnknownIMSIError:
-				// whole new session. just ignore.
-			default:
-				return fmt.Errorf("got something unexpected: %w", err)
-			}
-		} else {
-			c.RemoveSession(sess)
-		}
+		c.RemoveSessionByIMSI(imsi)
+		session.IMSI = imsi
 	} else {
 		return &gtpv2.RequiredIEMissingError{Type: ie.IMSI}
 	}
