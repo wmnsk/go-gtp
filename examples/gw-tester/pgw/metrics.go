@@ -19,7 +19,7 @@ type metricsCollector struct {
 	messagesReceived *prometheus.CounterVec
 }
 
-func (p *pgw) runMetricsCollector() error {
+func (p *pgw) runMetricsCollector() {
 	mc := &metricsCollector{}
 	mc.activeSessions = promauto.NewGaugeFunc(
 		prometheus.GaugeOpts{
@@ -63,5 +63,4 @@ func (p *pgw) runMetricsCollector() error {
 	)
 
 	p.mc = mc
-	return nil
 }

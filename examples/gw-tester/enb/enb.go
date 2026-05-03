@@ -18,6 +18,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/wmnsk/go-gtp/examples/gw-tester/s1mme"
 	"github.com/wmnsk/go-gtp/gtpv1"
@@ -98,7 +99,10 @@ func newENB(cfg *Config) (*enb, error) {
 
 func (e *enb) run(ctx context.Context) error {
 	// TODO: bind local address(cfg.LocalAddrs.S1CIP) with WithDialer option?
-	conn, err := grpc.Dial(e.mmeAddr.String(), grpc.WithInsecure())
+	conn, err := grpc.NewClient(
+		e.mmeAddr.String(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		return err
 	}
@@ -122,13 +126,19 @@ func (e *enb) run(ctx context.Context) error {
 
 	// start serving Prometheus, if address is given
 	if e.promAddr != "" {
-		if err := e.runMetricsCollector(); err != nil {
-			return err
-		}
+		e.runMetricsCollector()
 
 		http.Handle("/metrics", promhttp.Handler())
 		go func() {
-			if err := http.ListenAndServe(e.promAddr, nil); err != nil {
+			server := &http.Server{
+				Addr:              e.promAddr,
+				Handler:           nil,
+				ReadHeaderTimeout: 5 * time.Second,
+				ReadTimeout:       10 * time.Second,
+				WriteTimeout:      10 * time.Second,
+				IdleTimeout:       60 * time.Second,
+			}
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Println(err)
 			}
 		}()
@@ -176,22 +186,21 @@ func (e *enb) reload(cfg *Config) error {
 		Eci:     cfg.ECI,
 	}
 
-	// TODO: consider more efficient way
-	var attachSubs []*Subscriber
-	for _, sub := range cfg.Subscribers {
-		var existing bool
-		for _, attached := range e.sessions {
-			if sub.IMSI == attached.IMSI {
-				existing = true
-			}
-		}
+	var errors []error
+	sessionsByIMSI := make(map[string]*Subscriber, len(e.sessions))
+	for _, s := range e.sessions {
+		sessionsByIMSI[s.IMSI] = s
+	}
 
-		if existing {
+	attachSubs := make([]*Subscriber, 0, len(cfg.Subscribers))
+
+	for _, sub := range cfg.Subscribers {
+		if _, exists := sessionsByIMSI[sub.IMSI]; exists {
 			if !sub.Reattach {
 				continue
 			}
-
 			if err := e.uConn.DelTunnelByITEI(sub.ITEI); err != nil {
+				errors = append(errors, fmt.Errorf("failed to delete tunnel for %s: %w", sub.IMSI, err))
 				continue
 			}
 		}
@@ -200,6 +209,10 @@ func (e *enb) reload(cfg *Config) error {
 
 	for _, sub := range attachSubs {
 		e.attachCh <- sub
+	}
+
+	if len(errors) > 0 {
+		return fmt.Errorf("got errors while reloading config: %v", errors)
 	}
 	return nil
 }

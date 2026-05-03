@@ -5,7 +5,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"time"
@@ -68,20 +67,8 @@ func (s *sgw) handleCreateSessionRequest(s11Conn *gtpv2.Conn, mmeAddr net.Addr, 
 		if err != nil {
 			return err
 		}
-
 		// remove previous session for the same subscriber if exists.
-		sess, err := s11Conn.GetSessionByIMSI(imsi)
-		if err != nil {
-			switch err.(type) {
-			case *gtpv2.UnknownIMSIError:
-				// whole new session. just ignore.
-			default:
-				return fmt.Errorf("got something unexpected: %w", err)
-			}
-		} else {
-			s11Conn.RemoveSession(sess)
-		}
-
+		s11Conn.RemoveSessionByIMSI(imsi)
 		s11Session.IMSI = imsi
 	} else {
 		return &gtpv2.RequiredIEMissingError{Type: ie.IMSI}

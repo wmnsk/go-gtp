@@ -13,7 +13,7 @@ import (
 func NewAccessPointName(apn string) *IE {
 	i := New(AccessPointName, make([]byte, len(apn)+1))
 	var offset = 0
-	for _, label := range strings.Split(apn, ".") {
+	for label := range strings.SplitSeq(apn, ".") {
 		l := len(label)
 		i.Payload[offset] = uint8(l)
 		copy(i.Payload[offset+1:], label)
@@ -38,10 +38,7 @@ func (i *IE) AccessPointName() (string, error) {
 	)
 
 	max := len(i.Payload)
-	for {
-		if offset >= max {
-			break
-		}
+	for offset < max {
 		l := int(i.Payload[offset])
 		if offset+l+1 >= max {
 			return "", io.ErrUnexpectedEOF

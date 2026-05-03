@@ -10,6 +10,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vishvananda/netlink"
@@ -110,13 +111,19 @@ func (p *pgw) run(ctx context.Context) error {
 
 	// start serving Prometheus, if address is given
 	if p.promAddr != "" {
-		if err := p.runMetricsCollector(); err != nil {
-			return err
-		}
+		p.runMetricsCollector()
 
 		http.Handle("/metrics", promhttp.Handler())
 		go func() {
-			if err := http.ListenAndServe(p.promAddr, nil); err != nil {
+			server := &http.Server{
+				Addr:              p.promAddr,
+				Handler:           nil,
+				ReadHeaderTimeout: 5 * time.Second,
+				ReadTimeout:       10 * time.Second,
+				WriteTimeout:      10 * time.Second,
+				IdleTimeout:       60 * time.Second,
+			}
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Println(err)
 			}
 		}()

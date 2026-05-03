@@ -147,10 +147,7 @@ func (f *FullyQualifiedCSIDFields) UnmarshalBinary(b []byte) error {
 		return ErrMalformed
 	}
 
-	for {
-		if l < offset+2 {
-			break
-		}
+	for l >= offset+2 {
 		f.CSIDs = append(f.CSIDs, binary.BigEndian.Uint16(b[offset:offset+2]))
 		offset += 2
 	}
@@ -249,10 +246,7 @@ func (i *IE) CSIDs() ([]uint16, error) {
 		}
 
 		var csids []uint16
-		for {
-			if offset+2 > len(i.Payload) {
-				break
-			}
+		for offset+2 <= len(i.Payload) {
 			csids = append(csids, binary.BigEndian.Uint16(i.Payload[offset:offset+2]))
 			offset += 2
 		}

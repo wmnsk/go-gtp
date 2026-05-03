@@ -145,8 +145,7 @@ func handleModifyBearerResponse(c *gtpv2.Conn, sgwAddr net.Addr, msg message.Mes
 	}
 	if brCtxIE := mbRspFromSGW.BearerContextsModified; brCtxIE != nil {
 		for _, childIE := range brCtxIE[0].ChildIEs {
-			switch childIE.Type {
-			case ie.FullyQualifiedTEID:
+			if childIE.Type == ie.FullyQualifiedTEID {
 				if childIE.Instance() != 0 {
 					continue
 				}

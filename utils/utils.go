@@ -149,7 +149,7 @@ func EncodeFQDN(fqdn string) []byte {
 	b := make([]byte, len(fqdn)+1)
 
 	var offset = 0
-	for _, label := range strings.Split(fqdn, ".") {
+	for label := range strings.SplitSeq(fqdn, ".") {
 		l := len(label)
 		b[offset] = uint8(l)
 		copy(b[offset+1:], label)
@@ -167,10 +167,7 @@ func DecodeFQDN(b []byte) string {
 	)
 
 	max := len(b)
-	for {
-		if offset >= max {
-			break
-		}
+	for offset < max {
 		l := int(b[offset])
 		if offset+l+1 > max {
 			break

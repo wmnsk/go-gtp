@@ -209,11 +209,7 @@ func (i *IE) String() string {
 // ParseMultiIEs Parses multiple (unspecified number of) IEs to []*IE at a time.
 func ParseMultiIEs(b []byte) ([]*IE, error) {
 	var ies []*IE
-	for {
-		if len(b) == 0 {
-			break
-		}
-
+	for len(b) > 0 {
 		i, err := Parse(b)
 		if err != nil {
 			return nil, err

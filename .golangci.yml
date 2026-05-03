@@ -12,7 +12,7 @@ linters:
     - errorlint
     - goconst
     - gocritic
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
     - gosec
     - govet
@@ -29,6 +29,10 @@ linters:
     gosec:
       excludes:
         - G115
+    staticcheck:
+      checks:
+        - all
+        - -QF1008
   exclusions:
     generated: lax
     presets:
@@ -39,11 +43,10 @@ linters:
     paths:
       - third_party$
       - builtin$
-      - examples$
 issues:
   max-issues-per-linter: 4095
   max-same-issues: 1023
-  new: true
+  #new: true
 formatters:
   enable:
     - gofmt

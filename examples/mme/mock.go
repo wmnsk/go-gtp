@@ -53,23 +53,23 @@ func handleAttach(raddr net.Addr, c *gtpv2.Conn, sub *gtpv2.Subscriber, br *gtpv
 	// remove previous session for the same subscriber if exists.
 	sess, err := c.GetSessionByIMSI(sub.IMSI)
 	if err != nil {
-		switch err.(type) {
-		case *gtpv2.UnknownIMSIError:
-			// whole new session. just ignore.
-		default:
-			return fmt.Errorf("got something unexpected: %w", err)
+		// unknown IMSI is expected here, handle others as unexpected error.
+		var unknownIMSIErr *gtpv2.UnknownIMSIError
+		if !errors.As(err, &unknownIMSIErr) {
+			return fmt.Errorf("error retrieving session: %w", err)
 		}
-	} else {
-		teid, err := sess.GetTEID(gtpv2.IFTypeS11S4SGWGTPC)
-		if err != nil {
-			return gtpv2.ErrTEIDNotFound
-		}
-		// send Delete Session Request to cleanup sessions in S/P-GW.
-		if _, err := c.DeleteSession(teid, sess); err != nil {
-			return fmt.Errorf("got something unexpected: %w", err)
-		}
-		c.RemoveSession(sess)
 	}
+
+	teid, err := sess.GetTEID(gtpv2.IFTypeS11S4SGWGTPC)
+	if err != nil {
+		return gtpv2.ErrTEIDNotFound
+	}
+
+	if _, err := c.DeleteSession(teid, sess); err != nil {
+		return fmt.Errorf("error deleting session: %w", err)
+	}
+
+	c.RemoveSession(sess)
 
 	pgwAddr, err := getPGWIP(br.APN)
 	if err != nil {
