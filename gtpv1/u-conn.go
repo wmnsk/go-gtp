@@ -92,6 +92,12 @@ func (pkt pktConn4) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n 
 	if err != nil {
 		return 0, err
 	}
+	// Nothing to set nor restore when the socket already uses the requested
+	// value, which is the common case (WriteTo always requests 0): this saves
+	// two setsockopt calls per packet.
+	if oldDSCPECN == dscpecn {
+		return pkt.WriteTo(p, addr)
+	}
 	err = pkt.setDSCPECN(dscpecn)
 	if err != nil {
 		return 0, err
@@ -154,6 +160,12 @@ func (pkt pktConn6) WriteToWithDSCPECN(p []byte, addr net.Addr, dscpecn int) (n 
 	if err != nil {
 		return 0, err
 	}
+	// Nothing to set nor restore when the socket already uses the requested
+	// value, which is the common case (WriteTo always requests 0): this saves
+	// two setsockopt calls per packet.
+	if oldDSCPECN == dscpecn {
+		return pkt.WriteTo(p, addr)
+	}
 	err = pkt.setDSCPECN(dscpecn)
 	if err != nil {
 		return 0, err
@@ -185,17 +197,22 @@ func newPktConn(laddr net.Addr) (pktConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	if addr.IP.To4() != nil {
+	return newPktConnFromUDPConn(pktC.(*net.UDPConn), addr.IP)
+}
+
+// newPktConnFromUDPConn wraps conn in a pktConn, choosing IPv4 or IPv6 from ip.
+func newPktConnFromUDPConn(conn *net.UDPConn, ip net.IP) (pktConn, error) {
+	if ip.To4() != nil {
 		return pktConn4{
 			mu:         &sync.Mutex{},
-			udpConn:    pktC.(*net.UDPConn),
-			PacketConn: ipv4.NewPacketConn(pktC),
+			udpConn:    conn,
+			PacketConn: ipv4.NewPacketConn(conn),
 		}, nil
-	} else if addr.IP.To16() != nil {
+	} else if ip.To16() != nil {
 		return pktConn6{
 			mu:         &sync.Mutex{},
-			udpConn:    pktC.(*net.UDPConn),
-			PacketConn: ipv6.NewPacketConn(pktC),
+			udpConn:    conn,
+			PacketConn: ipv6.NewPacketConn(conn),
 		}, nil
 	}
 	return nil, fmt.Errorf("laddr must refer to an IP address")
@@ -240,6 +257,31 @@ func NewUPlaneConn(laddr net.Addr) *UPlaneConn {
 
 		errIndEnabled: true,
 	}
+}
+
+// NewUPlaneConnFromUDPConn creates a new UPlaneConn used for server, on top of
+// an already bound conn instead of a local address. It lets the caller tune the
+// socket before serving, e.g. SetReadBuffer/SetWriteBuffer, or options set
+// through conn.SyscallConn().
+//
+// The returned UPlaneConn takes ownership of conn: it is closed when the
+// UPlaneConn is closed or the context given to ListenAndServe is done.
+func NewUPlaneConnFromUDPConn(conn *net.UDPConn) (*UPlaneConn, error) {
+	if conn == nil {
+		return nil, errors.New("conn must not be nil")
+	}
+	laddr, ok := conn.LocalAddr().(*net.UDPAddr)
+	if !ok {
+		return nil, fmt.Errorf("unexpected local address type %T", conn.LocalAddr())
+	}
+	pc, err := newPktConnFromUDPConn(conn, laddr.IP)
+	if err != nil {
+		return nil, err
+	}
+
+	u := NewUPlaneConn(laddr)
+	u.pktConn = pc
+	return u, nil
 }
 
 // DialUPlane sends Echo Request to raddr to check if the endpoint is alive and returns UPlaneConn.

@@ -103,3 +103,81 @@ func TestClientWrite(t *testing.T) {
 		t.Fatal("timed out while waiting for response to come")
 	}
 }
+
+func TestNewUPlaneConnFromUDPConn(t *testing.T) {
+	var (
+		okCh  = make(chan struct{})
+		errCh = make(chan error)
+		buf   = make([]byte, 2048)
+		tv    = &testVal{
+			0x11111111, 0x22222222, 0x3333,
+			[]byte{0xde, 0xad, 0xbe, 0xef},
+		}
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	udpConn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// the point of the constructor: the socket can be tuned before serving.
+	if err := udpConn.SetReadBuffer(1 << 20); err != nil {
+		t.Fatal(err)
+	}
+
+	srvConn, err := gtpv1.NewUPlaneConnFromUDPConn(udpConn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srvConn.DisableErrorIndication()
+	if diff := cmp.Diff(srvConn.LocalAddr(), udpConn.LocalAddr()); diff != "" {
+		t.Error(diff)
+	}
+
+	go func() {
+		if err := srvConn.ListenAndServe(ctx); err != nil {
+			errCh <- err
+		}
+	}()
+
+	cliConn, err := gtpv1.DialUPlane(ctx, &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1)}, srvConn.LocalAddr())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	go func(tv *testVal) {
+		n, _, teid, err := srvConn.ReadFromGTP(buf)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		if diff := cmp.Diff(teid, tv.teidOut); diff != "" {
+			t.Error(diff)
+		}
+		if diff := cmp.Diff(buf[:n], tv.payload); diff != "" {
+			t.Error(diff)
+		}
+		okCh <- struct{}{}
+	}(tv)
+
+	if _, err := cliConn.WriteToGTP(tv.teidOut, tv.payload, srvConn.LocalAddr()); err != nil {
+		t.Fatal(err)
+	}
+
+	select {
+	case <-okCh:
+		return
+	case err := <-errCh:
+		t.Fatal(err)
+	case <-time.After(10 * time.Second):
+		t.Fatal("timed out while waiting for response to come")
+	}
+}
+
+func TestNewUPlaneConnFromUDPConnNil(t *testing.T) {
+	if _, err := gtpv1.NewUPlaneConnFromUDPConn(nil); err == nil {
+		t.Fatal("expected an error for a nil conn")
+	}
+}
